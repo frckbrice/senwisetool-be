@@ -1,3 +1,3 @@
 # senwisetool-project
 
-An App to for Rainforest alliance requirement compliance in Africa
+An App to automate Rainforest alliance requirement compliance in Africa farms.
