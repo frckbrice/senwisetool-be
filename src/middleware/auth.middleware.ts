@@ -1,5 +1,5 @@
 
-import { RequestService } from "src/request.service";
+import { RequestService } from "src/global/request.service";
 
 import { Injectable, NestMiddleware, UnauthorizedException, Logger } from '@nestjs/common'
 import { NextFunction, Request, Response } from 'express'
@@ -23,7 +23,7 @@ export class AuthMiddleware implements NestMiddleware {
         //     throw new UnauthorizedException()
         // }
 
-        try {
+        try {/** here we can do the authentication and attach the user to the request */
             const payload = req.body.userId
             this.requestService.setUserId(payload);
         } catch (error) {
