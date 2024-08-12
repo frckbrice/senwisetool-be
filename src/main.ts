@@ -4,7 +4,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  // app.useGlobalGuards(new AuthGuard());
   const config = new DocumentBuilder()
     .setTitle('senwisetool api')
     .setDescription('The senwisetool API documentation')
