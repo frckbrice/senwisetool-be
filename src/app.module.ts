@@ -23,6 +23,7 @@ import { ChaptersModule } from './resources/chapters/chapters.module';
 import { SharesModule } from './resources/shares/shares.module';
 import { FarmersModule } from './resources/farmers/farmers.module';
 import { FarmsModule } from './resources/farms/farms.module';
+import { MyLoggerModule } from './global/logger/logger.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { FarmsModule } from './resources/farms/farms.module';
     SharesModule,
     FarmersModule,
     FarmsModule,
+    MyLoggerModule,
   ],
   controllers: [AppController],
   providers: [AppService, RequestService,

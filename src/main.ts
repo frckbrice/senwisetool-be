@@ -2,8 +2,10 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder, SwaggerDocumentOptions } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   app.enableCors();
   // app.useGlobalGuards(new AuthGuard());
   // app.setGlobalPrefix("api");
