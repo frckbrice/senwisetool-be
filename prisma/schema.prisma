@@ -15,3 +15,34 @@ datasource db {
   // uncomment next line if you use Prisma <5.10
   // directUrl = env("DATABASE_URL_UNPOOLED")
 }
+
+enum Role {
+  PDG
+  AGENT
+  ADG
+  AUDITOR
+  HR
+  IT
+  SALES
+  IT_SUPPORT
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  password      String
+  role         Role     @default(PDG)
+  companyId   String
+  company     Company @relation(fields: [companyId], references: [id])
+}
+
+model Company {
+  id  String @id @default(cuid())
+  name  String
+  address  String
+  phone  String
+  email  String
+  website  String
+  logo  String
+  users  User[]
+}
