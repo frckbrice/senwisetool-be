@@ -7,7 +7,7 @@ import { plainToInstance } from "class-transformer";
 @Injectable()
 export class UserInterceptor implements NestInterceptor {
     intercept(context: ExecutionContext, next: CallHandler<User[]>): Observable<User[]> | Promise<Observable<User[]>> {
-
+        // remove the password from user response
         return next.handle().pipe(map((users) => users.map((user) => plainToInstance(User, user))));
 
     }

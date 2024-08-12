@@ -9,19 +9,7 @@ export class UsersService {
   }
 
   findAll() {
-    return [{
-      name: "paul",
-      email: "paul@me.com",
-      password: "password"
-    }, {
-      name: "Henry",
-      email: "henry@me.com",
-      password: "henry"
-    }, {
-      name: "Golang",
-      email: "golang@me.com",
-      password: "Golang"
-    }];;
+    return [];
   }
 
   findOne(id: number) {
