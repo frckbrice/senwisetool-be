@@ -5,8 +5,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiBearerAuth, ApiCreatedResponse, ApiForbiddenResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserInterceptor } from './interceptors/user.interceptor';
 import { Role } from '@prisma/client';
-import { Roles } from 'src/guards/roles.decorator';
-import { RolesGuard } from 'src/guards/auth.guard';
+import { Roles } from 'src/global/guards/roles.decorator';
+import { RolesGuard } from 'src/global/guards/auth.guard';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
 import { SkipThrottle } from '@nestjs/throttler';
 
