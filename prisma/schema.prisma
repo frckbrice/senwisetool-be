@@ -27,22 +27,319 @@ enum Role {
   IT_SUPPORT
 }
 
+enum ProjectStatus {
+  DRAFT
+  ARCHIVED
+  ACTIVE
+  DELETED
+}
+
+enum TypeProject {
+  INSPECTION
+  MAPPING
+}
+
+enum UserStatus {
+  FARMER
+  EMPLOYEE
+  AUDITOR
+}
+
 model User {
-  id           String    @id @default(uuid())
+  id           String    @id @default(cuid())
   email        String    @unique
+  username String
   password      String
   role         Role     @default(PDG)
   companyId   String
   company     Company @relation(fields: [companyId], references: [id])
+  proof_of_skills String
+  phone String
+  status UserStatus
+  projectAudit Project_audit[]
+  farm Farm[] 
+  receipt Receipt?
+  market_audit Market_audit?
 }
 
 model Company {
   id  String @id @default(cuid())
   name  String
-  address  String
+  country String
+  address  String 
   phone  String
   email  String
-  website  String
+  sector_of_activity String 
+  website  String ?
   logo  String
   users  User[]
+  projects Project[]
+  campaign Campaign[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  trainings Training[]
+  payment_mode String
+  paypal_id String
+  subscription Subscription[]
+  markets Market[]
+}
+
+model Project {
+  id  String @id @default(cuid())
+  name  String
+  description  String
+  startDate  DateTime
+  endDate  DateTime
+  type TypeProject
+  sector_activity String
+  status ProjectStatus
+  companyId   String
+  Company     Company @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  form_structure  Json?    @default("{}")  @db.JsonB
+  projectAudit Project_audit[]
+}
+
+model Campaign {
+  id  String @id @default(cuid())
+  name  String
+  description  String
+  startDate  DateTime
+  endDate  DateTime
+  companyId   String
+  Company     Company @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  stockCampaigns StockCampaign[]
+}
+
+model StockCampaign {
+  id  String @id @default(cuid())
+  campaignId   String
+  projectId   Campaign @relation(fields: [campaignId], references: [id])
+  quantity  Int
+  price  Float
+  weight  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Agent_collector {
+  id String @id @default(cuid())
+  name String
+  code String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  companyId String
+}
+
+model Inspection_data {
+  id String @id @default(cuid())
+  projectId String
+  form_data   Json ?  @default("{}")  @db.JsonB
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  data_collector_id String
+}
+
+model Training_participant {
+  id String @id @default(cuid())
+  name String
+  signature String
+  email String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  training_id String
+  training Training @relation(fields: [training_id], references: [id])
+}
+
+model Training {
+  id String @id @default(cuid())
+  theme String
+  title String
+  modules String
+  startDate DateTime
+  endDate DateTime
+  companyId String
+  company Company @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  locality String
+  training_bucket_url String
+  report_url String
+  participants Training_participant[]
+}
+
+model Project_audit {
+  id String @id @default(cuid())
+  project_id String
+  user_id String
+  user User @relation(fields: [user_id], references: [id])
+  project Project @relation(fields: [project_id], references: [id])
+  audit_date DateTime
+  audit_notes String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Farm {
+  id String @id @default(cuid())
+  label String ? 
+  farmerId String 
+  user User @relation(fields: [farmerId], references: [id])
+  createdAt DateTime @default(now())
+  latitude Float
+  longitude Float
+  mapping_coodinates Farm_coordinates[]
+  village String
+}
+
+model Farm_coordinates{
+  id String @id @default(cuid())
+  farmId String
+  farm Farm @relation(fields: [farmId], references: [id])
+  latitude Float
+  longitude Float
+  createdAt DateTime @default(now())
+  coodinates_url String
+}
+
+model Subscription {
+  id String @id @default(cuid())
+  company_id String
+  company Company @relation(fields: [company_id], references: [id])
+  priceId String
+  price Price @relation(fields: [priceId], references: [id])
+  start_date DateTime
+  end_date DateTime
+  status String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Price {
+  id String @id @default(cuid())
+  offer_id String
+  active Boolean
+  description String
+  unit_amount Float
+  currency String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  subscription Subscription[]
+ offer Offer @relation(fields: [offer_id], references: [id])
+}
+
+model Offer {
+  id String @id @default(cuid())
+  name String
+  description String
+  duration Int
+  price Float
+  currency String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  subscription Price[]
+  chapters Offer_Chapter[]
+}
+
+model Chapter {
+  id String @id @default(cuid())
+  label String
+  description String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  required_norm String
+  number_of_requirements Int
+  number_of_applicable Int
+  number_of_non_appplicable Int 
+  percentage_applicable Int
+  offers Offer_Chapter[]
+}
+
+model Offer_Chapter {
+  id String @id @default(cuid())
+  offerId String
+  chapterId String
+  chapter Chapter @relation(fields: [chapterId], references: [id])
+  offer Offer @relation(fields: [offerId], references: [id])
+}
+
+model Market_audit {
+  id String @id @default(cuid())
+  marketId String
+  user_id String @unique
+  user User @relation(fields: [user_id], references: [id])
+  market Market @relation(fields: [marketId], references: [id])
+  audit_date DateTime
+}
+
+model Market {
+  id String @id @default(cuid())
+  label String
+  description String
+  location String
+  market_type String
+  market_number Int
+  companyId String
+  company Company @relation(fields: [companyId], references: [id])
+  borderau_vente_url String
+  bon_entree_magazin_url String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  market_audit Market_audit[]
+  transaction Transaction[]
+  receipts Receipt[]
+}
+
+model Receipt {
+  id String @id @default(cuid())
+  marketId String
+  farmerId String @unique
+  user User @relation(fields: [farmerId], references: [id])
+  market Market @relation(fields: [marketId], references: [id])
+  receipt_date DateTime
+  product_name String
+  quantity_in_bags Int
+  unit_amount Float
+  currency String
+  section_or_village String
+  net_weight_in_kg Float
+  humidity_of_product String
+  total_amount Float
+  net_weight_sale Int
+  refraction_humidity_or_quality String
+  prelevement_statutaire Int 
+  net_paid Int 
+  farmer_signature String
+  company_signature String
+  farmer_picture String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  receipt_number String
+  receipt_url String
+  receipt_pdf_url String
+}
+
+model Transaction {
+  id String @id @default(cuid())
+  level_of_traceability String
+  driver_name String
+  quantity Int 
+  net_declared_weight_in_kg Float
+  humidity Int
+  total_quantity_of_bags Int 
+  marketId String @unique
+  receiver_name String
+  date DateTime @default(now())
+  market Market @relation(fields: [marketId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  min_commerce_verificator_agent_name String
+   min_commerce_verificator_agent_signature String
+  digital_signature_driver String
+  digital_signature_sender String
+  product_quality String
+  vehicule_immatriculation_number String
 }

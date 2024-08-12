@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { User } from "../entities/user.entity";
+import { Role } from "@prisma/client";
 
 export class PaginationQueryDto<TData = User> {
   @ApiProperty()
@@ -11,5 +12,9 @@ export class PaginationQueryDto<TData = User> {
   @ApiProperty()
   skip?: number = 0 // number of users to skip;
 
+  @ApiProperty()
+  role?: Role
+
+  @ApiProperty()
   results: TData[];
 }

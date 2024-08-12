@@ -8,7 +8,7 @@ import { Role } from '@prisma/client';
 import { Roles } from 'src/global/guards/roles.decorator';
 import { RolesGuard } from 'src/global/guards/auth.guard';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
-import { SkipThrottle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 
 @ApiTags('users') // enable api docs
 @Controller('users')
@@ -36,6 +36,7 @@ export class UsersController {
     const queryParams = {
       limit: Number(query.limit || 30), // current default for pagination on admin dashboard
       skip: Number(query.skip || 0),
+      role: query.role || ""
     }
     return this.usersService.findAll(queryParams);
   }
@@ -52,6 +53,8 @@ export class UsersController {
   @Patch(':id')
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
+  // TODO: to be update to right value
+  @Throttle({ default: { ttl: 1000, limit: 1 } })
   @ApiOperation({ summary: 'patch a user by id' })
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.updateUser(id, updateUserDto);

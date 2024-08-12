@@ -2,11 +2,14 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { CampaignsService } from './campaigns.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { UpdateCampaignDto } from './dto/update-campaign.dto';
+import { Throttle, SkipThrottle } from '@nestjs/throttler'
+import { LoggerService } from 'src/global/logger/logger.service';
+
 
 @Controller('campaigns')
 export class CampaignsController {
-  constructor(private readonly campaignsService: CampaignsService) {}
-
+  constructor(private readonly campaignsService: CampaignsService) { }
+  private readonly logger = new LoggerService(CampaignsController.name)
   @Post()
   create(@Body() createCampaignDto: CreateCampaignDto) {
     return this.campaignsService.create(createCampaignDto);
