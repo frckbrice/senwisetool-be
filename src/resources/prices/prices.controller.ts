@@ -2,10 +2,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { PricesService } from './prices.service';
 import { CreatePriceDto } from './dto/create-price.dto';
 import { UpdatePriceDto } from './dto/update-price.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('prices')
 @Controller('prices')
 export class PricesController {
-  constructor(private readonly pricesService: PricesService) {}
+  constructor(private readonly pricesService: PricesService) { }
 
   @Post()
   create(@Body() createPriceDto: CreatePriceDto) {

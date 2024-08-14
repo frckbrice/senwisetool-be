@@ -2,10 +2,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { InspectionDataService } from './inspection_data.service';
 import { CreateInspectionDatumDto } from './dto/create-inspection_datum.dto';
 import { UpdateInspectionDatumDto } from './dto/update-inspection_datum.dto';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller('inspection-data')
+@ApiTags('inspection_data')
+@Controller('inspection_data')
 export class InspectionDataController {
-  constructor(private readonly inspectionDataService: InspectionDataService) {}
+  constructor(private readonly inspectionDataService: InspectionDataService) { }
 
   @Post()
   create(@Body() createInspectionDatumDto: CreateInspectionDatumDto) {

@@ -16,7 +16,7 @@ export class LoggerService extends ConsoleLogger {
             if (!fs.existsSync(path.join(__dirname, '..', '..', 'logs'))) {
                 await fsPromises.mkdir(path.join(__dirname, '..', '..', 'logs'))
             }
-            await fsPromises.appendFile(path.join(__dirname, '..', '..', 'logs', 'myLogFile.log'), formattedEntry)
+            await fsPromises.appendFile(path.join(__dirname, '..', '..', 'logs', 'logFile.log'), formattedEntry)
         } catch (e) {
             if (e instanceof Error) console.error(e.message)
         }

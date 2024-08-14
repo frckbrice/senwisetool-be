@@ -17,6 +17,7 @@ export class ProjectsController {
     return this.projectsService.create(createProjectDto);
   }
 
+  @SkipThrottle({ default: false })
   @Get()
   findAll() {
     return this.projectsService.findAll();

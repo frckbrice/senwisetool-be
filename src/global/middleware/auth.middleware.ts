@@ -1,5 +1,5 @@
 
-import { RequestService } from "src/global/request.service";
+import { RequestService } from "src/global/current-logged-in/request.service";
 
 import { Injectable, NestMiddleware, UnauthorizedException, Logger } from '@nestjs/common'
 import { NextFunction, Request, Response } from 'express'

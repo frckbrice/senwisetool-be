@@ -53,13 +53,14 @@ model User {
   role         Role     @default(PDG)
   companyId   String
   company     Company @relation(fields: [companyId], references: [id])
-  proof_of_skills String
+ 
   phone String
   status UserStatus
   projectAudit Project_audit[]
   farm Farm[] 
   receipt Receipt?
   market_audit Market_audit?
+  training_audits Company_training_audit[]
 }
 
 model Company {
@@ -82,6 +83,7 @@ model Company {
   paypal_id String
   subscription Subscription[]
   markets Market[]
+  
 }
 
 model Project {
@@ -162,6 +164,7 @@ model Training {
   startDate DateTime
   endDate DateTime
   companyId String
+  trainer_proof_of_skills String
   company Company @relation(fields: [companyId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -169,6 +172,7 @@ model Training {
   training_bucket_url String
   report_url String
   participants Training_participant[]
+  training_audits Company_training_audit[]
 }
 
 model Project_audit {
@@ -187,6 +191,9 @@ model Farm {
   id String @id @default(cuid())
   label String ? 
   farmerId String 
+  region String
+  division String
+  commune String
   user User @relation(fields: [farmerId], references: [id])
   createdAt DateTime @default(now())
   latitude Float
@@ -342,4 +349,12 @@ model Transaction {
   digital_signature_sender String
   product_quality String
   vehicule_immatriculation_number String
+}
+
+model Company_training_audit {
+  id String @id @default(cuid())
+  user_id String
+  user User @relation(fields: [user_id], references: [id])
+  training_id String
+  training Training @relation(fields: [training_id], references: [id])
 }

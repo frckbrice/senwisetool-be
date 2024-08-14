@@ -2,10 +2,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { MappingsService } from './mappings.service';
 import { CreateMappingDto } from './dto/create-mapping.dto';
 import { UpdateMappingDto } from './dto/update-mapping.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('mappings')
 @Controller('mappings')
 export class MappingsController {
-  constructor(private readonly mappingsService: MappingsService) {}
+  constructor(private readonly mappingsService: MappingsService) { }
 
   @Post()
   create(@Body() createMappingDto: CreateMappingDto) {

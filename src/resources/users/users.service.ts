@@ -1,12 +1,15 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { CreateUserDto } from './dto/create-user.dto'
 import { User as IUserModel, Role } from '@prisma/client'
 import { PrismaService } from 'src/adapters/config/prisma.service'
+import { PaginationQueryDto } from './dto/pagination-query.dto'
+import { LoggerService } from 'src/global/logger/logger.service'
 
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly prismaService: PrismaService
+    private readonly prismaService: PrismaService,
+    private readonly logger: LoggerService
   ) { }
   async findOne(email: string) {
     return this.prismaService.user.findFirstOrThrow({
@@ -24,18 +27,42 @@ export class UsersService {
     })
   }
 
-  async findAll(queryParams: { limit: number; skip: number }): Promise<[number, IUserModel[]]> {
+  async findAll({ limit, skip, role }: Partial<PaginationQueryDto>) {
     // 👷‍♂️ needed the total count for pagination but prisma has no inbuilt count option. Running an atomic operation like a transaction is a way around
-    return this.prismaService.$transaction([
-      this.prismaService.user.count(),
-      this.prismaService.user.findMany({
-        take: queryParams.limit,
-        skip: queryParams.skip,
-      }),
-    ])
+    try {
+      const where: { role: Role | undefined } = {
+        role: undefined
+      };
+      if (role) {
+        where["role"] = role;
+      }
+
+      const query: { where: typeof where, take?: number, skip?: number } = { where };
+      if (skip) {
+        query["skip"] = skip;
+        query["take"] = (limit ?? 0) * (skip - 1);
+      }
+
+      const [total, users] = await this.prismaService.$transaction([
+        this.prismaService.user.count({ where }),
+        this.prismaService.user.findMany(query),
+      ]);
+
+      return {
+        total,
+        users,
+        page: limit,
+        perPage: skip,
+      }
+
+    } catch (error) {
+      this.logger.error("Error fetching users", UsersService.name)
+      throw new NotFoundException("No users found")
+    }
   }
 
-  async createUser(data: CreateUserDto) {
+  //TODO: use the right Type here insted of any
+  async createUser(data: any) {
     const user = await this.prismaService.user.create({
       data: data,
     })

@@ -1,7 +1,7 @@
 import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { RequestService } from './global/request.service';
+import { RequestService } from './global/current-logged-in/request.service';
 import { AuthMiddleware } from './global/middleware/auth.middleware';
 import { RolesGuard } from './global/guards/auth.guard';
 import { AllExceptionsFilter } from './global/filter/http-exception.filter';
@@ -56,10 +56,10 @@ import { MyLoggerModule } from './global/logger/logger.module';
       useClass: RolesGuard,
 
     },
-    {
-      provide: APP_FILTER,
-      useClass: AllExceptionsFilter,
-    },
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: AllExceptionsFilter,
+    // },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard

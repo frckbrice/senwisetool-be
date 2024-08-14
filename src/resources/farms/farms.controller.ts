@@ -2,10 +2,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { FarmsService } from './farms.service';
 import { CreateFarmDto } from './dto/create-farm.dto';
 import { UpdateFarmDto } from './dto/update-farm.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('farms')
 @Controller('farms')
 export class FarmsController {
-  constructor(private readonly farmsService: FarmsService) {}
+  constructor(private readonly farmsService: FarmsService) { }
 
   @Post()
   create(@Body() createFarmDto: CreateFarmDto) {

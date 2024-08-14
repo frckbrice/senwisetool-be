@@ -13,7 +13,7 @@ export class PaginationQueryDto<TData = User> {
   skip?: number = 0 // number of users to skip;
 
   @ApiProperty()
-  role?: Role
+  role?: Role = Role.ADG
 
   @ApiProperty()
   results: TData[];
