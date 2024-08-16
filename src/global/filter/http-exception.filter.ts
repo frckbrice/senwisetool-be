@@ -27,15 +27,11 @@ export class AllExceptionsFilter extends BaseExceptionFilter implements Exceptio
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const request = ctx.getRequest<Request>();
-        // const status =
-        //     exception instanceof HttpException
-        //         ? exception.getStatus()
-        //         : HttpStatus.INTERNAL_SERVER_ERROR;
 
         const responseObj: ResponseObj = {
             statusCode: 500,
             timestamp: new Date().toISOString(),
-            path: request.url,
+            path: request.originalUrl,
             message: ''
         };
 
@@ -44,7 +40,7 @@ export class AllExceptionsFilter extends BaseExceptionFilter implements Exceptio
             responseObj.statusCode = exception.getStatus();
         } else if (exception instanceof PrismaClientValidationError) {
             responseObj.message = exception.message.replaceAll(/\n/g, ' ')
-            responseObj.statusCode = 422
+            responseObj.statusCode = 422   // unprocessable content
         } else {
             responseObj.message = 'Internal Server Error';
             responseObj.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;

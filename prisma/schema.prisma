@@ -35,7 +35,9 @@ enum ProjectStatus {
 }
 
 enum TypeProject {
-  INSPECTION
+  INITIAL_INSPECTION
+  EXTERNAL_INSPECTION
+  AUTO_EVALUATION
   MAPPING
 }
 
@@ -66,13 +68,14 @@ model User {
 model Company {
   id  String @id @default(cuid())
   name  String
+  slug  String
   country String
   address  String 
   phone  String
-  email  String
+  email  String @unique
   sector_of_activity String 
   website  String ?
-  logo  String
+  logo  String @unique
   users  User[]
   projects Project[]
   campaign Campaign[]
@@ -89,6 +92,7 @@ model Company {
 model Project {
   id  String @id @default(cuid())
   name  String
+  slug  String
   description  String
   startDate  DateTime
   endDate  DateTime
@@ -106,6 +110,7 @@ model Project {
 model Campaign {
   id  String @id @default(cuid())
   name  String
+  
   description  String
   startDate  DateTime
   endDate  DateTime

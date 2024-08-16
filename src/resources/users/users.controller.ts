@@ -38,9 +38,9 @@ export class UsersController {
   })
   findAll(@Query() query: PaginationQueryDto) {
     const queryParams = {
-      limit: Number(query.limit || 30), // current default for pagination on admin dashboard
-      skip: Number(query.skip || 0),
-      role: query?.role || ""
+      limit: Number(query.perPage || 30), // current default for pagination on admin dashboard
+      skip: Number(query.page || 0),
+      role: query?.role as Role | undefined
     }
     return this.usersService.findAll({ ...queryParams });
   }
@@ -64,11 +64,11 @@ export class UsersController {
     return this.usersService.updateUser(id, updateUserDto);
   }
 
-  // @Delete(':id')
-  // @Roles(Role.ADG, Role.IT_SUPPORT)
-  // @UseGuards(RolesGuard)
-  // @ApiOperation({ summary: 'delete by id' })
-  // remove(@Param('id') id: string) {
-  //   return this.usersService.remove(+id);
-  // }
+  @Delete(':id')
+  @Roles(Role.ADG, Role.IT_SUPPORT)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'delete by id' })
+  remove(@Param('id') id: string) {
+    return this.usersService.remove(id);
+  }
 }

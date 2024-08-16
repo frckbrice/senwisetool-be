@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class SubscriptionsService {
+
+  constructor(private eventEmitter: EventEmitter2) { }
   create(createSubscriptionDto: CreateSubscriptionDto) {
     return 'This action adds a new subscription';
   }
