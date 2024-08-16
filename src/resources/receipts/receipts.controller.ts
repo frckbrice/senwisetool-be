@@ -2,10 +2,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { ReceiptsService } from './receipts.service';
 import { CreateReceiptDto } from './dto/create-receipt.dto';
 import { UpdateReceiptDto } from './dto/update-receipt.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('receipts')
 @Controller('receipts')
 export class ReceiptsController {
-  constructor(private readonly receiptsService: ReceiptsService) {}
+  constructor(private readonly receiptsService: ReceiptsService) { }
 
   @Post()
   create(@Body() createReceiptDto: CreateReceiptDto) {

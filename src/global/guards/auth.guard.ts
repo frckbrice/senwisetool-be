@@ -13,7 +13,8 @@ export class RolesGuard implements CanActivate {
             context.getHandler(),
             context.getClass(),
         ])
-        if (!requiredRoles) { // to handle the case where and anonymous user may whant to access some part of the app.
+        // to handle the case where and anonymous user may want to access some part of the app.
+        if (!requiredRoles) {
             return true
         }
         // we make sure the user is connected and authenticated

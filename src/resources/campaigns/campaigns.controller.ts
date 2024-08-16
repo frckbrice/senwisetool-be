@@ -4,8 +4,9 @@ import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { UpdateCampaignDto } from './dto/update-campaign.dto';
 import { Throttle, SkipThrottle } from '@nestjs/throttler'
 import { LoggerService } from 'src/global/logger/logger.service';
+import { ApiTags } from '@nestjs/swagger';
 
-
+@ApiTags('campaigns')
 @Controller('campaigns')
 export class CampaignsController {
   constructor(private readonly campaignsService: CampaignsService) { }

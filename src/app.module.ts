@@ -1,11 +1,11 @@
 import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { RequestService } from './global/request.service';
-import { AuthMiddleware } from './global/middleware/auth.middleware';
+import { RequestService } from './global/current-logged-in/request.service';
+import { AuthMiddleware } from './global/auth/middleware/auth.middleware';
 import { RolesGuard } from './global/guards/auth.guard';
-import { AllExceptionsFilter } from './global/filter/http-exception.filter';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+
+import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler"
 import { CompaniesModule } from './resources/companies/companies.module';
 import { ProjectsModule } from './resources/projects/projects.module';
@@ -24,6 +24,9 @@ import { SharesModule } from './resources/shares/shares.module';
 import { FarmersModule } from './resources/farmers/farmers.module';
 import { FarmsModule } from './resources/farms/farms.module';
 import { MyLoggerModule } from './global/logger/logger.module';
+import { EventEmitterModule } from '@nestjs/event-emitter'
+import { PrismaModule } from './adapters/config/prisma.module';
+import { AuthModule } from './global/auth/auth.module';
 
 @Module({
   imports: [
@@ -31,6 +34,7 @@ import { MyLoggerModule } from './global/logger/logger.module';
       ttl: 60000,
       limit: 3,
     }]),
+    EventEmitterModule.forRoot(),
     CompaniesModule,
     ProjectsModule,
     InspectionDataModule,
@@ -42,12 +46,14 @@ import { MyLoggerModule } from './global/logger/logger.module';
     TransactionsModule,
     SubscriptionsModule,
     PricesModule,
+    PrismaModule,
     OffersModule,
     ChaptersModule,
     SharesModule,
     FarmersModule,
     FarmsModule,
     MyLoggerModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService, RequestService,
@@ -56,10 +62,10 @@ import { MyLoggerModule } from './global/logger/logger.module';
       useClass: RolesGuard,
 
     },
-    {
-      provide: APP_FILTER,
-      useClass: AllExceptionsFilter,
-    },
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: AllExceptionsFilter,
+    // },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard

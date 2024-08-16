@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, Use
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiBearerAuth, ApiCreatedResponse, ApiForbiddenResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserInterceptor } from './interceptors/user.interceptor';
 import { Role } from '@prisma/client';
 import { Roles } from 'src/global/guards/roles.decorator';
@@ -32,13 +32,17 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'get all users' })
   @UseInterceptors(UserInterceptor)
+  @ApiResponse({
+    description: "successfully fetch all users",
+    status: 200,
+  })
   findAll(@Query() query: PaginationQueryDto) {
     const queryParams = {
-      limit: Number(query.limit || 30), // current default for pagination on admin dashboard
-      skip: Number(query.skip || 0),
-      role: query.role || ""
+      limit: Number(query.perPage || 30), // current default for pagination on admin dashboard
+      skip: Number(query.page || 0),
+      role: query?.role as Role | undefined
     }
-    return this.usersService.findAll(queryParams);
+    return this.usersService.findAll({ ...queryParams });
   }
 
   @Get(':id')
@@ -60,11 +64,11 @@ export class UsersController {
     return this.usersService.updateUser(id, updateUserDto);
   }
 
-  // @Delete(':id')
-  // @Roles(Role.ADG, Role.IT_SUPPORT)
-  // @UseGuards(RolesGuard)
-  // @ApiOperation({ summary: 'delete by id' })
-  // remove(@Param('id') id: string) {
-  //   return this.usersService.remove(+id);
-  // }
+  @Delete(':id')
+  @Roles(Role.ADG, Role.IT_SUPPORT)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'delete by id' })
+  remove(@Param('id') id: string) {
+    return this.usersService.remove(id);
+  }
 }
