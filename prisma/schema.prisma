@@ -334,16 +334,16 @@ model Market {
   end_date DateTime
   market_number Int
 
-  label String
   description String
   location String
   market_type String
+  bordereau_vente_url String
+  bon_entree_magazin_url String
+
   
   company Company @relation(fields: [company_id], references: [id])
-  borderau_vente_url String
-  bon_entree_magazin_url String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   market_audit Market_audit[]
   transaction Transaction[]
   receipts Receipt[]
@@ -351,53 +351,61 @@ model Market {
 
 model Receipt {
   id String @id @default(cuid())
-  marketId String
-  farmerId String @unique
-  user User @relation(fields: [farmerId], references: [id])
-  market Market @relation(fields: [marketId], references: [id])
-  receipt_date DateTime
-  product_name String
-  quantity_in_bags Int
-  unit_amount Float
-  currency String
-  section_or_village String
+  market_id String
+  village String
+  farmer_id String @unique
+
+ date DateTime 
   net_weight_in_kg Float
-  humidity_of_product String
-  total_amount Float
-  net_weight_sale Int
+  quantity_in_bags Int
+  humidity_level_of_product String
+  net_weight_for_sale Int
   refraction_humidity_or_quality String
-  prelevement_statutaire Int 
+  unit_amount_per_kg Float
+  total_amount Float
+  currency String
+
+  farmer_picture_urls String[]
+  statutory_prerequisite Int 
   net_paid Int 
   farmer_signature String
   company_signature String
-  farmer_picture String[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
   receipt_number String
-  receipt_url String
-  receipt_pdf_url String
+  product_name String
+
+
+  user User @relation(fields: [farmer_id], references: [id])
+  market Market @relation(fields: [market_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Transaction {
   id String @id @default(cuid())
+  market_id String
+  date DateTime @default(now())
+
+
   level_of_traceability String
   driver_name String
   quantity Int 
-  net_declared_weight_in_kg Float
   humidity Int
-  total_quantity_of_bags Int 
-  marketId String @unique
+  net_weight_declared_in_Ton Float
+
+  humidity_level_of_product String?
+  total_quantity_in_bags Int 
   receiver_name String
-  date DateTime @default(now())
-  market Market @relation(fields: [marketId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  min_commerce_verificator_agent_name String
-   min_commerce_verificator_agent_signature String
-  digital_signature_driver String
-  digital_signature_sender String
+  // TODO: cross check the importance of these signatures 
+  sender_signature String
+  driver_signature String
   product_quality String
   vehicule_immatriculation_number String
+  min_com_verif_agent_name_and_sig String
+
+  market Market @relation(fields: [market_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Company_training_audit {
