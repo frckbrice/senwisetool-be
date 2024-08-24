@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { $Enums, Project, ProjectStatus, TypeProject } from "@prisma/client";
+import { ProjectStatus, TypeProject } from "@prisma/client";
 
-export class PaginationProjectQueryDto {
+export class PaginationCompanyQueryDto {
 
 
     @ApiProperty()
