@@ -5,16 +5,20 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 
+
+
+//TODO: Check if possible to enable postgis to store geographical points to the database 
+// this is for future use of geo data for analysis and calculations: service to customers.
+
  generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
+  // previewFeatures = ["postgresqlExtensions"]
 }
 
-// enable postgis to store geographical points to the database
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [postgis]
+  // extensions = [postgis]
 }
 
 
@@ -51,9 +55,9 @@ enum UserStatus {
 
 model User {
   id           String    @id @default(cuid())
-  email        String    @unique
-  username     String
-  password     String
+  email        String  ?  @unique
+  username     String    ?
+  password     String ?
   role         Role     @default(PDG)
 
   first_name    String
@@ -61,10 +65,10 @@ model User {
   phone_number  String
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  profileUrls   String
+  profileUrls   String ?
   company_id    String
-  famer_attached_contract_url   String
-
+  famer_attached_contract_url   String ?
+  activity  String?
   company       Company @relation(fields: [company_id], references: [id])
   status        UserStatus
   projectAudit  Project_audit[]
