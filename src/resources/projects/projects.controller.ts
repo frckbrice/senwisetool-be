@@ -6,8 +6,8 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { Prisma, Role } from '@prisma/client';
 import { PaginationProjectQueryDto } from './dto/paginate-project.dto';
-import { Roles } from 'src/global/guards/roles.decorator';
-import { RolesGuard } from 'src/global/guards/auth.guard';
+import { Roles } from 'src/global/auth/guards/roles.decorator';
+import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 
 // to handle rate limiting
 import { Throttle, SkipThrottle } from '@nestjs/throttler'

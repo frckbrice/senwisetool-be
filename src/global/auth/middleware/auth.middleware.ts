@@ -30,7 +30,7 @@ export class AuthMiddleware implements NestMiddleware {
                 secret: process.env.JWT_SECRETE,
             })
             req['user'] = payload;
-            this.requestService.setUserId(payload);
+            this.requestService.setUserId(payload.sub);
         } catch (error) {
             this.logger.error('Authenticification failed', AuthMiddleware.name)
             throw new UnauthorizedException('user not authenticated')

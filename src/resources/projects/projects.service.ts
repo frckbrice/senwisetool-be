@@ -3,7 +3,7 @@ import { PrismaService } from 'src/adapters/config/prisma.service';
 import { Prisma } from '@prisma/client';
 import { PaginationProjectQueryDto } from './dto/paginate-project.dto';
 import { LoggerService } from 'src/global/logger/logger.service';
-import { RolesGuard } from 'src/global/guards/auth.guard';
+import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 
 @Injectable()
 export class ProjectsService {

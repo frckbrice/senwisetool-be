@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RequestService } from './global/current-logged-in/request.service';
 import { AuthMiddleware } from './global/auth/middleware/auth.middleware';
-import { RolesGuard } from './global/guards/auth.guard';
+import { RolesGuard } from './global/auth/guards/auth.guard';
 
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler"
