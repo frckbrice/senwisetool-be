@@ -4,17 +4,23 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-generator client {
-  provider = "prisma-client-js"
+
+
+
+//TODO: Check if possible to enable postgis to store geographical points to the database 
+// this is for future use of geo data for analysis and calculations: service to customers.
+
+ generator client {
+  provider        = "prisma-client-js"
+  // previewFeatures = ["postgresqlExtensions"]
 }
 
-// prisma/schema.prisma
 datasource db {
-  provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
-  // uncomment next line if you use Prisma <5.10
-  // directUrl = env("DATABASE_URL_UNPOOLED")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  // extensions = [postgis]
 }
+
 
 enum Role {
   PDG
@@ -49,19 +55,26 @@ enum UserStatus {
 
 model User {
   id           String    @id @default(cuid())
-  email        String    @unique
-  username String
-  password      String
+  email        String  ?  @unique
+  username     String    ?
+  password     String ?
   role         Role     @default(PDG)
-  companyId   String
-  company     Company @relation(fields: [companyId], references: [id])
- 
-  phone String
-  status UserStatus
-  projectAudit Project_audit[]
-  farm Farm[] 
-  receipt Receipt?
-  market_audit Market_audit?
+
+  first_name    String
+  last_name     String
+  phone_number  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  profileUrls   String ?
+  company_id    String
+  famer_attached_contract_url   String ?
+  activity  String?
+  company       Company @relation(fields: [company_id], references: [id])
+  status        UserStatus
+  projectAudit  Project_audit[]
+  farm          Farm[] 
+  receipt       Receipt?
+  market_audit  Market_audit[]
   training_audits Company_training_audit[]
 }
 
@@ -70,20 +83,25 @@ model Company {
   name  String
   slug  String
   country String
-  address  String 
-  phone  String
   email  String @unique
+  logo  String @unique
+
+  payment_mode String
+  paypal_id String @unique
   sector_of_activity String 
   website  String ?
-  logo  String @unique
+  address  String 
+
+  phone_number  String
+  city  String
+  description String
+
   users  User[]
   projects Project[]
   campaign Campaign[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   trainings Training[]
-  payment_mode String
-  paypal_id String
   subscription Subscription[]
   markets Market[]
   
@@ -91,72 +109,89 @@ model Company {
 
 model Project {
   id  String @id @default(cuid())
-  name  String
-  slug  String
-  description  String
-  startDate  DateTime
-  endDate  DateTime
   type TypeProject
+  slug  String
+
+  company_id   String
+  title  String
+  description  String
   sector_activity String
+  country  String
   status ProjectStatus
-  companyId   String
-  Company     Company @relation(fields: [companyId], references: [id])
+
+  start_date  DateTime
+  end_date  DateTime
+  project_structure Json?    @default("{}")  @db.JsonB
+
+  archived Boolean @default(false)
+  draft Boolean @default(false)
+  projectAudit Project_audit[]
+  Company     Company @relation(fields: [company_id], references: [id])
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  form_structure  Json?    @default("{}")  @db.JsonB
-  projectAudit Project_audit[]
+  deleted_at DateTime @updatedAt
+  archived_at DateTime @updatedAt
+  draft_at DateTime @updatedAt
 }
 
 model Campaign {
   id  String @id @default(cuid())
   name  String
-  
   description  String
-  startDate  DateTime
-  endDate  DateTime
+
+  start_date  DateTime
+  end_date  DateTime
   companyId   String
   Company     Company @relation(fields: [companyId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  stockCampaigns StockCampaign[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  stockCampaigns Campaign_stock[]
 }
 
-model StockCampaign {
+model Campaign_stock {
   id  String @id @default(cuid())
-  campaignId   String
-  projectId   Campaign @relation(fields: [campaignId], references: [id])
   quantity  Int
-  price  Float
   weight  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  unit_of_mesure String
+  campaign_id  String
+  company_id   String
+
+  projectId   Campaign @relation(fields: [campaign_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
-model Agent_collector {
+model Collector_agent {
   id String @id @default(cuid())
   name String
   code String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   companyId String
 }
 
 model Inspection_data {
   id String @id @default(cuid())
-  projectId String
-  form_data   Json ?  @default("{}")  @db.JsonB
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  data_collector_id String
+  project_id String
+  collected_by String
+  project_data_url String
+
+  project_data   Json ?  @default("{}")  @db.JsonB
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  collected_at DateTime @default(now())
 }
 
 model Training_participant {
   id String @id @default(cuid())
-  name String
+  first_name String
+  last_name String
   signature String
   email String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   training_id String
   training Training @relation(fields: [training_id], references: [id])
 }
@@ -164,18 +199,17 @@ model Training_participant {
 model Training {
   id String @id @default(cuid())
   theme String
-  title String
   modules String
-  startDate DateTime
-  endDate DateTime
-  companyId String
-  trainer_proof_of_skills String
-  company Company @relation(fields: [companyId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  locality String
-  training_bucket_url String
-  report_url String
+  start_date DateTime
+  end_date DateTime
+  company_id  String
+  training_picture_url String[]
+  training_attendance_sheet_url String
+  location String
+  company Company @relation(fields: [company_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
   participants Training_participant[]
   training_audits Company_training_audit[]
 }
@@ -184,122 +218,136 @@ model Project_audit {
   id String @id @default(cuid())
   project_id String
   user_id String
+  type_of_project TypeProject
   user User @relation(fields: [user_id], references: [id])
   project Project @relation(fields: [project_id], references: [id])
-  audit_date DateTime
-  audit_notes String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Farm {
   id String @id @default(cuid())
-  label String ? 
-  farmerId String 
-  region String
-  division String
-  commune String
-  user User @relation(fields: [farmerId], references: [id])
-  createdAt DateTime @default(now())
-  latitude Float
-  longitude Float
-  mapping_coodinates Farm_coordinates[]
+  location Json ?  @default("{}")  @db.JsonB
+  farmer_id String 
+
   village String
+  creation_date DateTime
+  division String
+  council String
+  farm_image_url String
+  user User @relation(fields: [farmer_id], references: [id])
+  
+  mapping_coodinates Farm_coordinates[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
+//TODO: check the real data structure to store the geoPoints.
 model Farm_coordinates{
   id String @id @default(cuid())
-  farmId String
-  farm Farm @relation(fields: [farmId], references: [id])
-  latitude Float
-  longitude Float
-  createdAt DateTime @default(now())
-  coodinates_url String
+  estimate_area Float
+
+  mapping_date DateTime
+  farm_id String
+  located_at Json ?  @default("{}")  @db.JsonB
+
+  coordinates Json ?  @default("{}")  @db.JsonB
+  collected_by String
+  farm Farm @relation(fields: [farm_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Subscription {
   id String @id @default(cuid())
+  price_id String
   company_id String
-  company Company @relation(fields: [company_id], references: [id])
-  priceId String
-  price Price @relation(fields: [priceId], references: [id])
+
   start_date DateTime
   end_date DateTime
   status String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  description String
+  
+  payment_mode String
+  auto_renewal String
+  billing_cycle String
+
+  company Company @relation(fields: [company_id], references: [id])
+  price Price_plan @relation(fields: [price_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
-model Price {
+model Price_plan {
   id String @id @default(cuid())
-  offer_id String
   active Boolean
-  description String
-  unit_amount Float
+price String
   currency String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  subscription Subscription[]
- offer Offer @relation(fields: [offer_id], references: [id])
-}
-
-model Offer {
-  id String @id @default(cuid())
   name String
-  description String
-  duration Int
-  price Float
-  currency String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  subscription Price[]
-  chapters Offer_Chapter[]
+
+  duration String
+  benefits String[]
+ renewal_options String
+  cancellation_policy String[]
+  subscription Subscription[]
+
+  price_plan_requiement Price_plan_requiement[]
 }
 
-model Chapter {
+
+model Requirement {
   id String @id @default(cuid())
   label String
-  description String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  required_norm String
-  number_of_requirements Int
-  number_of_applicable Int
-  number_of_non_appplicable Int 
-  percentage_applicable Int
-  offers Offer_Chapter[]
+  title String
+  content Json ?  @default("{}")  @db.JsonB
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  price_plan_requiement Price_plan_requiement[]
+  // required_norm String
+  // number_of_requirements Int
+  // number_of_applicable_requirements Int
+  // number_of_non_appplicable_requirements Int 
+  // percentage_applicable Int
 }
 
-model Offer_Chapter {
+model Price_plan_requiement {
   id String @id @default(cuid())
-  offerId String
-  chapterId String
-  chapter Chapter @relation(fields: [chapterId], references: [id])
-  offer Offer @relation(fields: [offerId], references: [id])
+  req_id String
+  price_plan_id String
+  requirement Requirement @relation(fields: [req_id], references: [id])
+  price_plan Price_plan @relation(fields: [price_plan_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Market_audit {
   id String @id @default(cuid())
-  marketId String
-  user_id String @unique
+  user_id String
+  market_id String
   user User @relation(fields: [user_id], references: [id])
-  market Market @relation(fields: [marketId], references: [id])
-  audit_date DateTime
+  market Market @relation(fields: [market_id], references: [id])
+  date DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Market {
   id String @id @default(cuid())
-  label String
+  company_id String
+  start_date DateTime
+  end_date DateTime
+  market_number Int
+
   description String
   location String
   market_type String
-  market_number Int
-  companyId String
-  company Company @relation(fields: [companyId], references: [id])
-  borderau_vente_url String
+  bordereau_vente_url String
   bon_entree_magazin_url String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  
+  company Company @relation(fields: [company_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   market_audit Market_audit[]
   transaction Transaction[]
   receipts Receipt[]
@@ -307,53 +355,61 @@ model Market {
 
 model Receipt {
   id String @id @default(cuid())
-  marketId String
-  farmerId String @unique
-  user User @relation(fields: [farmerId], references: [id])
-  market Market @relation(fields: [marketId], references: [id])
-  receipt_date DateTime
-  product_name String
-  quantity_in_bags Int
-  unit_amount Float
-  currency String
-  section_or_village String
+  market_id String
+  village String
+  farmer_id String @unique
+
+ date DateTime 
   net_weight_in_kg Float
-  humidity_of_product String
-  total_amount Float
-  net_weight_sale Int
+  quantity_in_bags Int
+  humidity_level_of_product String
+  net_weight_for_sale Int
   refraction_humidity_or_quality String
-  prelevement_statutaire Int 
+  unit_amount_per_kg Float
+  total_amount Float
+  currency String
+
+  farmer_picture_urls String[]
+  statutory_prerequisite Int 
   net_paid Int 
   farmer_signature String
   company_signature String
-  farmer_picture String[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
   receipt_number String
-  receipt_url String
-  receipt_pdf_url String
+  product_name String
+
+
+  user User @relation(fields: [farmer_id], references: [id])
+  market Market @relation(fields: [market_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Transaction {
   id String @id @default(cuid())
+  market_id String
+  date DateTime @default(now())
+
+
   level_of_traceability String
   driver_name String
   quantity Int 
-  net_declared_weight_in_kg Float
   humidity Int
-  total_quantity_of_bags Int 
-  marketId String @unique
+  net_weight_declared_in_Ton Float
+
+  humidity_level_of_product String?
+  total_quantity_in_bags Int 
   receiver_name String
-  date DateTime @default(now())
-  market Market @relation(fields: [marketId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  min_commerce_verificator_agent_name String
-   min_commerce_verificator_agent_signature String
-  digital_signature_driver String
-  digital_signature_sender String
+  // TODO: cross check the importance of these signatures 
+  sender_signature String
+  driver_signature String
   product_quality String
   vehicule_immatriculation_number String
+  min_com_verif_agent_name_and_sig String
+
+  market Market @relation(fields: [market_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Company_training_audit {

@@ -8,11 +8,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   // call the http adapter here
   const { httpAdapter } = app.get(HttpAdapterHost);
+  // apply global filters for not handled exceptions 
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
 
   app.enableCors();
   // app.useGlobalGuards(new AuthGuard());
-  // app.setGlobalPrefix("api");
+  app.setGlobalPrefix("v1");
   const config = new DocumentBuilder()
     .addBearerAuth()  // bearer auth enabled
     .setTitle('senwisetool api')

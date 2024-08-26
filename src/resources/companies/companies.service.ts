@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, NotFoundException, UseGuards } from '@nestjs/common';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { Prisma } from '@prisma/client';
-import { PaginationCompanyQueryDto } from './dto/paginate-company.dto';
+import { PaginationCompanyQueryDto } from "./dto/paginate-company.dto";
 import { LoggerService } from 'src/global/logger/logger.service';
 import { RolesGuard } from 'src/global/guards/auth.guard';
 
