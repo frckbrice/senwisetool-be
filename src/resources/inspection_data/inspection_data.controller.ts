@@ -4,8 +4,8 @@ import { CreateInspectionDatumDto } from './dto/create-inspection_datum.dto';
 import { UpdateInspectionDatumDto } from './dto/update-inspection_datum.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Prisma, Role } from "@prisma/client";
-import { RolesGuard } from 'src/global/guards/auth.guard';
-import { Roles } from 'src/global/guards/roles.decorator';
+import { RolesGuard } from 'src/global/auth/guards/auth.guard';
+import { Roles } from 'src/global/auth/guards/roles.decorator';
 
 
 @ApiTags('inspection_data')

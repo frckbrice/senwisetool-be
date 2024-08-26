@@ -3,8 +3,8 @@ import { ComapnyService } from './companies.service';
 
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Prisma, Role } from "@prisma/client";
-import { RolesGuard } from 'src/global/guards/auth.guard';
-import { Roles } from 'src/global/guards/roles.decorator';
+import { RolesGuard } from 'src/global/auth/guards/auth.guard';
+import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { PaginationCompanyQueryDto } from './dto/paginate-company.dto';
 
 // @UseGuards(RolesGuard)

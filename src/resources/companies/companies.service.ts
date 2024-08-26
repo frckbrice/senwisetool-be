@@ -3,7 +3,7 @@ import { PrismaService } from 'src/adapters/config/prisma.service';
 import { Prisma } from '@prisma/client';
 import { PaginationCompanyQueryDto } from "./dto/paginate-company.dto";
 import { LoggerService } from 'src/global/logger/logger.service';
-import { RolesGuard } from 'src/global/guards/auth.guard';
+import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 
 @Injectable()
 export class ComapnyService {
