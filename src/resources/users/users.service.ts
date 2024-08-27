@@ -65,7 +65,7 @@ export class UsersService {
   }
 
   //TODO: use the right Type here insted of any
-  async createUser(data: CreateUserDto) {
+  async createUser(data: Prisma.UserCreateInput) {
     return this.prismaService.user.create({
       data: data,
     }).catch((error) => {

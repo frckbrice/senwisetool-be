@@ -23,12 +23,12 @@ datasource db {
 
 
 enum Role {
+  FARMER
   PDG
+  EMPLOYEE
   AGENT
   ADG
   AUDITOR
-  HR
-  IT
   SALES
   IT_SUPPORT
 }
@@ -48,27 +48,43 @@ enum TypeProject {
 }
 
 enum UserStatus {
-  FARMER
-  EMPLOYEE
-  AUDITOR
+  ACTIVE
+  INACTIVE
+  BANNED
 }
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  CANCELLED
+  SUSPENDED
+}
+
+enum PaymentMethod {
+  CARD 
+  PAYPAL 
+  E_CHEQUE
+  CASH
+  INSTANT_BANK_TRANSFER
+}
+
 
 model User {
   id           String    @id @default(cuid())
-  email        String  ?  @unique
-  username     String    ?
-  password     String ?
+  username     String?
+  email        String?  @unique
+ 
+  password     String?
   role         Role     @default(PDG)
 
   first_name    String
-  last_name     String
-  phone_number  String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  last_name     String ?
+  phone_number  String ?
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
   profileUrls   String ?
   company_id    String
   famer_attached_contract_url   String ?
-  activity  String?
   company       Company @relation(fields: [company_id], references: [id])
   status        UserStatus
   projectAudit  Project_audit[]
@@ -87,6 +103,7 @@ model Company {
   logo  String @unique
 
   payment_mode String
+  company_paypal_email String
   paypal_id String @unique
   sector_of_activity String 
   website  String ?
@@ -128,8 +145,8 @@ model Project {
   projectAudit Project_audit[]
   Company     Company @relation(fields: [company_id], references: [id])
   
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   deleted_at DateTime @updatedAt
   archived_at DateTime @updatedAt
   draft_at DateTime @updatedAt
@@ -258,22 +275,24 @@ model Farm_coordinates{
   updated_at DateTime @updatedAt
 }
 
+
+
 model Subscription {
   id String @id @default(cuid())
-  price_id String
+  plan_id String
   company_id String
 
   start_date DateTime
   end_date DateTime
-  status String
+  status String  @default("INACTIVE")
   description String
   
-  payment_mode String
+  payment_method String
   auto_renewal String
-  billing_cycle String
+  billing_cycle String   @default("Every 1 year")
 
   company Company @relation(fields: [company_id], references: [id])
-  price Price_plan @relation(fields: [price_id], references: [id])
+  price Price_plan @relation(fields: [plan_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }

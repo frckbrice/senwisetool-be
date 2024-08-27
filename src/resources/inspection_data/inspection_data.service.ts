@@ -24,12 +24,12 @@ export class InspectionDataService {
           this.prismaService.inspection_data.count({}),
           this.prismaService.inspection_data.findMany({
             where: {
-              projectId: query.projectId
+              project_id: query.projectId
             },
             take: query.page,
             skip: (query.page ?? 0) * (query.perPage ?? 20 - 1),
             orderBy: {
-              createdAt: 'desc',
+              created_at: 'desc',
             }
           })
         ])
