@@ -6,7 +6,7 @@ export class Price implements Price_plan {
     currency: string;
     description: string;
     id: string;
-    number_of_billing_cycles: number;
+    number_of_billing_cycles: string;
     price: string;
     price_type: string;
     product_name: ProductName;

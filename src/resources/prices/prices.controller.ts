@@ -5,9 +5,9 @@ import { UpdatePriceDto } from './dto/update-price.dto';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 
-@ApiTags('prices')
+@ApiTags('price_plan')
 @ApiBearerAuth('access-token')
-@Controller('prices')
+@Controller('price_plan')
 export class PricesController {
   constructor(private readonly pricesService: PricesService) { }
 

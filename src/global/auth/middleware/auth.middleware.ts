@@ -9,8 +9,10 @@ import { User } from "@prisma/client";
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
     private allowRoutes = [
-        "/v1/subscriptions/*",
-        "/users/create"
+        "/v1/subscriptions/",
+        '/v1/subscriptions/?=subscription_id',
+        "/users/create",
+        "/v1/price_plan/",
     ]
     constructor(private readonly requestService: RequestService,
         private jwtService: JwtService) { }

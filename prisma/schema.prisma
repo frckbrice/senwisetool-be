@@ -58,6 +58,7 @@ enum SubscriptionStatus {
   INACTIVE
   CANCELLED
   SUSPENDED
+  APPROVAL_PENDING
 }
 
 enum PaymentMethod {
@@ -121,6 +122,7 @@ model Company {
   website  String ?
   address  String 
 
+  company_paypal_email  String
   phone_number  String
   city  String
   description String
@@ -290,6 +292,7 @@ model Farm_coordinates{
 
 
 model Subscription {
+<<<<<<< HEAD
   id String @id @default(cuid())
   plan_id String
   company_id String
@@ -307,6 +310,22 @@ model Subscription {
   price Price_plan @relation(fields: [plan_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+=======
+  id                      String @id @default(cuid())
+  price_id                String
+  company_id              String
+
+  start_date              DateTime
+  end_date                DateTime
+  status                  SubscriptionStatus   @default(INACTIVE)
+  
+  payment_mode            String
+
+  company              Company @relation(fields: [company_id], references: [id])
+  price                Price_plan @relation(fields: [price_id], references: [id])
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+>>>>>>> 55a7cdc (updates prismas shecma)
 }
 
 model Price_plan {
@@ -321,7 +340,7 @@ model Price_plan {
   plan_name          String    @unique
   description        String
   billing_cycle      String @default("Every 1 year")
-  number_of_billing_cycles Int ?
+  number_of_billing_cycles String ?  @default("Unlimited")
   auto_renewal       Boolean
 
 
