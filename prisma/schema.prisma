@@ -122,7 +122,6 @@ model Company {
   website  String ?
   address  String 
 
-  company_paypal_email  String
   phone_number  String
   city  String
   description String
@@ -292,25 +291,6 @@ model Farm_coordinates{
 
 
 model Subscription {
-<<<<<<< HEAD
-  id String @id @default(cuid())
-  plan_id String
-  company_id String
-
-  start_date DateTime
-  end_date DateTime
-  status String  @default("INACTIVE")
-  description String
-  
-  payment_method String
-  auto_renewal String
-  billing_cycle String   @default("Every 1 year")
-
-  company Company @relation(fields: [company_id], references: [id])
-  price Price_plan @relation(fields: [plan_id], references: [id])
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-=======
   id                      String @id @default(cuid())
   price_id                String
   company_id              String
@@ -325,7 +305,6 @@ model Subscription {
   price                Price_plan @relation(fields: [price_id], references: [id])
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
->>>>>>> 55a7cdc (updates prismas shecma)
 }
 
 model Price_plan {

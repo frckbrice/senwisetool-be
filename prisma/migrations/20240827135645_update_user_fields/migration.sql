@@ -1,2 +1,0 @@
--- CreateEnum
-CREATE TYPE "PaymentMethod" AS ENUM ('CARD', 'PAYPAL', 'E_CHEQUE', 'CASH', 'INSTANT_BANK_TRANSFER');

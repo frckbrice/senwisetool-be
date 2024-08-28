@@ -69,20 +69,9 @@ export class CreateUserDto {
   @IsNotEmpty()
   status: UserStatus;
 
-<<<<<<< HEAD
-  activity: string | null
-  famer_attached_contract_url: string | null
-  first_name: string
-  last_name: string
-  profileUrls: string | null
-  id: string
-
-
-=======
   /**
    * example company_1:1526654ds4ds5ds55
    */
-  company_id: string
 
   /**
    * example https://*
@@ -102,7 +91,6 @@ export class CreateUserDto {
   /**
    * example phone_number: +237 600001122
    */
-  phone_number: string | null
 
   /**
    * example profile_urls: https://*
@@ -123,5 +111,4 @@ export class CreateUserDto {
    * example created_at: 2022-06-01
    */
   created_at: Date
->>>>>>> c67cb30 (basic plan setup for fetching in front end)
 }

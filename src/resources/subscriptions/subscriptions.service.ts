@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 
-=======
->>>>>>> c67cb30 (basic plan setup for fetching in front end)
 import { Injectable, InternalServerErrorException, NotFoundException, NotImplementedException } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
@@ -51,41 +48,33 @@ export class SubscriptionsService {
 
     } catch (error) {
       this.logger.error(`Error while creating subscription ${error}`, SubscriptionsService.name);
-      throw new NotImplementedException("Failed to create subscription");
+      throw new NotImplementedException();
     }
   }
 
   // get subcription details
   async getSubscriptionDetails(subscription_id: string, company_id: string) {
 
-    try {
-      const result = await this.payalService.getSubscriptionDetails(subscription_id);
-      if (result) {
-        console.log("subscription details fetched", result);
-        // this.storeSubscriptionDetails(result, company_id);
-        return {
-          data: result,
-          status: 201,
-          message: `Subscription details successfully fetched`
-        }
+    const result = await this.payalService.getSubscriptionDetails(subscription_id);
+    if (result) {
+      console.log("subscription details fetched", result);
+      // this.storeSubscriptionDetails(result, company_id);
+      return {
+        data: result,
+        status: 201,
+        message: `Subscription details successfully fetched`
       }
-      else
-        return {
-          data: null,
-          status: 400,
-          message: `Failed to fetch subscription details`
-        }
-    } catch (error) {
-      this.logger.error(`Error while fetching subscription details ${error}`, SubscriptionsService.name);
-      throw new NotFoundException("Failed to fetch subscription details");
     }
+    else
+      return {
+        data: null,
+        status: 400,
+        message: `Failed to fetch subscription details`
+      }
   }
 
 
-<<<<<<< HEAD
 
-=======
->>>>>>> c67cb30 (basic plan setup for fetching in front end)
   findAll() {
     return `This action returns all subscriptions`;
   }
@@ -94,45 +83,33 @@ export class SubscriptionsService {
     return `This action returns a #${id} subscription`;
   }
 
-<<<<<<< HEAD
 
-=======
->>>>>>> c67cb30 (basic plan setup for fetching in front end)
   async upgradeSubscriptionPlan(id: string, updateSubscriptionDto: UpdateSubscriptionDto) {
 
     // validate plan id
     if (!this.currentplanIds.PLAN_ID.includes(updateSubscriptionDto.plan_id)) {
       throw new Error(`plan id ${updateSubscriptionDto.plan_id} not found`)
     }
-    try {
 
-      const result = await this.payalService.changPlan(id, <string>updateSubscriptionDto.plan_id);
-      if (result)
-        return {
-          data: result,
-          status: 201,
-          message: `Subscription plan upgraded successfully.`
-        }
-      else
-        return {
-          data: null,
-          status: 400,
-          message: `Failed to upgrade subscription plan.`
-        }
-    } catch (error) {
-
-      this.logger.error(`Error while upgrading subscription plan ${error}`, SubscriptionsService.name);
-      throw new NotImplementedException("Failed to upgrade subscription plan");
-    }
+    const result = await this.payalService.changPlan(id, <string>updateSubscriptionDto.plan_id);
+    if (result)
+      return {
+        data: result,
+        status: 201,
+        message: `Subscription plan upgraded successfully.`
+      }
+    else
+      return {
+        data: null,
+        status: 400,
+        message: `Failed to upgrade subscription plan.`
+      }
   }
 
   remove(id: number) {
     return `This action removes a #${id} subscription`;
   }
-<<<<<<< HEAD
 
-=======
->>>>>>> c67cb30 (basic plan setup for fetching in front end)
 
   // cancel payment
 
@@ -237,17 +214,14 @@ export class SubscriptionsService {
         const subscription = await tx.subscription.create({
           data: {
             id: subscriptionDetails.id,
-            company_id: company_id,
-            price: subscriptionDetails.billing_info.value,
             price_id: subscriptionDetails.plan_id,
             status: subscriptionDetails.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE', // find difficulties to load prisma SubscriptionStatus enum here.
-            start_date: subscriptionDetails.start_time,
-            end_date: (new Date(subscriptionDetails.end_time).getTime() + 360 * 24 * 60 * 60 * 1000).toString(),
+            start_date: subscriptionDetails.start_date,
+            end_date: subscriptionDetails.end_date,
             created_at: subscriptionDetails.status_update_time,
-
+            company_id: company_id,
             // TODO: update this billing cycle with correct dynamic value: consider using prisma value and paypal incoming value. also above
             payment_mode: subscriptionDetails.billing_info.payment_method === 'paypal' ? 'PAYPAL' : 'PAYPAL',
-
           }
         },
         )
@@ -275,9 +249,5 @@ export class SubscriptionsService {
 
 
   }
-<<<<<<< HEAD
 
 }
-=======
-}
->>>>>>> c67cb30 (basic plan setup for fetching in front end)
