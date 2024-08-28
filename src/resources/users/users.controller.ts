@@ -4,7 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiBearerAuth, ApiCreatedResponse, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserInterceptor } from './interceptors/user.interceptor';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
@@ -23,7 +23,7 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiCreatedResponse({ description: 'The record has been successfully created.' })
   @ApiForbiddenResponse({ description: 'Forbidden.' })
-  create(@Body() createUserDto: CreateUserDto) {
+  create(@Body() createUserDto: Prisma.UserCreateInput) {
     return this.usersService.createUser(createUserDto);
   }
 

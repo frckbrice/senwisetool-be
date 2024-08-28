@@ -20,13 +20,14 @@ import { SubscriptionsModule } from './resources/subscriptions/subscriptions.mod
 import { PricesModule } from './resources/prices/prices.module';
 import { OffersModule } from './resources/offers/offers.module';
 import { ChaptersModule } from './resources/chapters/chapters.module';
-import { SharesModule } from './resources/shares/shares.module';
+import { ShareModule } from './share/share.module'
 import { FarmersModule } from './resources/farmers/farmers.module';
 import { FarmsModule } from './resources/farms/farms.module';
 import { MyLoggerModule } from './global/logger/logger.module';
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { PrismaModule } from './adapters/config/prisma.module';
 import { AuthModule } from './global/auth/auth.module';
+import { ConfigModule } from "@nestjs/config";
 
 @Module({
   imports: [
@@ -34,6 +35,9 @@ import { AuthModule } from './global/auth/auth.module';
       ttl: 60000,
       limit: 3,
     }]),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     EventEmitterModule.forRoot(),
     CompaniesModule,
     ProjectsModule,
@@ -49,11 +53,11 @@ import { AuthModule } from './global/auth/auth.module';
     PrismaModule,
     OffersModule,
     ChaptersModule,
-    SharesModule,
     FarmersModule,
     FarmsModule,
     MyLoggerModule,
-    AuthModule
+    AuthModule,
+    ShareModule
   ],
   controllers: [AppController],
   providers: [AppService, RequestService,

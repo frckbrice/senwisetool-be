@@ -13,10 +13,10 @@ export class LoggerService extends ConsoleLogger {
         }).format(new Date())}\t${entry}\n`
 
         try {
-            if (!fs.existsSync(path.join(__dirname, '..', '..', 'logs'))) {
-                await fsPromises.mkdir(path.join(__dirname, '..', '..', 'logs'))
+            if (!fs.existsSync(path.join(__dirname, '..', 'logs'))) {
+                await fsPromises.mkdir(path.join(__dirname, '..', 'logs'))
             }
-            await fsPromises.appendFile(path.join(__dirname, '..', '..', 'logs', 'logFile.log'), formattedEntry)
+            await fsPromises.appendFile(path.join(__dirname, '..', 'logs', 'logFile.log'), formattedEntry)
         } catch (e) {
             if (e instanceof Error) console.error(e.message)
         }

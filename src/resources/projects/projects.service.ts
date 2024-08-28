@@ -31,7 +31,7 @@ export class ProjectsService {
         take: query.page,
         skip: (query.page ?? 0) * (query.perPage ?? 20 - 1),
         orderBy: {
-          startDate: 'desc',
+          start_date: 'desc',
         }
       })
     ]);

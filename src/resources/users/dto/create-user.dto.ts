@@ -1,5 +1,5 @@
 import { IsString, IsEmail, Length, IsNotEmpty, IsEnum } from 'class-validator'
-import { Role, UserStatus } from '@prisma/client'
+import { Role, User, UserStatus } from '@prisma/client'
 import { UUID } from 'crypto'
 export class CreateUserDto {
   /**
@@ -43,20 +43,14 @@ export class CreateUserDto {
   */
   @IsString()
   @IsNotEmpty()
-  companyId: string
+  company_id: string
+
 
   /**
-    * @example "123456789"
-    */
+* @example "+237 600001122 or 600001122."
+*/
   @IsString()
-  phoneNumber: string
-
-  /**
- * @example "Mr."
- */
-  @IsString()
-  @Length(2, 3)
-  civility: string
+  phone_number: string
 
 
   /**
@@ -68,18 +62,19 @@ export class CreateUserDto {
   username: string
 
   /**
-* @example "+237 600001122 or 600001122."
-*/
-  @IsString()
-  @Length(9, 15)
-  @IsNotEmpty()
-  phone: string;
-
-  /**
   * @example "+237 600001122 or 600001122."
   */
-  @IsEnum([UserStatus.AUDITOR, UserStatus.FARMER, UserStatus.EMPLOYEE])
+  @IsEnum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.BANNED])
   @Length(9, 15)
   @IsNotEmpty()
   status: UserStatus;
+
+  activity: string | null
+  famer_attached_contract_url: string | null
+  first_name: string
+  last_name: string
+  profileUrls: string | null
+  id: string
+
+
 }
