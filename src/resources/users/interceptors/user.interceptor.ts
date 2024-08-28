@@ -1,14 +1,14 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from "@nestjs/common";
 import { Observable, map } from "rxjs";
-import { User } from "../entities/user.entity";
+import { UserType } from "../entities/user.entity";
 import { plainToInstance } from "class-transformer";
 
 
 @Injectable()
 export class UserInterceptor implements NestInterceptor {
-    intercept(context: ExecutionContext, next: CallHandler<User[]>): Observable<User[]> | Promise<Observable<User[]>> {
+    intercept(context: ExecutionContext, next: CallHandler<UserType[]>): Observable<UserType[]> | Promise<Observable<UserType[]>> {
         // remove the password from user response
-        return next.handle().pipe(map((users) => users.map((user) => plainToInstance(User, user))));
+        return next.handle().pipe(map((users) => users.map((user) => plainToInstance(UserType, user))));
 
     }
 }

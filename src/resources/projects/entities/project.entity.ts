@@ -4,25 +4,23 @@ import { JsonValue } from "@prisma/client/runtime/library";
 
 export class ProjectEntity implements Project {
     id: string;
-    name: string;
+    type: $Enums.TypeProject;
+    company_id: string;
+    title: string;
     description: string;
+    sector_activity: string;
+    country: string;
+    status: $Enums.ProjectStatus;
     start_date: Date;
     end_date: Date;
-    company_id: string;
-    created_at: Date;
-    updated_at: Date;
-    status: $Enums.ProjectStatus;
-    type: $Enums.TypeProject;
-    form_structure: Prisma.JsonValue;
-    sector_activity: string;
-    slug: string;
-    title: string;
-    country: string;
-    project_structure: JsonValue;
+    project_structure: Prisma.JsonValue;
     archived: boolean;
-    archived_at: Date;
-    deleted_at: Date;
     draft: boolean;
-    draft_at: Date;
 
+    archived_at: Date;
+    draft_at: Date;
+    created_at: Date;
+    deleted_at: Date;
+    slug: string;
+    updated_at: Date;
 }

@@ -316,9 +316,9 @@ model Price_plan {
   price              String
   currency           String
   
-  product_name       ProductName @default(BRONZE)
+  product_name       ProductName @default(BRONZE) @unique
   price_type         String    @default("Fixed pricing")
-  plan_name          String
+  plan_name          String    @unique
   description        String
   billing_cycle      String @default("Every 1 year")
   number_of_billing_cycles Int ?

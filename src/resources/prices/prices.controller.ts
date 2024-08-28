@@ -12,20 +12,24 @@ export class PricesController {
   constructor(private readonly pricesService: PricesService) { }
 
   @Post()
+  // @Roles(Role.ADG, Role.PDG, Role.IT_SUPPORT)
+  // @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'Create price plan' })
-  @ApiResponse({ status: 201, type: CreatePriceDto, schema: Prisma.Price_planScalarFieldEnum, content: {}, description: 'Created price plan' })
-  create(@Body() createPriceDto: Prisma.Price_planCreateInput) {
-    return this.pricesService.create(createPriceDto);
+  @ApiResponse({ status: 201, type: CreatePriceDto, description: 'Created price plan' })
+  async create(@Body() createPriceDto: Prisma.Price_planCreateInput) {
+    return await this.pricesService.create(createPriceDto);
   }
 
   @Get()
-  findAll() {
-    return this.pricesService.findAll();
+  async findAll() {
+    return await this.pricesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pricesService.findOne(+id);
+  @Get(':plan_id')
+  @ApiOperation({ summary: 'Create price plan' })
+  @ApiResponse({ status: 204, type: CreatePriceDto, schema: Prisma.Price_planScalarFieldEnum, content: {}, description: 'successfully fetch a plan' })
+  async findOne(@Param('plan_id') plan_id: string) {
+    return await this.pricesService.findOne(plan_id);
   }
 
   @Patch(':id')

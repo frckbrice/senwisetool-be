@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> c67cb30 (basic plan setup for fetching in front end)
 import { Injectable, InternalServerErrorException, NotFoundException, NotImplementedException } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
@@ -74,7 +77,10 @@ export class SubscriptionsService {
   }
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> c67cb30 (basic plan setup for fetching in front end)
   findAll() {
     return `This action returns all subscriptions`;
   }
@@ -83,7 +89,10 @@ export class SubscriptionsService {
     return `This action returns a #${id} subscription`;
   }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> c67cb30 (basic plan setup for fetching in front end)
   async upgradeSubscriptionPlan(id: string, updateSubscriptionDto: UpdateSubscriptionDto) {
 
     // validate plan id
@@ -109,7 +118,10 @@ export class SubscriptionsService {
   remove(id: number) {
     return `This action removes a #${id} subscription`;
   }
+<<<<<<< HEAD
 
+=======
+>>>>>>> c67cb30 (basic plan setup for fetching in front end)
 
   // cancel payment
 
@@ -251,5 +263,9 @@ export class SubscriptionsService {
 
 
   }
+<<<<<<< HEAD
 
 }
+=======
+}
+>>>>>>> c67cb30 (basic plan setup for fetching in front end)

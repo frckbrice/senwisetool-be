@@ -69,6 +69,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   status: UserStatus;
 
+<<<<<<< HEAD
   activity: string | null
   famer_attached_contract_url: string | null
   first_name: string
@@ -77,4 +78,50 @@ export class CreateUserDto {
   id: string
 
 
+=======
+  /**
+   * example company_1:1526654ds4ds5ds55
+   */
+  company_id: string
+
+  /**
+   * example https://*
+   */
+  famer_attached_contract_url: string | null
+
+  /**
+   *  example first_name: John
+   *  */
+  first_name: string
+
+  /**
+   * example last_name: doe
+   */
+  last_name: string | null
+
+  /**
+   * example phone_number: +237 600001122
+   */
+  phone_number: string | null
+
+  /**
+   * example profile_urls: https://*
+   */
+  profileUrls: string | null
+
+  /**
+   * example id: 9e6b3782-3c6f-4961-a986-48372f88a154
+   */
+  id: string
+
+  /**
+   * example updated_at: 2022-06-01
+   */
+  updated_at: Date
+
+  /**
+   * example created_at: 2022-06-01
+   */
+  created_at: Date
+>>>>>>> c67cb30 (basic plan setup for fetching in front end)
 }
