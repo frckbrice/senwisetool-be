@@ -2,15 +2,19 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { PricesService } from './prices.service';
 import { CreatePriceDto } from './dto/create-price.dto';
 import { UpdatePriceDto } from './dto/update-price.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Prisma } from '@prisma/client';
 
 @ApiTags('prices')
+@ApiBearerAuth('access-token')
 @Controller('prices')
 export class PricesController {
   constructor(private readonly pricesService: PricesService) { }
 
   @Post()
-  create(@Body() createPriceDto: CreatePriceDto) {
+  @ApiOperation({ summary: 'Create price plan' })
+  @ApiResponse({ status: 201, type: CreatePriceDto, schema: Prisma.Price_planScalarFieldEnum, content: {}, description: 'Created price plan' })
+  create(@Body() createPriceDto: Prisma.Price_planCreateInput) {
     return this.pricesService.create(createPriceDto);
   }
 

@@ -68,6 +68,18 @@ enum PaymentMethod {
   INSTANT_BANK_TRANSFER
 }
 
+enum ProductName {
+  BRONZE
+  SILVER
+  GOLD
+}
+
+enum PlanStatus {
+  ON 
+  OFF
+  EXPIRED
+}
+
 
 model User {
   id           String    @id @default(cuid())
@@ -298,19 +310,27 @@ model Subscription {
 }
 
 model Price_plan {
-  id String @id @default(cuid())
-  active Boolean
-price String
-  currency String
-  name String
+  id                 String @id @default(cuid())
+  active             Boolean
+  status             PlanStatus   @default(OFF)
+  price              String
+  currency           String
+  
+  product_name       ProductName @default(BRONZE)
+  price_type         String    @default("Fixed pricing")
+  plan_name          String
+  description        String
+  billing_cycle      String @default("Every 1 year")
+  number_of_billing_cycles Int ?
+  auto_renewal       Boolean
 
-  duration String
-  benefits String[]
- renewal_options String
+
   cancellation_policy String[]
   subscription Subscription[]
 
   price_plan_requiement Price_plan_requiement[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 

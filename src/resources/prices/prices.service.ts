@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePriceDto } from './dto/create-price.dto';
 import { UpdatePriceDto } from './dto/update-price.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PricesService {
-  create(createPriceDto: CreatePriceDto) {
+  create(createPriceDto: Prisma.Price_planCreateInput) {
     return 'This action adds a new price';
   }
 

@@ -8,16 +8,22 @@ import { User } from "@prisma/client";
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
-    private allowRoutes = []
+    private allowRoutes = [
+        "/v1/subscriptions/*",
+        "/users/create"
+    ]
     constructor(private readonly requestService: RequestService,
         private jwtService: JwtService) { }
     private readonly logger = new Logger(AuthMiddleware.name);
 
     async use(req: Request & { user: User }, res: Response, next: NextFunction): Promise<void> {
-        // allow some routes to be public
-        if (req.originalUrl.startsWith("/users/create"))
-            return next()
 
+        // allow some routes to be public
+        if (this.allowRoutes.includes(req.originalUrl)) {
+            this.logger.log('Allowing public access', AuthMiddleware.name)
+            return next()
+        }
+        this.logger.log('Not allowing public access. start authentication', AuthMiddleware.name)
         //handle the authentication
         const token = this.extractTokenFromHeader(req)
         if (!token) {
