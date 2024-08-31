@@ -7,7 +7,7 @@ export class CreateSubscriptionDto {
      */
     @IsString()
     @IsNotEmpty()
-    plan_id: string = <string>process.env.PAYPAL_BRONZE_PLAN_ID;
+    plan_id: string = <string>process.env.PAYPAL_SILVER_PLAN_ID;
 
     /**
      * example company_id: company_1:1526654ds4ds5ds55

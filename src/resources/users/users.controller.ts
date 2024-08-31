@@ -17,13 +17,17 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @Post()
-  @Roles(Role.ADG, Role.PDG, Role.IT_SUPPORT)
-  @UseGuards(RolesGuard)
+  // @Roles(Role.ADG, Role.PDG, Role.IT_SUPPORT)
+  // @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'create user' })
   @ApiBearerAuth()
   @ApiCreatedResponse({ description: 'The record has been successfully created.' })
   @ApiForbiddenResponse({ description: 'Forbidden.' })
-  create(@Body() createUserDto: Prisma.UserCreateInput) {
+  create(@Body() createUserDto: {
+    user_id: string,
+    user_email: string,
+    first_name: string,
+  }) {
     return this.usersService.createUser(createUserDto);
   }
 
@@ -50,15 +54,14 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'get single user by id' })
   findOne(@Param('id') id: string, @Body() body: any) {
-    const email = body.email;
-    return this.usersService.findOne(email);
+    return this.usersService.findOne(body.email);
   }
 
   @Patch(':id')
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
   // TODO: to be update to right value
-  @Throttle({ default: { ttl: 1000, limit: 1 } })
+  @Throttle({ default: { ttl: 1000, limit: 5 } })
   @ApiOperation({ summary: 'patch a user by id' })
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.updateUser(id, updateUserDto);

@@ -1,19 +1,110 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { CreatePriceDto } from './dto/create-price.dto';
 import { UpdatePriceDto } from './dto/update-price.dto';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from 'src/adapters/config/prisma.service';
+import { LoggerService } from 'src/global/logger/logger.service';
+import { CurrentPlanIds } from 'src/global/plan-id/current-plan-ids';
 
 @Injectable()
 export class PricesService {
-  create(createPriceDto: CreatePriceDto) {
-    return 'This action adds a new price';
+
+  private logger = new LoggerService(PricesService.name)
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly currenPlanIds: CurrentPlanIds
+  ) { }
+
+
+  async create(createPriceDto: Prisma.Price_planCreateInput) {
+
+    // validate plan id
+    if (!this.currenPlanIds.PLAN_ID.includes(createPriceDto.id)) {
+      throw new Error(`plan id ${createPriceDto.id} not found`)
+    }
+
+    try {
+      const result = await this.prismaService.price_plan.create({
+        data: createPriceDto
+      });
+
+      if (result)
+        return {
+          status: 201,
+          data: result,
+          message: 'Price plan created successfully'
+        }
+      else
+        return {
+          status: 500,
+          data: null,
+          message: 'Failed to create price plan'
+        }
+    } catch (e) {
+      console.error(`\n\nError while creating price plan ${e}`);
+      this.logger.error(`Error while creating price plan ${e}`, PricesService.name);
+      throw new InternalServerErrorException("Failed to create price plan");
+    }
+
   }
 
-  findAll() {
-    return `This action returns all prices`;
+  async findAll() {
+    try {
+      const resutls = await this.prismaService.price_plan.findMany({});
+
+      if (resutls.length > 0)
+        return {
+          status: 200,
+          data: resutls,
+          message: 'Price plans fetched successfully'
+        }
+      else
+        return {
+          status: 404,
+          data: null,
+          message: 'Failed to fetch price plans'
+        }
+    } catch (error) {
+      console.error(`\n\nError while fetching price plans: \n\n  ${error}`);
+      this.logger.error(`Error while fetching price plans: \n\n  ${error}`, PricesService.name);
+      throw new NotFoundException("Failed to fetch price plans");
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} price`;
+  async findOne(plan_name: string) {
+    // validate plan id
+    if (!this.currenPlanIds.PLAN_ID.includes(plan_name)) {
+      throw new Error(`plan id ${plan_name} not found`)
+    }
+
+    try {
+      const resutl = await this.prismaService.price_plan.findUnique({
+        where: {
+          plan_name: plan_name,
+        },
+        select: {
+          id: true,
+          product_name: true,
+        }
+      });
+      if (resutl && resutl.id)
+        return {
+          status: 200,
+          data: resutl,
+          message: 'Price plan fetched successfully'
+        }
+      else
+        return {
+          status: 404,
+          data: null,
+          message: 'Failed to fetch price plan'
+        }
+    } catch (error) {
+      console.error(`\n\nError while fetching price plan: \n\n  ${error}`);
+      this.logger.error(`Error while fetching price plan: \n\n  ${error}`, PricesService.name);
+      throw new NotFoundException(" Failed to fetch price plan");
+    }
+
   }
 
   update(id: number, updatePriceDto: UpdatePriceDto) {

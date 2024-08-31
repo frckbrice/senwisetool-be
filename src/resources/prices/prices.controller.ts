@@ -2,26 +2,35 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { PricesService } from './prices.service';
 import { CreatePriceDto } from './dto/create-price.dto';
 import { UpdatePriceDto } from './dto/update-price.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Prisma } from '@prisma/client';
 
-@ApiTags('prices')
-@Controller('prices')
+@ApiTags('price_plans')
+@ApiBearerAuth('access-token')
+@Controller('price_plans')
 export class PricesController {
   constructor(private readonly pricesService: PricesService) { }
 
   @Post()
-  create(@Body() createPriceDto: CreatePriceDto) {
-    return this.pricesService.create(createPriceDto);
+  // @Roles(Role.ADG, Role.PDG, Role.IT_SUPPORT)
+  // @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Create price plan' })
+  @ApiResponse({ status: 201, type: CreatePriceDto, description: 'Created price plan' })
+  async create(@Body() createPriceDto: Prisma.Price_planCreateInput) {
+    console.log("\n\ncreate plan request")
+    return await this.pricesService.create(createPriceDto);
   }
 
   @Get()
-  findAll() {
-    return this.pricesService.findAll();
+  async findAll() {
+    return await this.pricesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pricesService.findOne(+id);
+  @Get(':plan_name')
+  @ApiOperation({ summary: 'Create price plan' })
+  @ApiResponse({ status: 200, type: CreatePriceDto, schema: Prisma.Price_planScalarFieldEnum, content: {}, description: 'successfully fetch a plan' })
+  async findOne(@Param('plan_name') plan_name: string) {
+    return await this.pricesService.findOne(plan_name);
   }
 
   @Patch(':id')

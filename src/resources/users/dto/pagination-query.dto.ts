@@ -1,5 +1,4 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { User } from "../entities/user.entity";
 import { Role } from "@prisma/client";
 
 export class PaginationQueryDto {

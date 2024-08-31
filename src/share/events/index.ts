@@ -6,4 +6,5 @@ export const localEvents = {
   participantCreated: 'participant.created',
   paymentCanceled: `paypalPayment.canceled`,
   paymentSuccess: `paypalPayment.successfull`,
+  unsubscribeToPlan: `subscription.unsubscribe`,
 }

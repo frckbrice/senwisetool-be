@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('PDG', 'AGENT', 'ADG', 'AUDITOR', 'HR', 'IT', 'SALES', 'IT_SUPPORT');
+CREATE TYPE "Role" AS ENUM ('FARMER', 'PDG', 'EMPLOYEE', 'AGENT', 'ADG', 'AUDITOR', 'SALES', 'IT_SUPPORT');
 
 -- CreateEnum
 CREATE TYPE "ProjectStatus" AS ENUM ('DRAFT', 'ARCHIVED', 'ACTIVE', 'DELETED');
@@ -8,27 +8,35 @@ CREATE TYPE "ProjectStatus" AS ENUM ('DRAFT', 'ARCHIVED', 'ACTIVE', 'DELETED');
 CREATE TYPE "TypeProject" AS ENUM ('INITIAL_INSPECTION', 'EXTERNAL_INSPECTION', 'AUTO_EVALUATION', 'MAPPING');
 
 -- CreateEnum
-CREATE TYPE "UserStatus" AS ENUM ('FARMER', 'EMPLOYEE', 'AUDITOR');
+CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'BANNED');
 
 -- CreateEnum
-CREATE TYPE "SubscriptionStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'CANCELLED');
+CREATE TYPE "SubscriptionStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'CANCELLED', 'SUSPENDED', 'APPROVAL_PENDING');
+
+-- CreateEnum
+CREATE TYPE "PaymentMethod" AS ENUM ('CARD', 'PAYPAL', 'E_CHEQUE', 'CASH', 'INSTANT_BANK_TRANSFER');
+
+-- CreateEnum
+CREATE TYPE "ProductName" AS ENUM ('BRONZE', 'SILVER', 'GOLD');
+
+-- CreateEnum
+CREATE TYPE "PlanStatus" AS ENUM ('ON', 'OFF', 'EXPIRED');
 
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
-    "email" TEXT,
     "username" TEXT,
+    "email" TEXT,
     "password" TEXT,
     "role" "Role" NOT NULL DEFAULT 'PDG',
     "first_name" TEXT NOT NULL,
-    "last_name" TEXT NOT NULL,
-    "phone_number" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "last_name" TEXT,
+    "phone_number" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
     "profileUrls" TEXT,
     "company_id" TEXT NOT NULL,
     "famer_attached_contract_url" TEXT,
-    "activity" TEXT,
     "status" "UserStatus" NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -73,8 +81,8 @@ CREATE TABLE "Project" (
     "project_structure" JSONB DEFAULT '{}',
     "archived" BOOLEAN NOT NULL DEFAULT false,
     "draft" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3) NOT NULL,
     "archived_at" TIMESTAMP(3) NOT NULL,
     "draft_at" TIMESTAMP(3) NOT NULL,
@@ -213,15 +221,12 @@ CREATE TABLE "Farm_coordinates" (
 -- CreateTable
 CREATE TABLE "Subscription" (
     "id" TEXT NOT NULL,
-    "plan_id" TEXT NOT NULL,
+    "price_id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "start_date" TIMESTAMP(3) NOT NULL,
     "end_date" TIMESTAMP(3) NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'INACTIVE',
-    "description" TEXT NOT NULL,
+    "status" "SubscriptionStatus" NOT NULL DEFAULT 'INACTIVE',
     "payment_mode" TEXT NOT NULL,
-    "auto_renewal" TEXT NOT NULL,
-    "billing_cycle" TEXT NOT NULL DEFAULT 'Every 1 year',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -232,13 +237,19 @@ CREATE TABLE "Subscription" (
 CREATE TABLE "Price_plan" (
     "id" TEXT NOT NULL,
     "active" BOOLEAN NOT NULL,
+    "status" "PlanStatus" NOT NULL DEFAULT 'OFF',
     "price" TEXT NOT NULL,
     "currency" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "duration" TEXT NOT NULL,
-    "benefits" TEXT[],
-    "renewal_options" TEXT NOT NULL,
+    "product_name" "ProductName" NOT NULL DEFAULT 'BRONZE',
+    "price_type" TEXT NOT NULL DEFAULT 'Fixed pricing',
+    "plan_name" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "billing_cycle" TEXT NOT NULL DEFAULT 'Every 1 year',
+    "number_of_billing_cycles" TEXT DEFAULT 'Unlimited',
+    "auto_renewal" BOOLEAN NOT NULL,
     "cancellation_policy" TEXT[],
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Price_plan_pkey" PRIMARY KEY ("id")
 );
@@ -370,6 +381,12 @@ CREATE UNIQUE INDEX "Company_logo_key" ON "Company"("logo");
 CREATE UNIQUE INDEX "Company_paypal_id_key" ON "Company"("paypal_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Price_plan_product_name_key" ON "Price_plan"("product_name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Price_plan_plan_name_key" ON "Price_plan"("plan_name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Receipt_farmer_id_key" ON "Receipt"("farmer_id");
 
 -- AddForeignKey
@@ -406,7 +423,7 @@ ALTER TABLE "Farm_coordinates" ADD CONSTRAINT "Farm_coordinates_farm_id_fkey" FO
 ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "Price_plan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_price_id_fkey" FOREIGN KEY ("price_id") REFERENCES "Price_plan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Price_plan_requiement" ADD CONSTRAINT "Price_plan_requiement_req_id_fkey" FOREIGN KEY ("req_id") REFERENCES "Requirement"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

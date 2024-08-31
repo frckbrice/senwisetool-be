@@ -1,7 +1,8 @@
-import { HttpService } from "@nestjs/axios";
+// import { HttpService } from "@nestjs/axios";
 import { Injectable } from "@nestjs/common";
 import { AxiosResponse } from "axios";
-import { Observable } from "rxjs";
+import { filter, Observable } from "rxjs";
+import { FetchService } from 'nestjs-fetch';
 
 
 // create a subscription in paypal
@@ -12,23 +13,24 @@ export class SubscribeToPayPalService {
     CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET;
     ClIENT_PUBLIC_URL = process.env.ClIENT_PUBLIC_URL;
 
-    constructor(private readonly httpService: HttpService) { }
+    constructor(private readonly fetch: FetchService) { }
 
+    // set basic auth ID
     auth: string = Buffer.from(this.CLIENT_ID + ':' + this.CLIENT_SECRET).toString('base64');
     //  create subscription payload.
     setSubscriptionPayload(subscriptionPlanId: string) {
         let subscriptionPayload = {
-            plan_id: subscriptionPlanId,
-            application_context: {
-                brand_name: "sendwisetool",
-                local: "en_US",
-                user_action: "SUBSCRIBE_NOW",
-                payment_method: {
-                    payer_selected: "paypal",
-                    payee_preferred: "IMMEDIATE_PAYMENT_REQUIRED"
+            "plan_id": `${subscriptionPlanId}`,
+            "application_context": {
+                "brand_name": "sendwisetool",
+                "local": "en_US",
+                "user_action": "SUBSCRIBE_NOW",
+                "payment_method": {
+                    "payer_selected": "PAYPAL",
+                    "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
                 },
-                return_url: this.ClIENT_PUBLIC_URL + "v1/subscription/successPayPalPayment",
-                cancel_url: this.ClIENT_PUBLIC_URL + "v1/subscription/cancelPayPalPayment"
+                "return_url": `${this.ClIENT_PUBLIC_URL}/v1/subscription/successPayPalPayment`,
+                "cancel_url": `${this.ClIENT_PUBLIC_URL}/v1/subscription/cancelPayPalPayment`,
             }
         };
 
@@ -36,61 +38,76 @@ export class SubscribeToPayPalService {
     }
 
     // create subscription
-    subscribe(subscriptionPlanId: string): Observable<AxiosResponse<any, any>> {
-        const subscriptSession = this.httpService.post(this.base + '/v1/billing/subscriptions', JSON.stringify(this.setSubscriptionPayload(subscriptionPlanId)), {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic ' + this.auth
-            }
-        });
+    async subscribeToPlan(subscriptionPlanId: string) {
 
-        console.log("\n\n subscriptSession from subscribe", subscriptSession, "\n\n");
-        return subscriptSession;
+        try {
+            const subscriptSession = await this.fetch.post('/v1/billing/subscriptions', {
+                body: JSON.stringify(this.setSubscriptionPayload(subscriptionPlanId)),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + this.auth
+                }
+            })
+
+            return await subscriptSession.json();
+        } catch (error) {
+            console.log("error", error);
+            throw new Error(error);
+        }
+
     }
 
     // get subscription details
-    getSubscriptionDetails(subscriptionId: string): Observable<AxiosResponse<any, any>> {
-        const subcriptDetails = this.httpService.get(this.base + '/v1/billing/subscriptions/' + subscriptionId, {
+    async getSubscriptionDetails(subscriptionId: string) {
+        const subcriptDetails = this.fetch.get('/v1/billing/subscriptions/' + subscriptionId, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Basic ' + this.auth
             }
         });
-
-        console.log("\n\n subcriptDetails from getSubscriptionDetails", subcriptDetails, "\n\n");
-        return subcriptDetails;
+        return await (await subcriptDetails).json();
     }
 
     // unsubscribe to a plan
-    unsubscribe(subscriptionId: string): Observable<AxiosResponse<any, any>> {
+    async unsubscribeToPlan(subscriptionId: string) {
 
         // this is Mock: 
         // TODO: adds a reason to unsubscribe from frontend.
         const payload = {
             "reason": "Not satisfied with the service"
         }
+        try {
 
-        const unsubResponse = this.httpService.post(this.base + '/v1/billing/subscriptions/' + subscriptionId + '/cancel', JSON.stringify(payload), {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic ' + this.auth
-            }
-        });
+            const unsubResponse = this.fetch.post('/v1/billing/subscriptions/' + subscriptionId + '/cancel', {
+                body: JSON.stringify(payload),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + this.auth
+                }
+            });
 
-        return unsubResponse;
+            return await (await unsubResponse).json();
+        } catch (error) {
+            console.error(`Error while cancelling subscription ${error}`, SubscribeToPayPalService.name);
+            throw new Error(error);
+        }
     }
 
-    changPlan(subscriptionId: string, plan_id: string): Observable<AxiosResponse<any, any>> {
-        // upgrade the plan
-        const upgradeSubscriptionPlan = this.httpService.post(`${this.base}//v1/billing/subscriptions/${subscriptionId}/revise`, {
-            "plan_id": plan_id,
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic ' + this.auth
-            }
-        })
+    async changPlan(subscriptionId: string, plan_id: string) {
+        try {
+            // upgrade the plan
+            const upgradeSubscriptionPlan = await this.fetch.post(`/v1/billing/subscriptions/${subscriptionId}/revise`, {
+                body: JSON.stringify({ "plan_id": plan_id, }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + this.auth
+                }
+            })
 
-        return upgradeSubscriptionPlan;
+            return await upgradeSubscriptionPlan.json();
+        } catch (error) {
+            console.error(`Error while upgrading subscription ${error}`, SubscribeToPayPalService.name);
+            throw new Error(error);
+        }
     }
 }
