@@ -148,7 +148,8 @@ model Project {
   sector_activity String
   country  String
   status ProjectStatus
-
+  state String
+  city String
   start_date  DateTime
   end_date  DateTime
   project_structure Json?    @default("{}")  @db.JsonB

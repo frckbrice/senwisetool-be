@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { CreateUserDto } from './dto/create-user.dto'
-import { Prisma, Role } from '@prisma/client'
+import { Prisma, Role, UserStatus } from '@prisma/client'
 import { PrismaService } from 'src/adapters/config/prisma.service'
 import { PaginationQueryDto } from './dto/pagination-query.dto'
 import { LoggerService } from 'src/global/logger/logger.service'
@@ -65,15 +65,64 @@ export class UsersService {
   }
 
   //TODO: use the right Type here insted of any
-  async createUser(data: Prisma.UserCreateInput) {
-    return this.prismaService.user.create({
-      data: data,
-    }).catch((error) => {
-      this.logger.error("Error creating user", UsersService.name)
-      throw error
-    })
+  async createUser(data: {
+    user_id: string,
+    user_email: string,
+    first_name: string,
+  }) {
 
+    try {
+      // check first if the user already exist before creating newuser
 
+      const user = await this.prismaService.user.findUnique({
+        where: {
+          id: data.user_id,
+        }
+      })
+
+      if (user?.id)
+        return {
+          status: 409,
+          message: "User already exists",
+          data: user
+        }
+      else {
+        const newUSer = await this.prismaService.user.create({
+          data: {
+            id: data.user_id,
+            first_name: data.first_name,
+            email: data.user_email,
+            role: Role.EMPLOYEE,
+            company_id: "",
+            phone_number: null,
+            username: null,
+            status: UserStatus.ACTIVE,
+            famer_attached_contract_url: null,
+            last_name: null,
+            profileUrls: null,
+          },
+        })
+
+        if (newUSer && newUSer.id) {
+          return {
+            status: 201,
+            message: "User created successfully",
+            data: newUSer
+          }
+        } else {
+          return {
+            status: 404,
+            message: "User not found",
+            data: null
+          }
+        }
+
+      }
+
+    } catch (error) {
+      this.logger.error(`error creating the user: ${error}`, UsersService.name)
+      throw new InternalServerErrorException("Failed to create user")
+    }
   }
 
   async updateUser(id: string, update: Partial<CreateUserDto>) {

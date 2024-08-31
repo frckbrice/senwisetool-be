@@ -23,7 +23,11 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiCreatedResponse({ description: 'The record has been successfully created.' })
   @ApiForbiddenResponse({ description: 'Forbidden.' })
-  create(@Body() createUserDto: Prisma.UserCreateInput) {
+  create(@Body() createUserDto: {
+    user_id: string,
+    user_email: string,
+    first_name: string,
+  }) {
     return this.usersService.createUser(createUserDto);
   }
 

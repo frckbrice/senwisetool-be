@@ -71,28 +71,26 @@ export class PricesService {
     }
   }
 
-  async findOne(plan_id: string) {
-
+  async findOne(plan_name: string) {
     // validate plan id
-    if (!this.currenPlanIds.PLAN_ID.includes(plan_id)) {
-      throw new Error(`plan id ${plan_id} not found`)
+    if (!this.currenPlanIds.PLAN_ID.includes(plan_name)) {
+      throw new Error(`plan id ${plan_name} not found`)
     }
 
     try {
-      const resutls = await this.prismaService.price_plan.findUnique({
+      const resutl = await this.prismaService.price_plan.findUnique({
         where: {
-          id: plan_id,
+          plan_name: plan_name,
         },
         select: {
           id: true,
           product_name: true,
         }
       });
-
-      if (resutls && resutls.id)
+      if (resutl && resutl.id)
         return {
           status: 200,
-          data: resutls,
+          data: resutl,
           message: 'Price plan fetched successfully'
         }
       else
@@ -106,6 +104,7 @@ export class PricesService {
       this.logger.error(`Error while fetching price plan: \n\n  ${error}`, PricesService.name);
       throw new NotFoundException(" Failed to fetch price plan");
     }
+
   }
 
   update(id: number, updatePriceDto: UpdatePriceDto) {

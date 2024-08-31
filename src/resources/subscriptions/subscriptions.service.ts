@@ -145,6 +145,11 @@ export class SubscriptionsService {
           id: true,
           price_id: true,   // TODO: make a migration for prisma.
           status: true,
+          company: {
+            select: {
+              paypal_id: true
+            }
+          }
         }
       })
 
