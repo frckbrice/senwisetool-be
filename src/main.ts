@@ -2,7 +2,7 @@ import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder, SwaggerDocumentOptions } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './global/filter/http-exception.filter';
-
+import "reflect-metadata"; // is used to allow the usage of class transformers to be applied to remove password.
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

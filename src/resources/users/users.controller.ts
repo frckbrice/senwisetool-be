@@ -29,11 +29,11 @@ export class UsersController {
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'get all users' })
-  @UseInterceptors(UserInterceptor)
   @ApiResponse({
     description: "successfully fetch all users",
     status: 200,
   })
+  @UseInterceptors(UserInterceptor)
   findAll(@Query() query: PaginationQueryDto) {
     const queryParams = {
       limit: Number(query.perPage || 30), // current default for pagination on admin dashboard
@@ -46,9 +46,10 @@ export class UsersController {
   @Get(':id')
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
+  @UseInterceptors(UserInterceptor)
   @ApiOperation({ summary: 'get single user by id' })
-  findOne(@Param('id') id: string, @Body() body: any) {
-    return this.usersService.findOne(body.email);
+  findOne(@Param('id') id: string) {
+    return this.usersService.findOne(id);
   }
 
   @Patch(':id')

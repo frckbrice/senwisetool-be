@@ -15,15 +15,15 @@ export class UsersService {
 
   async findOne(id: string) {
 
-    const where = {} as { id: string | undefined, email: string | undefined }
-    if (id.includes("@")) {
-      where["email"] = id as string
-    }
-
-    else where["id"] = id as string
-
-
     try {
+      const where = {} as { id: string | undefined, email: string | undefined }
+      if (id.toString().includes("@")) {
+        where["email"] = id as string
+      }
+
+      else where["id"] = id as string
+
+
       const user = await this.prismaService.user.findUnique({ where })
 
       if (user)
@@ -66,13 +66,27 @@ export class UsersService {
         this.prismaService.user.count({ where }),
         this.prismaService.user.findMany(query),
       ]);
+      if (users.length)
+        return {
+          status: 200,
+          message: "users fetched successfully",
+          data: users,
+          total,
+          page: page ?? 0,
+          perPage: perPage ?? 20,
+          totalPages: Math.ceil(total / (perPage ?? 20))
+        }
+      else
+        return {
+          status: 400,
+          message: "No users found",
+          data: [],
+          total,
+          page: page ?? 0,
+          perPage: perPage ?? 20,
+          totalPages: Math.ceil(total / (perPage ?? 20))
+        }
 
-      return {
-        total,
-        users,
-        page,
-        perPage,
-      }
 
     } catch (error) {
       this.logger.error(`Error fetching users \n\n: ${error}`, UsersService.name)
