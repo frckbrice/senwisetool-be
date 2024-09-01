@@ -7,7 +7,8 @@ import { SubscribeToPayPalService } from './subscribe.service.dao';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { localEvents } from 'src/share/events';
 import { PrismaService } from 'src/adapters/config/prisma.service';
-import { CurrentPlanIds } from 'src/global/plan-id/current-plan-ids';
+import { CurrentPlanIds } from 'src/global/utils/current-plan-ids';
+import { CompanyStatus } from '@prisma/client';
 
 @Injectable()
 export class SubscriptionsService {
@@ -137,7 +138,7 @@ export class SubscriptionsService {
   async getCompanySubscription(company_id: string) {
 
     try {
-      const data = await this.prismaService.subscription.findFirstOrThrow({
+      const data = await this.prismaService.subscription.findFirst({
         where: {
           company_id: company_id
         },
@@ -239,6 +240,7 @@ export class SubscriptionsService {
           data: {
             paypal_id: subscriptionDetails.subscriber.payer_id,
             company_paypal_email: subscriptionDetails.subscription_email,
+            status: CompanyStatus.ACTIVE // set it to active because he has subscribe to a plan.
           }
         })
         // TODO: handle the sending message logig for the below event...

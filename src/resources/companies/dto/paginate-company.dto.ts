@@ -10,9 +10,4 @@ export class PaginationCompanyQueryDto {
     @ApiProperty()
     page?: number = 0 // number of users to skip;
 
-    @ApiProperty()
-    status: ProjectStatus = "DRAFT"
-
-    @ApiProperty()
-    type: TypeProject = "INITIAL_INSPECTION"
 }

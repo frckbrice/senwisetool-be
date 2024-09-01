@@ -4,7 +4,7 @@ import { SubscriptionsController } from './subscriptions.controller';
 import { SubscribeToPayPalService } from './subscribe.service.dao';
 // import { HttpModule } from "@nestjs/axios";
 import { FetchModule } from 'nestjs-fetch';
-import { CurrentPlanIds } from 'src/global/plan-id/current-plan-ids';
+import { CurrentPlanIds } from 'src/global/utils/current-plan-ids';
 
 @Module({
   imports: [FetchModule.register({

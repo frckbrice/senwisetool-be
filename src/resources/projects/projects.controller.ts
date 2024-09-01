@@ -1,8 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
-import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { Prisma, Role } from '@prisma/client';
 import { PaginationProjectQueryDto } from './dto/paginate-project.dto';
@@ -10,47 +8,74 @@ import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 
 // to handle rate limiting
-import { Throttle, SkipThrottle } from '@nestjs/throttler'
-
+import { SkipThrottle } from '@nestjs/throttler'
 
 @ApiTags('projects')
-@Roles(Role.ADG)
+
 @UseGuards(RolesGuard)
+@SkipThrottle()
+@ApiBearerAuth()
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) { }
+  constructor(
+    private readonly projectsService: ProjectsService,
+  ) { }
   private readonly logger = new LoggerService(ProjectsController.name)
 
   @Post()
   @ApiOperation({ summary: 'create project' })
+  @ApiResponse({ status: 201, description: 'The projects has been successfully created.' })
+  @Roles(Role.ADG, Role.IT_SUPPORT)
   create(@Body() createProjectDto: Prisma.ProjectCreateInput) {
     return this.projectsService.create(createProjectDto);
   }
 
-  @SkipThrottle({ default: false })
+
   @Get()
   @ApiOperation({ summary: 'Find all projects ' })
+  @ApiResponse({
+    status: 200,
+    description: 'The projects has been successfully fetched.',
+  })
+  @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
   findAll(@Query() query: PaginationProjectQueryDto) {
     return this.projectsService.findAll(query);
   }
 
-  @Get(':id')
+  @Get(':project_id')
   @ApiOperation({ summary: 'find one project with its Id' })
-  findOne(@Param('id') id: string) {
-    return this.projectsService.findOne(id);
+  @ApiResponse({
+    status: 200,
+    description: 'The project has been successfully fetched.',
+  })
+  @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
+  findOne(@Param('project_id') project_id: string) {
+    return this.projectsService.findOne(project_id);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'update one project with its Id' })
-  update(@Param('id') id: string, @Body() updateProjectDto: Prisma.ProjectUpdateInput) {
-    return this.projectsService.update(id, updateProjectDto);
+  @Patch(':project_id')
+  @ApiOperation({ summary: 'update one project with its Project_id' })
+  @ApiResponse({
+    status: 200,  // returned as this resource is again used in front end
+    description: 'The project has been successfully updated.',
+  })
+  @Roles(Role.ADG, Role.IT_SUPPORT,)
+  @ApiOperation({ summary: 'update one project with its Project_id' })
+  update(@Param('project_id') project_id: string, @Body() updateProjectDto: Prisma.ProjectUpdateInput) {
+    return this.projectsService.update(project_id, updateProjectDto);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'delete one project with its Id' })
-  remove(@Param('id') id: string) {
-    return this.projectsService.remove(id);
+  @Delete(':project_id')
+  @ApiOperation({ summary: 'delete one project with its Project_id' })
+  @ApiResponse({
+    status: 204, // returned as this resource is no more used in front end
+    description: 'The project has been successfully deleted.',
+  })
+  @Roles(Role.ADG, Role.IT_SUPPORT,)
+  @ApiOperation({ summary: 'delete one project with its Project_id' })
+  remove(@Param('project_id') project_id: string) {
+    return this.projectsService.remove(project_id);
   }
 
-  // TODO: create endpoint to store inspection_data
+
 }

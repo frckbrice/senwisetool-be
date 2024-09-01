@@ -23,4 +23,7 @@ export class ProjectEntity implements Project {
     deleted_at: Date;
     slug: string;
     updated_at: Date;
+    city: string;
+    state: string;
+    deployed_at: Date;
 }

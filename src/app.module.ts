@@ -28,6 +28,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter'
 import { PrismaModule } from './adapters/config/prisma.module';
 import { AuthModule } from './global/auth/auth.module';
 import { ConfigModule } from "@nestjs/config";
+import { TrainingsModule } from './resouces/trainings/trainings.module';
 
 @Module({
   imports: [
@@ -57,7 +58,8 @@ import { ConfigModule } from "@nestjs/config";
     FarmsModule,
     MyLoggerModule,
     AuthModule,
-    ShareModule
+    ShareModule,
+    TrainingsModule
   ],
   controllers: [AppController],
   providers: [AppService, RequestService,

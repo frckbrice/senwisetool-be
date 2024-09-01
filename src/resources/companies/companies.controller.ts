@@ -2,21 +2,26 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } f
 import { ComapnyService } from './companies.service';
 
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Prisma, Role } from "@prisma/client";
+import { Prisma, Role, User } from "@prisma/client";
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { PaginationCompanyQueryDto } from './dto/paginate-company.dto';
+import { SkipThrottle } from '@nestjs/throttler';
+import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
 
 // @UseGuards(RolesGuard)
 @ApiTags('companies')
 @Controller('companies')
+@SkipThrottle()
 export class CompanyController {
   constructor(private readonly companyService: ComapnyService) { }
 
   @Post()
   @ApiOperation({ summary: 'create project data' })
-  create(@Body() createInspectionDatumDto: Prisma.CompanyCreateInput) {
-    return this.companyService.create(createInspectionDatumDto);
+  @Roles(Role.ADG, Role.IT_SUPPORT)
+  @UseGuards(RolesGuard)
+  create(@Body() createInspectionDatumDto: Prisma.CompanyCreateInput, @CurrentUser() user: Partial<User>) {
+    return this.companyService.create(createInspectionDatumDto, user);
   }
 
   @Roles(Role.ADG)

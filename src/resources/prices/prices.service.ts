@@ -4,7 +4,7 @@ import { UpdatePriceDto } from './dto/update-price.dto';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { LoggerService } from 'src/global/logger/logger.service';
-import { CurrentPlanIds } from 'src/global/plan-id/current-plan-ids';
+import { CurrentPlanIds } from 'src/global/utils/current-plan-ids';
 
 @Injectable()
 export class PricesService {

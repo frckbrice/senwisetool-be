@@ -81,6 +81,12 @@ enum PlanStatus {
   EXPIRED
 }
 
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+}
+
 
 model User {
   id           String    @id @default(cuid())
@@ -117,7 +123,7 @@ model Company {
 
   payment_mode String
   company_paypal_email String
-  paypal_id String @unique
+  paypal_id String ?
   sector_of_activity String 
   website  String ?
   address  String 
@@ -126,11 +132,13 @@ model Company {
   city  String
   description String
 
+// the case where the company account will be deactivate
+  status CompanyStatus ?
   users  User[]
   projects Project[]
   campaign Campaign[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   trainings Training[]
   subscription Subscription[]
   markets Market[]
@@ -147,15 +155,15 @@ model Project {
   description  String
   sector_activity String
   country  String
-  status ProjectStatus
+  status ProjectStatus @default(DRAFT)
   state String
   city String
   start_date  DateTime
   end_date  DateTime
-  project_structure Json?    @default("{}")  @db.JsonB
+  project_structure Json    @default("{}")  @db.JsonB
 
-  archived Boolean @default(false)
-  draft Boolean @default(false)
+  // archived Boolean @default(false) 
+  // draft Boolean @default(false)
   projectAudit Project_audit[]
   Company     Company @relation(fields: [company_id], references: [id])
   
@@ -164,6 +172,7 @@ model Project {
   deleted_at DateTime @updatedAt
   archived_at DateTime @updatedAt
   draft_at DateTime @updatedAt
+  deployed_at DateTime @updatedAt
 }
 
 model Campaign {
