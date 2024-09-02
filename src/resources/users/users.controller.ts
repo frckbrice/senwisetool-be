@@ -17,17 +17,11 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @Post()
-  // @Roles(Role.ADG, Role.PDG, Role.IT_SUPPORT)
-  // @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'create user' })
   @ApiBearerAuth()
   @ApiCreatedResponse({ description: 'The record has been successfully created.' })
   @ApiForbiddenResponse({ description: 'Forbidden.' })
-  create(@Body() createUserDto: {
-    user_id: string,
-    user_email: string,
-    first_name: string,
-  }) {
+  create(@Body() createUserDto: Partial<Prisma.UserCreateInput & { company_id: string }>) {
     return this.usersService.createUser(createUserDto);
   }
 
@@ -35,11 +29,11 @@ export class UsersController {
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'get all users' })
-  @UseInterceptors(UserInterceptor)
   @ApiResponse({
     description: "successfully fetch all users",
     status: 200,
   })
+  @UseInterceptors(UserInterceptor)
   findAll(@Query() query: PaginationQueryDto) {
     const queryParams = {
       limit: Number(query.perPage || 30), // current default for pagination on admin dashboard
@@ -52,9 +46,10 @@ export class UsersController {
   @Get(':id')
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
+  @UseInterceptors(UserInterceptor)
   @ApiOperation({ summary: 'get single user by id' })
-  findOne(@Param('id') id: string, @Body() body: any) {
-    return this.usersService.findOne(body.email);
+  findOne(@Param('id') id: string) {
+    return this.usersService.findOne(id);
   }
 
   @Patch(':id')
@@ -67,11 +62,19 @@ export class UsersController {
     return this.usersService.updateUser(id, updateUserDto);
   }
 
+  @Patch(':id/punish')
+  @Roles(Role.ADG, Role.IT_SUPPORT)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'delete by id' })
+  punishUser(@Param('id') id: string, @Query() query: { deactivate: "INACTIVE", ban: "BANNED" }) {
+    return this.usersService.punishUser(id, query);
+  }
+
   @Delete(':id')
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'delete by id' })
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  remove(@Param('id') id: string,) {
+    return this.usersService.removeUser(id);
   }
 }

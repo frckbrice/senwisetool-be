@@ -6,7 +6,6 @@ export class UserType implements User {
     email: string;
     @Exclude()
     password: string;
-    companyId?: string;
     company_id: string;
     created_at: Date;
     famer_attached_contract_url: string | null;

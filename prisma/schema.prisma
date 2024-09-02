@@ -81,6 +81,12 @@ enum PlanStatus {
   EXPIRED
 }
 
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+}
+
 
 model User {
   id           String    @id @default(cuid())
@@ -117,7 +123,7 @@ model Company {
 
   payment_mode String
   company_paypal_email String
-  paypal_id String @unique
+  paypal_id String ?
   sector_of_activity String 
   website  String ?
   address  String 
@@ -126,11 +132,13 @@ model Company {
   city  String
   description String
 
+// the case where the company account will be deactivate
+  status CompanyStatus ?
   users  User[]
   projects Project[]
   campaign Campaign[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   trainings Training[]
   subscription Subscription[]
   markets Market[]
@@ -147,15 +155,15 @@ model Project {
   description  String
   sector_activity String
   country  String
-  status ProjectStatus
+  status ProjectStatus @default(DRAFT)
   state String
   city String
   start_date  DateTime
   end_date  DateTime
-  project_structure Json?    @default("{}")  @db.JsonB
+  project_structure Json    @default("{}")  @db.JsonB
 
-  archived Boolean @default(false)
-  draft Boolean @default(false)
+  // archived Boolean @default(false) 
+  // draft Boolean @default(false)
   projectAudit Project_audit[]
   Company     Company @relation(fields: [company_id], references: [id])
   
@@ -164,6 +172,7 @@ model Project {
   deleted_at DateTime @updatedAt
   archived_at DateTime @updatedAt
   draft_at DateTime @updatedAt
+  deployed_at DateTime @updatedAt
 }
 
 model Campaign {
@@ -214,12 +223,14 @@ model Inspection_data {
   collected_at DateTime @default(now())
 }
 
-model Training_participant {
+model training_session {
   id String @id @default(cuid())
   first_name String
   last_name String
-  signature String
   email String
+  phone String
+  role String
+  signature String
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -229,19 +240,22 @@ model Training_participant {
 
 model Training {
   id String @id @default(cuid())
-  theme String
-  modules String
+  location String
+  training_picture_url String[]
+  title String
+  slug String
+  modules String[]
   start_date DateTime
   end_date DateTime
   company_id  String
-  training_picture_url String[]
-  training_attendance_sheet_url String
-  location String
+  report_url String
+  trainer_proof_of_competency String[]
+  training_attendance_sheet_url String[]
   company Company @relation(fields: [company_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  participants Training_participant[]
+  participants training_session[]
   training_audits Company_training_audit[]
 }
 

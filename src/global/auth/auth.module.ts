@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common'
 import { UsersModule } from 'src/resources/users/users.module'
 import { JwtModule } from '@nestjs/jwt'
-import { CurrentPlanIds } from '../plan-id/current-plan-ids'
+import { CurrentPlanIds } from '../utils/current-plan-ids'
+import { UsersService } from 'src/resources/users/users.service'
 
 @Module({
   imports: [
     UsersModule,
+
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRETE,
@@ -13,6 +15,6 @@ import { CurrentPlanIds } from '../plan-id/current-plan-ids'
     }),
   ],
 
-  providers: [CurrentPlanIds],
+  providers: [],
 })
 export class AuthModule { }

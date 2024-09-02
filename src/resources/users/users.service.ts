@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { CreateUserDto } from './dto/create-user.dto'
-import { Prisma, Role, UserStatus } from '@prisma/client'
+import { Prisma, Role, User, UserStatus } from '@prisma/client'
 import { PrismaService } from 'src/adapters/config/prisma.service'
 import { PaginationQueryDto } from './dto/pagination-query.dto'
 import { LoggerService } from 'src/global/logger/logger.service'
@@ -12,20 +12,36 @@ export class UsersService {
     private readonly prismaService: PrismaService,
 
   ) { }
-  async findOne(email: string) {
-    return this.prismaService.user.findFirstOrThrow({
-      where: {
-        email: email,
-      },
-    })
-  }
 
-  async findOneByID(id: string) {
-    return this.prismaService.user.findUnique({
-      where: {
-        id: id,
-      },
-    })
+  async findOne(id: string) {
+
+    try {
+      const where = {} as { id: string | undefined, email: string | undefined }
+      if (id.toString().includes("@")) {
+        where["email"] = id as string
+      }
+
+      else where["id"] = id as string
+
+
+      const user = await this.prismaService.user.findUnique({ where })
+
+      if (user)
+        return {
+          data: user,
+          status: 200,
+          message: `User fetched  successfully`
+        }
+      else
+        return {
+          data: null,
+          status: 500,
+          message: `Failed to fetch user`
+        }
+    } catch (error) {
+      this.logger.error(`Error fetching user  \n\n: ${error}`, UsersService.name);
+      throw new InternalServerErrorException("Failed to fetch user");
+    }
   }
 
   async findAll({ page, perPage, role }: Partial<PaginationQueryDto>) {
@@ -43,32 +59,48 @@ export class UsersService {
         query["take"] = perPage;
         query["skip"] = (page ?? 0) * (perPage - 1);
       }
-      query["orderBy"] = {
-        createdAt: "desc",
-      }
+      // query["orderBy"] = {
+      //   created_at: "desc",
+      // }
       const [total, users] = await this.prismaService.$transaction([
         this.prismaService.user.count({ where }),
         this.prismaService.user.findMany(query),
       ]);
+      if (users.length)
+        return {
+          status: 200,
+          message: "users fetched successfully",
+          data: users,
+          total,
+          page: page ?? 0,
+          perPage: perPage ?? 20,
+          totalPages: Math.ceil(total / (perPage ?? 20))
+        }
+      else
+        return {
+          status: 400,
+          message: "No users found",
+          data: [],
+          total,
+          page: page ?? 0,
+          perPage: perPage ?? 20,
+          totalPages: Math.ceil(total / (perPage ?? 20))
+        }
 
-      return {
-        total,
-        users,
-        page,
-        perPage,
-      }
 
     } catch (error) {
-      this.logger.error("Error fetching users", UsersService.name)
+      this.logger.error(`Error fetching users \n\n: ${error}`, UsersService.name)
       throw new NotFoundException("No users found")
     }
   }
 
   //TODO: use the right Type here insted of any
-  async createUser(data: {
-    user_id: string,
-    user_email: string,
+  async createUserFromCompany(data: {
+    id: string,
     first_name: string,
+    email: string;
+    role: string;
+    company_id?: string
   }) {
 
     try {
@@ -76,7 +108,44 @@ export class UsersService {
 
       const user = await this.prismaService.user.findUnique({
         where: {
-          id: data.user_id,
+          email: data.email as string,
+        }
+      })
+
+      if (user)
+        return;
+      else {
+        await this.prismaService.user.create({
+          data: {
+            id: data.id,
+            first_name: <string>data.first_name,
+            email: data.email,
+            role: <Role>data.role,
+            status: UserStatus.ACTIVE,
+            company_id: <string>data.company_id,
+            phone_number: null,
+            username: null,
+            famer_attached_contract_url: null,
+            last_name: null,
+            profileUrls: null,
+          },
+        })
+      }
+
+    } catch (error) {
+      this.logger.error(`error creating the user ${data.first_name} \n\n: ${error}`, UsersService.name)
+      throw new InternalServerErrorException("Failed to create user" + data.first_name)
+    }
+  }
+
+  async createUser(data: Partial<Prisma.UserCreateInput & { company_id: string }>) {
+
+    try {
+      // check first if the user already exist before creating newuser
+
+      const user = await this.prismaService.user.findUnique({
+        where: {
+          email: <string>data.email,
         }
       })
 
@@ -89,17 +158,17 @@ export class UsersService {
       else {
         const newUSer = await this.prismaService.user.create({
           data: {
-            id: data.user_id,
-            first_name: data.first_name,
-            email: data.user_email,
-            role: Role.EMPLOYEE,
-            company_id: "",
-            phone_number: null,
-            username: null,
+            id: data.id,
+            first_name: <string>data.first_name,
+            email: data.email,
+            role: data.role,
+            company_id: <string>data.company_id,
             status: UserStatus.ACTIVE,
-            famer_attached_contract_url: null,
-            last_name: null,
-            profileUrls: null,
+            phone_number: data.phone_number ?? null,
+            username: data.username ?? null,
+            famer_attached_contract_url: data.famer_attached_contract_url ?? null,
+            last_name: data.last_name ?? null,
+            profileUrls: data.profileUrls ?? null,
           },
         })
 
@@ -120,34 +189,100 @@ export class UsersService {
       }
 
     } catch (error) {
-      this.logger.error(`error creating the user: ${error}`, UsersService.name)
-      throw new InternalServerErrorException("Failed to create user")
+      this.logger.error(`error creating the user ${data.first_name} \n\n: ${error}`, UsersService.name)
+      throw new InternalServerErrorException("Failed to create user" + data.first_name)
     }
   }
 
   async updateUser(id: string, update: Partial<CreateUserDto>) {
-    return this.prismaService.user.update({
-      where: {
-        id: id,
-      },
-      data: {
-        ...update,
-      },
-    }).catch((error) => {
-      this.logger.error("Error updating user", UsersService.name)
-      throw error
-    })
+    try {
+      const user = await this.prismaService.user.update({
+        where: {
+          id: id,
+        },
+        data: {
+          ...update,
+        },
+      }).catch((error) => {
+        this.logger.error(`Error updating user  \n\n: ${error}`, UsersService.name)
+        throw new InternalServerErrorException("Failed to update user")
+      })
+
+      if (user)
+        return {
+          data: user,
+          status: 204,
+          message: `User updated successfully`
+        }
+      else
+        return {
+          data: null,
+          status: 500,
+          message: `Failed to update user`
+        }
+    } catch (error) {
+      this.logger.error(`Error updating user  \n\n: ${error}`, UsersService.name);
+      throw new InternalServerErrorException("Failed to update user");
+    }
   }
 
   async updatedRole(id: string, role: Role) {
     return this.updateUser(id, { role })
   }
 
-  async remove(id: string) {
-    return this.prismaService.user.delete({
-      where: {
-        id: id,
-      },
-    });
+  async punishUser(id: string, query: { deactivate: "INACTIVE", ban: "BANNED" }) {
+    try {
+      const deletedUser = await this.prismaService.user.update({
+        where: {
+          id: id,
+        },
+        data: {
+          status: query.deactivate ? UserStatus.INACTIVE : query.ban ? UserStatus.BANNED : UserStatus.ACTIVE,
+        }
+      });
+
+      if (deletedUser)
+        return {
+          data: deletedUser,
+          status: 204,
+          message: `User ${query.deactivate ? "deactivated" : query.ban ? "banned" : "reactivated"} successfully`
+        }
+      else
+        return {
+          data: null,
+          status: 500,
+          message: `Failed to delete user`
+        }
+    } catch (error) {
+      this.logger.error(`Error  ${query.deactivate ? "deactivated" : query.ban ? "banned" : "reactivated"}  user  \n\n: ${error}`, UsersService.name)
+      throw new InternalServerErrorException(`Failed to  ${query.deactivate ? "deactivated" : query.ban ? "banned" : "reactivated"}  user`)
+    }
+  }
+
+  async removeUser(id: string,) {
+    try {
+      const deletedUser = await this.prismaService.user.delete({
+        where: {
+          id: id,
+        },
+
+      });
+
+      if (deletedUser)
+        return {
+          data: deletedUser,
+          status: 204,
+          message: `User deleted successfully`
+        }
+      else
+        return {
+          data: null,
+          status: 500,
+          message: `Failed to delete user`
+        }
+    } catch (error) {
+      this.logger.error(`Error removing user  \n\n: ${error}`, UsersService.name)
+      throw new InternalServerErrorException("Failed to removing user")
+    }
   }
 }
