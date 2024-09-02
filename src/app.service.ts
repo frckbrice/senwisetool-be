@@ -8,8 +8,8 @@ export class AppService {
 
   }
   getHello(): string {
-    const userId = this.requestService.getUserId();
-    this.logger.log(`Hello this is the userId ${userId}`);
-    return 'Hello World!';
+    // const userId = this.requestService.getUserId();
+    // this.logger.log(`Hello this is the userId ${userId}`);
+    return 'Welcome To SenWiseTool Server web app!';
   }
 }
