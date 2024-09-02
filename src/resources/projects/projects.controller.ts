@@ -2,13 +2,14 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } f
 import { ProjectsService } from './projects.service';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { LoggerService } from 'src/global/logger/logger.service';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role, User } from '@prisma/client';
 import { PaginationProjectQueryDto } from './dto/paginate-project.dto';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 
 // to handle rate limiting
 import { SkipThrottle } from '@nestjs/throttler'
+import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
 
 @ApiTags('projects')
 
@@ -26,8 +27,8 @@ export class ProjectsController {
   @ApiOperation({ summary: 'create project' })
   @ApiResponse({ status: 201, description: 'The projects has been successfully created.' })
   @Roles(Role.ADG, Role.IT_SUPPORT)
-  create(@Body() createProjectDto: Prisma.ProjectCreateInput) {
-    return this.projectsService.create(createProjectDto);
+  create(@Body() createProjectDto: Prisma.ProjectCreateInput, @CurrentUser() user: Partial<User>) {
+    return this.projectsService.create({ createProjectDto, user_id: <string>user.id });
   }
 
 
@@ -61,8 +62,8 @@ export class ProjectsController {
   })
   @Roles(Role.ADG, Role.IT_SUPPORT,)
   @ApiOperation({ summary: 'update one project with its Project_id' })
-  update(@Param('project_id') project_id: string, @Body() updateProjectDto: Prisma.ProjectUpdateInput) {
-    return this.projectsService.update(project_id, updateProjectDto);
+  update(@Param('project_id') project_id: string, @Body() updateProjectDto: Prisma.ProjectUpdateInput, @CurrentUser() user: Partial<User>) {
+    return this.projectsService.update({ id: project_id, updateProjectDto, user_id: <string>user.id });
   }
 
   @Delete(':project_id')

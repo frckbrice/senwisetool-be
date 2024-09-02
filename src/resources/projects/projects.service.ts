@@ -16,7 +16,7 @@ export class ProjectsService {
   ) { }
 
   @UseGuards(RolesGuard)
-  async create(createProjectDto: Prisma.ProjectCreateInput) {
+  async create({ createProjectDto, user_id }: { createProjectDto: Prisma.ProjectCreateInput, user_id: string }) {
 
     // avoid creating the same project twice
 
@@ -42,12 +42,26 @@ export class ProjectsService {
       }
 
     try {
-      const result = await this.prismaService.project.create({
-        data: {
-          ...createProjectDto,
-          slug: this.slugify.slugify(createProjectDto.title),
-        },
-      });
+      const result = await this.prismaService.$transaction(async (tx) => {
+        const result = await tx.project.create({
+          data: {
+            ...createProjectDto,
+            slug: this.slugify.slugify(createProjectDto.title),
+          },
+        });
+
+        // set the project audit to know who is in charge of the project
+        await tx.project_audit.create({
+          data: {
+            project_id: result.id,
+            user_id: user_id,
+            type_of_project: result.type,
+          }
+        })
+
+        return result;
+      })
+
 
       if (result)
         return {
@@ -155,15 +169,43 @@ export class ProjectsService {
 
   }
 
-  async update(id: string, updateProjectDto: Prisma.ProjectUpdateInput) {
+  async update({ id, user_id, updateProjectDto }: { id: string, user_id: string, updateProjectDto: Prisma.ProjectUpdateInput }) {
 
     try {
-      const result = await this.prismaService.project.update({
-        data: updateProjectDto,
-        where: {
-          id
+      const result = await this.prismaService.$transaction(async (tx) => {
+        const result = await this.prismaService.project.update({
+          data: updateProjectDto,
+          where: {
+            id
+          }
+        });
+
+        // set who updated the project
+        const audit = await tx.project_audit.findFirst({
+          where: {
+            AND: [
+              { project_id: result.id },
+              { user_id: user_id }
+            ]
+          }
+        });
+
+        // set the update date.
+        if (audit) {
+          await tx.project_audit.update({
+            where: {
+              id: audit.id,
+              user_id: user_id
+            },
+            data: {
+              type_of_project: result.type
+            }
+          })
         }
-      });
+
+        return result;
+      })
+
 
       if (result)
         return {

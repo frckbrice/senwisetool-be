@@ -223,12 +223,14 @@ model Inspection_data {
   collected_at DateTime @default(now())
 }
 
-model Training_participant {
+model training_session {
   id String @id @default(cuid())
   first_name String
   last_name String
-  signature String
   email String
+  phone String
+  role String
+  signature String
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -238,19 +240,22 @@ model Training_participant {
 
 model Training {
   id String @id @default(cuid())
-  theme String
-  modules String
+  location String
+  training_picture_url String[]
+  title String
+  slug String
+  modules String[]
   start_date DateTime
   end_date DateTime
   company_id  String
-  training_picture_url String[]
-  training_attendance_sheet_url String
-  location String
+  report_url String
+  trainer_proof_of_competency String[]
+  training_attendance_sheet_url String[]
   company Company @relation(fields: [company_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  participants Training_participant[]
+  participants training_session[]
   training_audits Company_training_audit[]
 }
 
