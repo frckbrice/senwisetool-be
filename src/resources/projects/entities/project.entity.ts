@@ -16,7 +16,8 @@ export class ProjectEntity implements Project {
     project_structure: Prisma.JsonValue;
     archived: boolean;
     draft: boolean;
-
+    state: string;
+    city: string;
     archived_at: Date;
     draft_at: Date;
     created_at: Date;
