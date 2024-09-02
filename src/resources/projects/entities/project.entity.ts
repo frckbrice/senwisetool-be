@@ -1,6 +1,5 @@
 
 import { $Enums, Prisma, Project } from "@prisma/client";
-import { JsonValue } from "@prisma/client/runtime/library";
 
 export class ProjectEntity implements Project {
     id: string;
@@ -24,7 +23,5 @@ export class ProjectEntity implements Project {
     deleted_at: Date;
     slug: string;
     updated_at: Date;
-    city: string;
-    state: string;
     deployed_at: Date;
 }
