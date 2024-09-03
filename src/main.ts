@@ -5,13 +5,13 @@ import { AllExceptionsFilter } from './global/filter/http-exception.filter';
 import "reflect-metadata"; // is used to allow the usage of class transformers to be applied to remove password.
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { cors: true });
   // call the http adapter here
   const { httpAdapter } = app.get(HttpAdapterHost);
   // apply global filters for not handled exceptions 
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
 
-  app.enableCors();
+  // app.enableCors();
   // app.useGlobalGuards(new AuthGuard());
   app.setGlobalPrefix("v1");
   const config = new DocumentBuilder()
