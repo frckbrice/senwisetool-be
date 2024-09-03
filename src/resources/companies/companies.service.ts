@@ -6,6 +6,7 @@ import { LoggerService } from 'src/global/logger/logger.service';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { UsersService } from '../users/users.service';
 import { Slugify } from 'src/global/utils/slugilfy';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ComapnyService {
@@ -14,7 +15,8 @@ export class ComapnyService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly userService: UsersService,
-    private slugifyService: Slugify
+    private slugifyService: Slugify,
+    private eventEmitter: EventEmitter2
   ) { }
 
 
@@ -50,6 +52,9 @@ export class ComapnyService {
           role: <string>user.role,
           company_id: <string>result.id,
         })
+        this.logger.log(`start emitting company.created`, ComapnyService.name);
+        // send message for company created in senwisetool system
+        this.eventEmitter.emit('company.created', result)
 
         return result;
       })

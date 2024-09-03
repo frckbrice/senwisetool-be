@@ -30,16 +30,17 @@ export class AuthMiddleware implements NestMiddleware {
 
         // allow some routes to be public
         if (this.allowRoutes.includes(req.originalUrl)) {
-            this.logger.log('Allowing public access to route', AuthMiddleware.name)
+            this.logger.log('Allowing public  access to route ', AuthMiddleware.name)
             return next()
         }
-        this.logger.log('Not allowing public access. start authentication', AuthMiddleware.name);
+        this.logger.log('Not allowing public access, start authentication ', AuthMiddleware.name);
 
 
-        // console.log("token: ", token)
         try {
-            //handle the authentication
+            //handle the authentication 
             const token = this.extractTokenFromHeader(req)
+
+
             if (!token) {
                 throw new UnauthorizedException("user not authenticated")
             }
@@ -59,23 +60,23 @@ export class AuthMiddleware implements NestMiddleware {
             this.requestService.setUserId(payload.sub);
             next()
         } catch (error) {
-            console.error("Error ", error)
-            this.logger.error('Authenticification failed', AuthMiddleware.name)
+            this.logger.error(`Authenticification failed \n\n${error}`, AuthMiddleware.name)
             throw new UnauthorizedException('user not authenticated')
         }
 
     }
 
     /**
-     * Extracts the token from the request header.
-     *
+     * Extracts the token fro the request header.
+     * 
      * @param {Request} request - the request object
-     * @return {string | undefined} the extracted token or undefined
+     * @return {string | undefined} the xtracted token  or undefined
      */
     private extractTokenFromHeader(request: Request): string | undefined {
         // console.log(" the request headers auth: ", request.headers.authorization);
         // console.log("the request body: ", request.body);
         const [type, token] = request.headers.authorization?.split(' ') ?? []
+
         return type === 'Bearer' ? token : undefined
     }
 }

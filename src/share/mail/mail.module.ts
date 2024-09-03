@@ -8,7 +8,9 @@ import * as path from 'path'
     MailerModule.forRoot({
       transport: {
         host: process.env.SENWISETOOL_HOST,
-        secure: false,
+        service: process.env.SENWISETOOL_SERVICE_PROVIDER,
+        port: 465,
+        secure: true,
         auth: {
           user: process.env.SENWISETOOL_TRANSPORT_USER,
           pass: process.env.SENWISETOOL_TRANSPORT_PASSWORD,

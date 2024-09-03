@@ -10,4 +10,6 @@ export const localEvents = {
 
   nearExpiration: `subscription.nearExpiration`,
   subscriptionExpired: `subscription.expired`,
+
+  companyCreated: 'company.created',
 }

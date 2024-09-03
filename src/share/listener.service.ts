@@ -4,13 +4,19 @@ import { localEvents } from './events'
 // import { MailService } from 'src/mail/mail.service'
 import { PrismaService } from 'src/adapters/config/prisma.service'
 import { MailerService } from '@nestjs-modules/mailer'
+import { CompanyType } from 'src/resources/companies/entities/company.entity'
+import { LoggerService } from 'src/global/logger/logger.service'
+import { MailServiceEvent } from './mail/mail.service'
 
 @Injectable()
 export class ListenerService {
   counter: number = 1
-  private logger = new Logger(ListenerService.name)
-
-  constructor(private readonly mailerService: MailerService, private prismaService: PrismaService,) { }
+  private logger = new LoggerService(ListenerService.name)
+  constructor(
+    private readonly mailerService: MailerService,
+    private prismaService: PrismaService,
+    private sendMailService: MailServiceEvent
+  ) { }
 
 
 
@@ -47,5 +53,26 @@ export class ListenerService {
 
     // TODO: send email to Customer company
     this.logger.log('handleupgradePaymentLogic', JSON.stringify(payload));
+  }
+
+  // company created
+  @OnEvent(localEvents.companyCreated)
+  async handleCompanyCreated(payload: CompanyType) {
+    const res = await this.sendMailService.senMail({
+      toEmail: payload.email,
+      subject: `${payload.name} COMPANY CREATED IN SENWISETOOL PLATEFORM✔`,
+      text: 'Thanks for joining us. We are glad you are member of senwisetool plateform. You can now enjoy all the features of our platform.',
+    });
+    if (res.endWith("gsmtp")) {
+      // TODO: send email to Customer company
+      this.logger.log('Company created \n\n ' + JSON.stringify(payload), ListenerService.name);
+    }
+    else {
+      while (this.counter < 4) {
+        this.handleCompanyCreated(payload)
+        this.counter++;
+      }
+    }
+    this.counter = 1;
   }
 }
