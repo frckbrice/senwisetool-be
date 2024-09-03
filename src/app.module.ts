@@ -31,6 +31,7 @@ import { ConfigModule } from "@nestjs/config";
 import { TrainingsModule } from './resources/trainings/trainings.module';
 import { HealthModule } from './resources/health/health.module';
 import { TrainingSessionModule } from './resources/training_session/training_session.module';
+import { MailModule } from './share/mail/mail.module';
 
 @Module({
   imports: [
@@ -63,7 +64,8 @@ import { TrainingSessionModule } from './resources/training_session/training_ses
     ShareModule,
     TrainingsModule,
     HealthModule,
-    TrainingSessionModule
+    TrainingSessionModule,
+    MailModule
   ],
   controllers: [AppController],
   providers: [AppService, RequestService,
