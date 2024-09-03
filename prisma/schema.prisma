@@ -230,8 +230,12 @@ model training_session {
   email String
   phone String
   role String
-  signature String
 
+  signature String
+  report_url String
+  trainer_proof_of_competency String[]
+  training_picture_url String[]
+  training_attendance_sheet_urls String[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   training_id String
@@ -241,21 +245,20 @@ model training_session {
 model Training {
   id String @id @default(cuid())
   location String
-  training_picture_url String[]
+ 
   title String
   slug String
   modules String[]
   start_date DateTime
+
   end_date DateTime
   company_id  String
-  report_url String
-  trainer_proof_of_competency String[]
-  training_attendance_sheet_url String[]
+ 
   company Company @relation(fields: [company_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  participants training_session[]
+  training_session training_session[]
   training_audits Company_training_audit[]
 }
 

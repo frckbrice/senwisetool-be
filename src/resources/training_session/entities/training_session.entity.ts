@@ -11,4 +11,8 @@ export class TrainingSession implements training_session {
     signature: string;
     training_id: string;
     updated_at: Date;
+    report_url: string;
+    trainer_proof_of_competency: string[];
+    training_attendance_sheet_urls: string[];
+    training_picture_url: string[];
 }
