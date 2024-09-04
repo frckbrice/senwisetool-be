@@ -1,5 +1,5 @@
 
-import { Injectable, InternalServerErrorException, NotFoundException, NotImplementedException } from '@nestjs/common';
+import { HttpException, Injectable, InternalServerErrorException, NotFoundException, NotImplementedException } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -21,12 +21,12 @@ export class SubscriptionsService {
     private currentplanIds: CurrentPlanIds
   ) { }
 
-
+  // this operation is done in the client by the paypal SDK.
   async subscribeToPlanService(createSubscriptionDto: CreateSubscriptionDto) {
     this.logger.log(`launched subscription to plan id: ${createSubscriptionDto.plan_id}`);
 
     // validate plan id
-    if (!this.currentplanIds.PLAN_ID.includes(createSubscriptionDto.plan_id)) {
+    if (!this.currentplanIds.PLAN_ID.some((value) => value.id === createSubscriptionDto.plan_id)) {
       throw new Error(`plan id ${createSubscriptionDto.plan_id} not found`)
     }
 
@@ -56,22 +56,42 @@ export class SubscriptionsService {
   // get subcription details
   async getSubscriptionDetails(subscription_id: string, company_id: string) {
 
-    const result = await this.payalService.getSubscriptionDetails(subscription_id);
-    if (result) {
-      console.log("subscription details fetched", result);
-      // this.storeSubscriptionDetails(result, company_id);
-      return {
-        data: result,
-        status: 201,
-        message: `Subscription details successfully fetched`
+    try {
+      const result = await this.payalService.getSubscriptionDetails(subscription_id);
+      if (result) {
+        this.logger.log(`subscription details fetched \n\n result: ${JSON.stringify(result)}`, SubscriptionsService.name);
+
+        // store subscription details to DB.
+        const storeSubs = await this.storeSubscriptionDetails(result, company_id);
+        if (storeSubs && storeSubs.data?.id)
+          this.logger.log(`subscription details stored to DB successfully`, SubscriptionsService.name);
+        else
+          throw new HttpException("Failed to store subscription details to database", 500);
+        // get the plan name:
+
+        // TODO: write listener fot this event to send message to user for confirmation
+        this.eventEmitter.emit(localEvents.paymentSuccess, {
+          start_time: result?.start_time,
+          subscription_id: result?.id,
+          subscriber_name: result?.subscriber.name.given_name + " " + result?.subscriber.name.surname,
+        });
+
+        return {
+          data: result,
+          status: 200,
+          message: `Subscription details successfully fetched`
+        }
       }
+      else
+        return {
+          data: null,
+          status: 400,
+          message: `Failed to fetch subscription details`
+        }
+    } catch (error) {
+      this.logger.error(`Error while fetching subscription details \n\n ${error}`, SubscribeToPayPalService.name);
+      throw new NotImplementedException(`Error while fetching subscription details `);
     }
-    else
-      return {
-        data: null,
-        status: 400,
-        message: `Failed to fetch subscription details`
-      }
   }
 
 
@@ -88,7 +108,7 @@ export class SubscriptionsService {
   async upgradeSubscriptionPlan(id: string, updateSubscriptionDto: UpdateSubscriptionDto) {
 
     // validate plan id
-    if (!this.currentplanIds.PLAN_ID.includes(updateSubscriptionDto.plan_id)) {
+    if (!this.currentplanIds.PLAN_ID.some((value) => value.id === updateSubscriptionDto.plan_id)) {
       throw new Error(`plan id ${updateSubscriptionDto.plan_id} not found`)
     }
 
@@ -127,9 +147,6 @@ export class SubscriptionsService {
   async successPayPalPayment(subscription_id: string, company_id: string) {
     this.logger.log('paypal payment successfull', SubscriptionsService.name);
 
-    // TODO: write listener fot this event to send message to user for cnfirmation
-    // this.eventEmitter.emit(localEvents.paymentSuccess, subscriptionPayload);
-
     //  on successful payment, change the status of subscription to active
     await this.getSubscriptionDetails(subscription_id, company_id);
   }
@@ -148,7 +165,8 @@ export class SubscriptionsService {
           status: true,
           company: {
             select: {
-              paypal_id: true
+              paypal_id: true,
+              status: true,
             }
           }
         }
@@ -184,7 +202,7 @@ export class SubscriptionsService {
             status: 'CANCELLED'
           }
         });
-        // TODO: write listener fot this event to send message to user for cnfirmation
+        // TODO: write listener for this event to send message to user for cnfirmation
         this.eventEmitter.emit(localEvents.unsubscribeToPlan, { subscription_id, company_id });
         return {
           data,
@@ -215,7 +233,7 @@ export class SubscriptionsService {
 
     try {
       // TODO:: if data, persists them in database subscription model
-      return await this.prismaService.$transaction(async (tx) => {
+      const data = await this.prismaService.$transaction(async (tx) => {
         //  create a subscription
         const subscription = await tx.subscription.create({
           data: {
@@ -226,6 +244,7 @@ export class SubscriptionsService {
             end_date: subscriptionDetails.end_date,
             created_at: subscriptionDetails.status_update_time,
             company_id: company_id,
+
             // TODO: update this billing cycle with correct dynamic value: consider using prisma value and paypal incoming value. also above
             payment_mode: subscriptionDetails.billing_info.payment_method === 'paypal' ? 'PAYPAL' : 'PAYPAL',
           }
@@ -244,13 +263,27 @@ export class SubscriptionsService {
           }
         })
         // TODO: handle the sending message logig for the below event...
-        this.eventEmitter.emit(localEvents.paymentSuccess, subscriptionDetails);
+        this.eventEmitter.emit(localEvents.paymentSuccess, subscription);
+
         return subscription;
-      })
+      });
+
+      if (data)
+        return {
+          status: 201,
+          message: `Subscription created successfully`,
+          data: data
+        };
+      else
+        return {
+          status: 500,
+          message: `Failed to create subscription`,
+          data: null
+        }
 
     } catch (error) {
-      console.error(error);
-      this.logger.error(`failed to unsubscribe company ${company_id}`, SubscriptionsService.name,);
+
+      this.logger.error(`failed to unsubscribe company ${company_id} \n\n ${error}`, SubscriptionsService.name,);
       throw new InternalServerErrorException(`failed to unsubscribe company ${company_id}`);
     }
 

@@ -1,8 +1,9 @@
 // import { HttpService } from "@nestjs/axios";
-import { Injectable } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, NotImplementedException } from "@nestjs/common";
 import { AxiosResponse } from "axios";
 import { filter, Observable } from "rxjs";
 import { FetchService } from 'nestjs-fetch';
+import { LoggerService } from "src/global/logger/logger.service";
 
 
 // create a subscription in paypal
@@ -11,8 +12,8 @@ export class SubscribeToPayPalService {
     base = "https://api-m.sandbox.paypal.com";
     CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
     CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET;
-    ClIENT_PUBLIC_URL = process.env.ClIENT_PUBLIC_URL;
-
+    LOCAL_API_URL = process.env.NEXT_PUBLIC_LOCAL_API_URL;
+    private logger = new LoggerService(SubscribeToPayPalService.name);
     constructor(private readonly fetch: FetchService) { }
 
     // set basic auth ID
@@ -29,8 +30,8 @@ export class SubscribeToPayPalService {
                     "payer_selected": "PAYPAL",
                     "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
                 },
-                "return_url": `${this.ClIENT_PUBLIC_URL}/v1/subscription/successPayPalPayment`,
-                "cancel_url": `${this.ClIENT_PUBLIC_URL}/v1/subscription/cancelPayPalPayment`,
+                "return_url": `${this.LOCAL_API_URL}/subscription/successPayPalPayment`,
+                "cancel_url": `${this.LOCAL_API_URL}/subscription/cancelPayPalPayment`,
             }
         };
 
@@ -51,21 +52,26 @@ export class SubscribeToPayPalService {
 
             return await subscriptSession.json();
         } catch (error) {
-            console.log("error", error);
-            throw new Error(error);
+            this.logger.log(`Error while creating subscription \n\n ${error}`, SubscribeToPayPalService.name);
+            throw new InternalServerErrorException(`Error while creating subscription `);
         }
 
     }
 
     // get subscription details
     async getSubscriptionDetails(subscriptionId: string) {
-        const subcriptDetails = this.fetch.get('/v1/billing/subscriptions/' + subscriptionId, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic ' + this.auth
-            }
-        });
-        return await (await subcriptDetails).json();
+        try {
+            const subcriptDetails = this.fetch.get(`/v1/billing/subscriptions/${subscriptionId}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + this.auth
+                }
+            });
+            return await (await subcriptDetails).json();
+        } catch (error) {
+            this.logger.error(`Error while fetching subscription details \n\n ${error}`, SubscribeToPayPalService.name);
+            throw new NotImplementedException(`Error while fetching subscription details `);
+        }
     }
 
     // unsubscribe to a plan
@@ -88,8 +94,8 @@ export class SubscribeToPayPalService {
 
             return await (await unsubResponse).json();
         } catch (error) {
-            console.error(`Error while cancelling subscription ${error}`, SubscribeToPayPalService.name);
-            throw new Error(error);
+            this.logger.error(`Error while cancelling subscription \n\n ${error}`, SubscribeToPayPalService.name);
+            throw new NotImplementedException(`Error while cancelling subscription `);
         }
     }
 
@@ -106,8 +112,8 @@ export class SubscribeToPayPalService {
 
             return await upgradeSubscriptionPlan.json();
         } catch (error) {
-            console.error(`Error while upgrading subscription ${error}`, SubscribeToPayPalService.name);
-            throw new Error(error);
+            this.logger.error(`Error while upgrading subscription \n\n ${error}`, SubscribeToPayPalService.name);
+            throw new NotImplementedException(` Error while upgrading subscription `);
         }
     }
 }

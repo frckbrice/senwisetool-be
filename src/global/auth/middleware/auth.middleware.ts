@@ -1,12 +1,11 @@
 
 import { RequestService } from "src/global/current-logged-in/request.service";
 
-import { Injectable, NestMiddleware, UnauthorizedException, Logger } from '@nestjs/common'
+import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common'
 import { NextFunction, Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaClient, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { LoggerService } from "src/global/logger/logger.service";
-import { UsersService } from "src/resources/users/users.service";
 import { PrismaService } from "src/adapters/config/prisma.service";
 
 @Injectable()
@@ -14,7 +13,7 @@ export class AuthMiddleware implements NestMiddleware {
     private allowRoutes = [
         "/v1",
         "/v1/health",
-        '/v1/subscriptions/?=subscription_id',
+        '/v1/subscriptions/successPayPalPayment/?subscription_id',
     ]
 
     constructor(
@@ -30,16 +29,17 @@ export class AuthMiddleware implements NestMiddleware {
 
         // allow some routes to be public
         if (this.allowRoutes.includes(req.originalUrl)) {
-            this.logger.log('Allowing public access to route', AuthMiddleware.name)
+            this.logger.log('Allowing public  access to route ', AuthMiddleware.name)
             return next()
         }
-        this.logger.log('Not allowing public access. start authentication', AuthMiddleware.name);
+        this.logger.log('Not allowing public access, start authentication ', AuthMiddleware.name);
 
 
-        // console.log("token: ", token)
         try {
-            //handle the authentication
+            //handle the authentication 
             const token = this.extractTokenFromHeader(req)
+
+
             if (!token) {
                 throw new UnauthorizedException("user not authenticated")
             }
@@ -52,30 +52,31 @@ export class AuthMiddleware implements NestMiddleware {
                 id: payload.sub,
                 email: payload.user_email,
                 first_name: payload.user_first_name,
-                role: existingUser ? existingUser.role : "ADG"
+                role: existingUser ? existingUser.role : "ADG",
+                company_id: payload.company_id ?? "",
             };
 
             req['user'] = user;
             this.requestService.setUserId(payload.sub);
             next()
         } catch (error) {
-            console.error("Error ", error)
-            this.logger.error('Authenticification failed', AuthMiddleware.name)
+            this.logger.error(`Authenticification failed \n\n${error}`, AuthMiddleware.name)
             throw new UnauthorizedException('user not authenticated')
         }
 
     }
 
     /**
-     * Extracts the token from the request header.
-     *
+     * Extracts the token fro the request header.
+     * 
      * @param {Request} request - the request object
-     * @return {string | undefined} the extracted token or undefined
+     * @return {string | undefined} the xtracted token  or undefined
      */
     private extractTokenFromHeader(request: Request): string | undefined {
         // console.log(" the request headers auth: ", request.headers.authorization);
         // console.log("the request body: ", request.body);
         const [type, token] = request.headers.authorization?.split(' ') ?? []
+
         return type === 'Bearer' ? token : undefined
     }
 }

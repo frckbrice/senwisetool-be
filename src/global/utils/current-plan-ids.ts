@@ -10,12 +10,14 @@ export class CurrentPlanIds {
 
     // TODO: update this later to respect good OOP principles.
     // this is just for the sake of demo.
-    PLAN_ID = [
-        this.PAYPAL_BRONZE_PLAN_ID,
-        this.PAYPAL_SILVER_PLAN_ID,
-        this.PAYPAL_GOLD_PLAN_ID,
-        "bronze",
-        "silver",
-        "gold",
-    ];
+    PLAN_ID = [{
+        name: "bronze",
+        id: this.PAYPAL_BRONZE_PLAN_ID,
+    }, {
+        name: "silver",
+        id: this.PAYPAL_SILVER_PLAN_ID,
+    }, {
+        name: "gold",
+        id: this.PAYPAL_GOLD_PLAN_ID
+    }]
 }
