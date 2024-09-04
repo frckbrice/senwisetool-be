@@ -19,7 +19,7 @@ export class PricesService {
   async create(createPriceDto: Prisma.Price_planCreateInput) {
 
     // validate plan id
-    if (!this.currenPlanIds.PLAN_ID.includes(createPriceDto.id)) {
+    if (!this.currenPlanIds.PLAN_ID.some(value => value.id === createPriceDto.id)) {
       throw new Error(`plan id ${createPriceDto.id} not found`)
     }
 
@@ -73,8 +73,8 @@ export class PricesService {
 
   async findOne(plan_name: string) {
     // validate plan id
-    if (!this.currenPlanIds.PLAN_ID.includes(plan_name)) {
-      throw new Error(`plan id ${plan_name} not found`)
+    if (!this.currenPlanIds.PLAN_ID.some(value => value.name === plan_name)) {
+      throw new Error(`plan  ${plan_name} not found`)
     }
 
     try {

@@ -17,7 +17,7 @@ export class PricesController {
   @ApiOperation({ summary: 'Create price plan' })
   @ApiResponse({ status: 201, type: CreatePriceDto, description: 'Created price plan' })
   async create(@Body() createPriceDto: Prisma.Price_planCreateInput) {
-    console.log("\n\ncreate plan request")
+
     return await this.pricesService.create(createPriceDto);
   }
 
@@ -30,6 +30,7 @@ export class PricesController {
   @ApiOperation({ summary: 'Create price plan' })
   @ApiResponse({ status: 200, type: CreatePriceDto, schema: Prisma.Price_planScalarFieldEnum, content: {}, description: 'successfully fetch a plan' })
   async findOne(@Param('plan_name') plan_name: string) {
+    console.log("findOne: ", plan_name)
     return await this.pricesService.findOne(plan_name);
   }
 

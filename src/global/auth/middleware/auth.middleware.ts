@@ -1,12 +1,11 @@
 
 import { RequestService } from "src/global/current-logged-in/request.service";
 
-import { Injectable, NestMiddleware, UnauthorizedException, Logger } from '@nestjs/common'
+import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common'
 import { NextFunction, Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaClient, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { LoggerService } from "src/global/logger/logger.service";
-import { UsersService } from "src/resources/users/users.service";
 import { PrismaService } from "src/adapters/config/prisma.service";
 
 @Injectable()
@@ -14,7 +13,7 @@ export class AuthMiddleware implements NestMiddleware {
     private allowRoutes = [
         "/v1",
         "/v1/health",
-        '/v1/subscriptions/?=subscription_id',
+        '/v1/subscriptions/successPayPalPayment/?subscription_id',
     ]
 
     constructor(
@@ -53,7 +52,8 @@ export class AuthMiddleware implements NestMiddleware {
                 id: payload.sub,
                 email: payload.user_email,
                 first_name: payload.user_first_name,
-                role: existingUser ? existingUser.role : "ADG"
+                role: existingUser ? existingUser.role : "ADG",
+                company_id: payload.company_id ?? "",
             };
 
             req['user'] = user;
