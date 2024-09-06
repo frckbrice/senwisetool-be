@@ -8,7 +8,9 @@ import { Prisma, Role } from '@prisma/client';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
-import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { days, SkipThrottle, Throttle } from '@nestjs/throttler';
+import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
+import { UserType } from './entities/user.entity';
 
 @ApiTags('users') // enable api docs
 @Controller('users')
@@ -43,13 +45,13 @@ export class UsersController {
     return this.usersService.findAll({ ...queryParams });
   }
 
-  @Get(':id')
+  @Get('current')
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
   @UseInterceptors(UserInterceptor)
   @ApiOperation({ summary: 'get single user by id' })
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  findOne(@CurrentUser() user: Partial<UserType>) {
+    return this.usersService.findOne(<string>user?.email);
   }
 
   @Patch(':id')

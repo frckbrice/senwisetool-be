@@ -48,6 +48,7 @@ export class AuthMiddleware implements NestMiddleware {
             // console.log("payload ", payload)
             const existingUser = await this.prismaService.user.findUnique({ where: { id: payload.sub }, select: { role: true } }) as User;
 
+            console.log("existing user ", payload)
             const user: Partial<User> = {
                 id: payload.sub,
                 email: payload.user_email,

@@ -32,13 +32,16 @@ export class CompanyController {
     return this.companyService.findAll(query);
   }
 
+  // get the current company
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
-  @Get(':id')
-  @ApiOperation({ summary: 'find one company with its id' })
-  findOne(@Param('id') id: string) {
+  @Get('current')
+  @ApiOperation({ summary: 'find the current company of the connected user' })
+  findOne(@CurrentUser() user: Partial<User>) {
+    const id = <string>user?.company_id
     return this.companyService.findOne(id);
   }
+
 
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
@@ -55,4 +58,7 @@ export class CompanyController {
   remove(@Param('id') id: string) {
     return this.companyService.remove(id);
   }
+
+
+
 }

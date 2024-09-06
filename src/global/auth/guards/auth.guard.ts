@@ -17,14 +17,14 @@ export class RolesGuard implements CanActivate {
 
         // we make sure the user is connected and authenticated
         const { user } = context.switchToHttp().getRequest()
-        const request = context.switchToHttp().getRequest()
-        // allow route access for public routes
-        if (!requiredRoles) {
+
+        // allow route access for public routes like : heath check, 
+        if (!(requiredRoles && user)) {
             this.logger.log('user allowed access to route handler', RolesGuard.name)
             return true
         }
 
-        if (!user || !requiredRoles) {
+        if (user || !requiredRoles) {
             !user ? this.logger.error('user not authenticated', RolesGuard.name)
                 : this.logger.error('user not allowed access to route handler', RolesGuard.name)
             return false
