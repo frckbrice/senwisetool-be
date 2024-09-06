@@ -4,6 +4,9 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './global/filter/http-exception.filter';
 import "reflect-metadata"; // is used to allow the usage of class transformers to be applied to remove password.
 
+const PORT = process.env.PORT ?? 5000;
+const dev_server_url = `${process.env.LOCAL_API_URL}:${PORT} `
+const production_server_url = `${process.env.PROD_API_URL}:${PORT} `;
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   // call the http adapter here
@@ -37,6 +40,9 @@ async function bootstrap() {
     yamlDocumentUrl: 'swagger/yaml',
   });
 
-  await app.listen(5000);
+  const environment = process.env.NODE_ENV || 'development';
+  await app.listen(PORT, () => {
+    console.log(`Server running in ${environment} mode on  ${environment === 'production' ? production_server_url : dev_server_url}`)
+  });
 }
 bootstrap();

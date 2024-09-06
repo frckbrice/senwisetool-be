@@ -24,7 +24,21 @@ export class UsersService {
       else where["id"] = id as string
 
 
-      const user = await this.prismaService.user.findUnique({ where })
+      const user = await this.prismaService.user.findUnique({
+        where,
+        include: {
+          company: {
+            select: {
+              name: true,
+              id: true,
+              paypal_id: true,
+              logo: true,
+              email: true,
+            }
+          }
+        }
+      })
+
 
       if (user)
         return {

@@ -37,7 +37,7 @@ import { MailModule } from './share/mail/mail.module';
   imports: [
     ThrottlerModule.forRoot([{
       ttl: 60000,
-      limit: 10,  //TODO: reduce this and apply correct handling response
+      limit: 5,  //TODO: reduce this and apply correct handling response
     }]),
     ConfigModule.forRoot({
       isGlobal: true,

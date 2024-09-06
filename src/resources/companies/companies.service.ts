@@ -132,6 +132,12 @@ export class ComapnyService {
       const result = await this.prismaService.company.findUnique({
         where: {
           id: company_id
+        },
+        select: {
+          id: true,
+          paypal_id: true,
+          email: true,
+          status: true,
         }
       })
 
