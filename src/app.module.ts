@@ -18,8 +18,7 @@ import { ReceiptsModule } from './resources/receipts/receipts.module';
 import { TransactionsModule } from './resources/transactions/transactions.module';
 import { SubscriptionsModule } from './resources/subscriptions/subscriptions.module';
 import { PricesModule } from './resources/prices/prices.module';
-import { OffersModule } from './resources/offers/offers.module';
-import { ChaptersModule } from './resources/chapters/chapters.module';
+import { RequirementModule } from './resources/requirements/requirement.module';
 import { ShareModule } from './share/share.module'
 import { FarmersModule } from './resources/farmers/farmers.module';
 import { FarmsModule } from './resources/farms/farms.module';
@@ -32,6 +31,7 @@ import { TrainingsModule } from './resources/trainings/trainings.module';
 import { HealthModule } from './resources/health/health.module';
 import { TrainingSessionModule } from './resources/training_session/training_session.module';
 import { MailModule } from './share/mail/mail.module';
+import { RequirementPricePlanModule } from './resources/requirement_price-plan/requirement_price-plan.module';
 
 @Module({
   imports: [
@@ -55,8 +55,7 @@ import { MailModule } from './share/mail/mail.module';
     SubscriptionsModule,
     PricesModule,
     PrismaModule,
-    OffersModule,
-    ChaptersModule,
+    RequirementModule,
     FarmersModule,
     FarmsModule,
     MyLoggerModule,
@@ -65,7 +64,8 @@ import { MailModule } from './share/mail/mail.module';
     TrainingsModule,
     HealthModule,
     TrainingSessionModule,
-    MailModule
+    MailModule,
+    RequirementPricePlanModule
   ],
   controllers: [AppController],
   providers: [AppService, RequestService,

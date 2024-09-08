@@ -14,6 +14,7 @@ export class AuthMiddleware implements NestMiddleware {
         "/v1",
         "/v1/health",
         '/v1/subscriptions/successPayPalPayment/?subscription_id',
+        "/v1/requirements"
     ]
 
     constructor(
@@ -27,6 +28,7 @@ export class AuthMiddleware implements NestMiddleware {
         user: Partial<User>
     }, res: Response, next: NextFunction): Promise<void> {
 
+        console.log(req.originalUrl === "/v1/requirements")
         // allow some routes to be public
         if (this.allowRoutes.includes(req.originalUrl)) {
             this.logger.log('Allowing public  access to route ', AuthMiddleware.name)

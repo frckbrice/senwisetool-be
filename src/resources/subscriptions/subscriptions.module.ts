@@ -12,5 +12,6 @@ import { CurrentPlanIds } from 'src/global/utils/current-plan-ids';
   })],
   controllers: [SubscriptionsController],
   providers: [SubscriptionsService, SubscribeToPayPalService, CurrentPlanIds],
+  exports: [SubscriptionsService]
 })
 export class SubscriptionsModule { }

@@ -26,7 +26,7 @@ export class SubscriptionsService {
     this.logger.log(`launched subscription to plan id: ${createSubscriptionDto.plan_id}`);
 
     // validate plan id
-    if (!this.currentplanIds.PLAN_ID.some((value) => value.id === createSubscriptionDto.plan_id)) {
+    if (!this.currentplanIds.PLAN_ID.some((value) => <string>value.id === createSubscriptionDto.plan_id)) {
       throw new Error(`plan id ${createSubscriptionDto.plan_id} not found`)
     }
 
@@ -105,14 +105,14 @@ export class SubscriptionsService {
   }
 
 
-  async upgradeSubscriptionPlan(id: string, updateSubscriptionDto: UpdateSubscriptionDto) {
+  async upgradeSubscriptionPlan(subscription_id: string, updateSubscriptionDto: UpdateSubscriptionDto) {
 
     // validate plan id
-    if (!this.currentplanIds.PLAN_ID.some((value) => value.id === updateSubscriptionDto.plan_id)) {
+    if (!this.currentplanIds.PLAN_ID.some((value) => <string>value.id === updateSubscriptionDto.plan_id)) {
       throw new Error(`plan id ${updateSubscriptionDto.plan_id} not found`)
     }
 
-    const result = await this.payalService.changPlan(id, <string>updateSubscriptionDto.plan_id);
+    const result = await this.payalService.changPlan(subscription_id, <string>updateSubscriptionDto.plan_id);
     if (result)
       return {
         data: result,
@@ -127,8 +127,8 @@ export class SubscriptionsService {
       }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} subscription`;
+  remove(subscription_id: string) {
+    return `This action removes a #${subscription_id} subscription`;
   }
 
 

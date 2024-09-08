@@ -99,10 +99,10 @@ export class SubscribeToPayPalService {
         }
     }
 
-    async changPlan(subscriptionId: string, plan_id: string) {
+    async changPlan(subscription_id: string, plan_id: string) {
         try {
             // upgrade the plan
-            const upgradeSubscriptionPlan = await this.fetch.post(`/v1/billing/subscriptions/${subscriptionId}/revise`, {
+            const upgradeSubscriptionPlan = await this.fetch.post(`/v1/billing/subscriptions/${subscription_id}/revise`, {
                 body: JSON.stringify({ "plan_id": plan_id, }),
                 headers: {
                     'Content-Type': 'application/json',
