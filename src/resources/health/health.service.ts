@@ -6,7 +6,7 @@ export class HealthService {
 
 
   findAll() {
-    return `The server is running !`;
+    return `Up!`;
   }
 
 }

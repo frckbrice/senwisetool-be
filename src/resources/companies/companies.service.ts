@@ -150,8 +150,8 @@ export class ComapnyService {
       else
         return {
           data: null,
-          status: 400,
-          message: `Failed to fetch company`
+          status: 404,
+          message: `NO FOUND company with id: "${company_id}"`
         }
     } catch (err) {
       this.logger.error("Can't find a company with id ", ComapnyService.name);
