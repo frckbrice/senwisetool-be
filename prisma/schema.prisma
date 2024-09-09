@@ -344,7 +344,7 @@ model Price_plan {
   cancellation_policy String[]
   subscription Subscription[]
 
-  price_plan_requiement Price_plan_requiement[]
+  price_plan_requirement Price_plan_requirement[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
@@ -352,12 +352,11 @@ model Price_plan {
 
 model Requirement {
   id String @id @default(cuid())
-  label String
-  title String
+  name String
   content Json ?  @default("{}")  @db.JsonB
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  price_plan_requiement Price_plan_requiement[]
+  price_plan_requirement Price_plan_requirement[]
   // required_norm String
   // number_of_requirements Int
   // number_of_applicable_requirements Int
@@ -365,14 +364,16 @@ model Requirement {
   // percentage_applicable Int
 }
 
-model Price_plan_requiement {
+model Price_plan_requirement {
   id String @id @default(cuid())
   req_id String
-  price_plan_id String
+   price_plan_id String
   requirement Requirement @relation(fields: [req_id], references: [id])
-  price_plan Price_plan @relation(fields: [price_plan_id], references: [id])
+  price_plan Price_plan @relation(fields: [ price_plan_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@index([req_id,  price_plan_id])
 }
 
 model Market_audit {

@@ -1,12 +1,13 @@
 
 import { RequestService } from "src/global/current-logged-in/request.service";
 
-import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common'
+import { HttpException, HttpStatus, Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common'
 import { NextFunction, Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { User } from "@prisma/client";
 import { LoggerService } from "src/global/logger/logger.service";
 import { PrismaService } from "src/adapters/config/prisma.service";
+import { UserType } from "src/resources/users/entities/user.entity";
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
@@ -36,30 +37,34 @@ export class AuthMiddleware implements NestMiddleware {
 
 
         try {
-            //handle the authentication 
+            //get the token frm the req.
             const token = this.extractTokenFromHeader(req)
-
 
             if (!token) {
                 throw new UnauthorizedException("user not authenticated")
             }
             /** here we can do the authentication and attach the user to the request */
             const payload = await this.jwtService.decode(token)
-            // console.log("payload ", payload)
+
             const existingUser = await this.prismaService.user.findUnique({ where: { id: payload.sub }, select: { role: true } }) as User;
 
-            console.log("existing user ", payload)
-            const user: Partial<User> = {
-                id: payload.sub,
-                email: payload.user_email,
-                first_name: payload.user_first_name,
-                role: existingUser ? existingUser.role : "ADG",
-                company_id: payload.company_id ?? "",
-            };
+            // console.log("existing user ", payload)
+            let user: Partial<User>;
+            if (payload) {
 
-            req['user'] = user;
-            this.requestService.setUserId(payload.sub);
-            next()
+                user = {
+                    id: payload.sub,
+                    email: payload.user_email,
+                    first_name: payload.user_first_name,
+                    role: existingUser ? existingUser.role : "ADG",
+                    company_id: payload.company_id ?? "cm0jhl9ro0000iprrvi6zesue",
+                };
+                req['user'] = user;
+                this.requestService.setUserId(payload.sub);
+                next();
+            } else
+                throw new HttpException("Unprocessable entity", HttpStatus.UNPROCESSABLE_ENTITY);
+
         } catch (error) {
             this.logger.error(`Authenticification failed \n\n${error}`, AuthMiddleware.name)
             throw new UnauthorizedException('user not authenticated')

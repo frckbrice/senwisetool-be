@@ -8,7 +8,7 @@ export class HealthController {
 
   @Get()
   findAll() {
-    return `server running at ${this.healthService.findAll()}`;
+    return `server running status:  ${this.healthService.findAll()}`;
   }
 
 }

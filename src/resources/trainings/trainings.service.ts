@@ -21,7 +21,7 @@ export class TrainingService {
   async create(createTrainingDto: Prisma.TrainingCreateInput, user: Partial<User>) {
     //TDOO: look if possible to avoid creating training twice
 
-
+    console.log("from training service: ", createTrainingDto)
     try {
       const result = await this.prismaService.training.create({
         data: {

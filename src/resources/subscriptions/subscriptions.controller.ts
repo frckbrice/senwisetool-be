@@ -47,14 +47,14 @@ export class SubscriptionsController {
   }
 
   // upgrade plqn
-  @Patch(':id/revise')
-  upgradeSubscriptionPlan(@Param('id') id: string, @Body() updateSubscriptionDto: UpdateSubscriptionDto) {
-    return this.subscriptionsService.upgradeSubscriptionPlan(id, updateSubscriptionDto);
+  @Patch(':subscription_id/revise')
+  upgradeSubscriptionPlan(@Param('subscription_id') subscription_id: string, @Body() updateSubscriptionDto: UpdateSubscriptionDto) {
+    return this.subscriptionsService.upgradeSubscriptionPlan(subscription_id, updateSubscriptionDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.subscriptionsService.remove(+id);
+  @Delete(':subscription_id')
+  remove(@Param('subscription_id') subscription_id: string) {
+    return this.subscriptionsService.remove(subscription_id);
   }
 
   @Get('cancelPayPalPayment')
