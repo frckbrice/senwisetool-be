@@ -69,7 +69,6 @@ console.log("existing user ", token)
             this.logger.error(`Authenticification failed \n\n${error}`, AuthMiddleware.name)
             throw new UnauthorizedException('user not authenticated')
         }
-
     }
 
     /**

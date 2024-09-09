@@ -80,23 +80,23 @@ export class RequirementService {
       if (plan_id)
         where['price_plan_id'] = plan_id ?? "";
 
-      // we need to verify if the company has subscribe first
-      const hasSubscribe = this.prismaService.subscription.findFirst({
-        where: {
-          company_id: params.company_id,
-          status: 'ACTIVE'
-        }
-      });
+      /* we need to verify if the company has subscribe first */
+      // const hasSubscribe = this.prismaService.subscription.findFirst({
+      //   where: {
+      //     company_id: params.company_id,
+      //     status: 'ACTIVE'
+      //   }
+      // });
 
-      if (!Boolean(hasSubscribe))
-        throw new HttpException("Company has not subscribed", HttpStatus.FORBIDDEN);
+      // if (!Boolean(hasSubscribe))
+      //   throw new HttpException("Company has not subscribed", HttpStatus.FORBIDDEN);
 
       // if there is no plan_id, then return all the requirements for the company
 
       /** get all the corresponding requirements IDs for the price plan*/
       const allReqIds = (await this.requiredPricePlans.findAllRequirements(where));
       // filter only the requirment Ids
-      const reqIds = allReqIds.data.map((req) => req.req_id);  // just for the sake of performace
+      const reqIds = allReqIds.data.map(({ req_id }: { req_id: string }) => req_id);  // just for the sake of performace
 
       //filter the request
       const data = await this.prismaService.requirement.findMany({
