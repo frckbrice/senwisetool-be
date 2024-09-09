@@ -33,6 +33,6 @@ export class RequirementController {
   // get all requirements for a specific price plan
   @Get('price_plan/:plan_id')
   getAllPricePlan(@Param('plan_id') plan_id: string, @CurrentUser() user: UserType) {
-    return this.requirementService.findAllRequirements({ plan_id: plan_id ?? "" });
+    return this.requirementService.findAllRequirements({ plan_id: plan_id ?? "", company_id: <string>user?.company_id });
   }
 }

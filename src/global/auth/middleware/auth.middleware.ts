@@ -69,7 +69,6 @@ export class AuthMiddleware implements NestMiddleware {
             this.logger.error(`Authenticification failed \n\n${error}`, AuthMiddleware.name)
             throw new UnauthorizedException('user not authenticated')
         }
-
     }
 
     /**
