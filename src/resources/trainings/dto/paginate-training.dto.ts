@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { ProjectStatus, TypeProject } from "@prisma/client";
 
 export class PaginationTrainingQueryDto {
-    locality: string
+    locality?: string
 
     @ApiProperty()
     perPage?: number = 20 // number of users to query at a time. defaults to 40;
