@@ -27,6 +27,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/throttler": "^6.1.0",
     "@prisma/client": "^5.18.0",
+    "async": "^3.2.6",
     "cache-manager": "^5.7.6",
     "moment-timezone": "^0.5.45",
     "nodemailer": "^6.9.14",

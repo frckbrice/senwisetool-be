@@ -3,14 +3,18 @@ import { Prisma } from '@prisma/client';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { RequirementPricePlanService } from '../requirement_price-plan/requirement_price-plan.service';
-
+import { ReadCompanyFiles } from './read-company-files';
+import { cwd } from "node:process";
+import path, { join } from 'path';
+import fsPromises, { readFile, readdir, appendFile, mkdir } from 'node:fs/promises';
 @Injectable()
 export class RequirementService {
   private readonly logger = new LoggerService(RequirementService.name);
 
   constructor(
     private prismaService: PrismaService,
-    private requiredPricePlans: RequirementPricePlanService
+    private requiredPricePlans: RequirementPricePlanService,
+    private readFileService: ReadCompanyFiles
   ) { }
   async create(createRequirementDto: Prisma.RequirementCreateInput) {
 
@@ -119,6 +123,20 @@ export class RequirementService {
         }
     } catch (error) {
       this.logger.error(`Error fetching requirements for this plan id: ${params.plan_id} \n\n ${error}`, RequirementService.name);
+      throw new HttpException("Error fetching comapnies", HttpStatus.NOT_FOUND);
+    }
+  }
+
+  async getAllFile() {
+    try {
+      const directory = cwd() + '/src/global/utils/requirement-files/';
+      const data = await this.readFileService.getAllFiles(directory);
+      const newDir = join(__dirname, "..", "data", 'data.json')
+      const fileContent = await readFile(newDir, { encoding: 'utf8' })
+
+      return fileContent;
+    } catch (error) {
+      this.logger.error(`Error fetching requirements for this plan  \n\n ${error}`, RequirementService.name);
       throw new HttpException("Error fetching comapnies", HttpStatus.NOT_FOUND);
     }
   }
