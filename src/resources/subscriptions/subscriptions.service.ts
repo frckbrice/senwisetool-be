@@ -1,5 +1,5 @@
 
-import { HttpException, Injectable, InternalServerErrorException, NotFoundException, NotImplementedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException, NotImplementedException } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -8,7 +8,11 @@ import { LoggerService } from 'src/global/logger/logger.service';
 import { localEvents } from 'src/share/events';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { CurrentPlanIds } from 'src/global/utils/current-plan-ids';
-import { CompanyStatus } from '@prisma/client';
+import { CompanyStatus, Prisma, Subscription, SubscriptionStatus } from '@prisma/client';
+import moment, { now } from 'moment-timezone';
+import { RequirementPricePlanService } from '../requirement_price-plan/requirement_price-plan.service';
+import { SubscriptionEntity } from './entities/subscription.entity';
+import { ApplyNixins } from 'src/global/utils/create-object-type';
 
 @Injectable()
 export class SubscriptionsService {
@@ -18,7 +22,8 @@ export class SubscriptionsService {
     private eventEmitter: EventEmitter2,
     private payalService: SubscribeToPayPalService,
     private prismaService: PrismaService,
-    private currentplanIds: CurrentPlanIds
+    private currentplanIds: CurrentPlanIds,
+    private createNewtype: ApplyNixins
   ) { }
 
   // this operation is done in the client by the paypal SDK.
@@ -94,37 +99,123 @@ export class SubscriptionsService {
     }
   }
 
+  // find all the subscriptions for the sake of checking the expired time.
 
-
-  findAll() {
-    return `This action returns all subscriptions`;
+  async findAll() {
+    try {
+      const data = await this.prismaService.subscription.findMany();
+      if (data.length)
+        return {
+          status: HttpStatus.OK,
+          message: 'All subscriptions fetched successfully',
+          data,
+          total: data.length
+        }
+      else
+        return {
+          status: HttpStatus.NOT_FOUND,
+          message: 'No subscriptions found ',
+          data: [],
+          total: 0
+        }
+    } catch (error) {
+      this.logger.error(`Error while fetching subscriptions \n\n ${error}`, SubscriptionsService.name);
+      throw new HttpException(`Error while fetching subscriptions `, HttpStatus.NOT_FOUND);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} subscription`;
-  }
+  // find all the subscription between interval dates
+  async getSubscriptionsExpireInNextTwoMonthsOrThreeWeeksAfterExpiration() {
 
+    const now = moment().utc();
+
+    try {
+      const data = await this.prismaService.subscription.findMany({
+        where: {
+          OR: [
+            // Subscriptions ending within the next 2 months
+            {
+              end_date: {
+                gte: now.toDate(),
+                lte: now.clone().add(2, 'months').toDate(),
+              },
+            },
+            // Subscriptions that ended within the last 3 weeks (grace period)
+            {
+              end_date: {
+                gte: now.clone().subtract(3, 'weeks').toDate(),
+                lt: now.toDate(),
+              },
+            },
+          ],
+          status: SubscriptionStatus.ACTIVE,
+        },
+        orderBy: {
+          end_date: 'asc',
+        },
+        include: {
+          company: true,
+        },
+      });
+      console.log("subscriptions: ", data)
+      if (data.length)
+        return {
+          data,
+          status: 200,
+          message: `Subscription that expire in next two months or three weeks after expiration.`
+        }
+      else
+        return {
+          data: [],
+          status: 400,
+          message: `Failed to fetch subscription that expire in next two months or three weeks after expiration.`
+        }
+    } catch (error) {
+      this.logger.error(`Error while fetching subscriptions expire in next two months or three weeks after expiration \n\n ${error}`, SubscriptionsService.name);
+      throw new NotImplementedException(`Error while fetching subscriptions expire in next two months or three weeks after expiration`);
+    }
+
+
+
+  }
 
   async upgradeSubscriptionPlan(subscription_id: string, updateSubscriptionDto: UpdateSubscriptionDto) {
 
-    // validate plan id
-    if (!this.currentplanIds.PLAN_ID.some((value) => <string>value.id === updateSubscriptionDto.plan_id)) {
-      throw new Error(`plan id ${updateSubscriptionDto.plan_id} not found`)
-    }
+    try {
+      // validate plan id
+      if (!this.currentplanIds.PLAN_ID.some((value) => <string>value.id === updateSubscriptionDto.plan_id)) {
+        throw new Error(`plan id ${updateSubscriptionDto.plan_id} not found`)
+      }
 
-    const result = await this.payalService.changPlan(subscription_id, <string>updateSubscriptionDto.plan_id);
-    if (result)
-      return {
-        data: result,
-        status: 201,
-        message: `Subscription plan upgraded successfully.`
+      const result = await this.payalService.changPlan(subscription_id, <string>updateSubscriptionDto.plan_id);
+      if (result) {
+        // update the subscription to set the new price plan
+        const data = await this.updateCompanySubscription(subscription_id, { plan_id: <string>updateSubscriptionDto.plan_id });
+
+        if (data)
+          return {
+            data: result,
+            status: HttpStatus.CREATED,
+            message: `Subscription plan upgraded successfully.`
+          }
+        else
+          return {
+            data: null,
+            status: HttpStatus.NOT_MODIFIED,
+            message: `Failed to upgrade subscription plan. to Database`
+          }
       }
-    else
-      return {
-        data: null,
-        status: 400,
-        message: `Failed to upgrade subscription plan.`
-      }
+
+      else
+        return {
+          data: null,
+          status: HttpStatus.NOT_MODIFIED,
+          message: `Failed to upgrade subscription plan.`
+        }
+    } catch (error) {
+      this.logger.error(`Error while upgrading subscription plan \n\n ${error}`, SubscriptionsService.name);
+      throw new HttpException(`Error while upgrading subscription plan `, HttpStatus.NOT_MODIFIED);
+    }
   }
 
   remove(subscription_id: string) {
@@ -161,7 +252,7 @@ export class SubscriptionsService {
         },
         select: {
           id: true,
-          price_id: true,   // TODO: make a migration for prisma.
+          plan_id: true,   // TODO: make a migration for prisma.
           status: true,
           company: {
             select: {
@@ -194,34 +285,36 @@ export class SubscriptionsService {
       // TODO: handle logic to update the subscription status of a company
       if (result.data.status === '204') {
         // according to paypal docs, a status of 204 here is consider successfully unsubscribed
-        const data = this.prismaService.subscription.update({
-          where: {
-            id: subscription_id
-          },
-          data: {
-            status: 'CANCELLED'
+
+        const data = await this.updateCompanySubscription(subscription_id, { status: SubscriptionStatus.CANCELLED });
+        if (data) {
+          // TODO: write listener for this event to send message to user for cnfirmation
+          this.eventEmitter.emit(localEvents.unsubscribeToPlan, { subscription_id, company_id });
+          return {
+            data,
+            status: HttpStatus.NO_CONTENT,
+            message: `Subscription cancelled successfully`
           }
-        });
-        // TODO: write listener for this event to send message to user for cnfirmation
-        this.eventEmitter.emit(localEvents.unsubscribeToPlan, { subscription_id, company_id });
-        return {
-          data,
-          status: 204,
-          message: `Subscription cancelled successfully`
         }
+        return {
+          status: HttpStatus.NOT_MODIFIED,
+          data: null,
+          message: `failed to unsubscribe company ${company_id}`,
+        }
+
       }
 
       //  TODO: check if this requires a sending message
       else
         return {
-          status: 500,
+          status: HttpStatus.NOT_MODIFIED,
           data: null,
           message: `failed to unsubscribe company ${company_id}`,
         }
       // TODO: send email to company for notification
     } catch (error) {
       this.logger.error(`failed to unsubscribe company ${company_id}`, SubscriptionsService.name,);
-      throw new NotImplementedException(`failed to unsubscribe company ${company_id}`);
+      throw new HttpException(`failed to unsubscribe company ${company_id}`, HttpStatus.NOT_MODIFIED);
     }
 
   }
@@ -230,7 +323,7 @@ export class SubscriptionsService {
   // store subscription details
   async storeSubscriptionDetails(subscriptionDetails: any, company_id: string) {
     // TODO: store subscription details
-
+    const end_date = moment(subscriptionDetails.start_time).add(1, 'year').toDate();
     try {
       // TODO:: if data, persists them in database subscription model
       const data = await this.prismaService.$transaction(async (tx) => {
@@ -238,10 +331,10 @@ export class SubscriptionsService {
         const subscription = await tx.subscription.create({
           data: {
             id: subscriptionDetails.id,
-            price_id: subscriptionDetails.plan_id,
-            status: subscriptionDetails.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE', // find difficulties to load prisma SubscriptionStatus enum here.
+            plan_id: subscriptionDetails.plan_id,
+            status: subscriptionDetails.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE', // found difficulties to load prisma SubscriptionStatus enum here.
             start_date: subscriptionDetails.start_date,
-            end_date: subscriptionDetails.end_date,
+            end_date: end_date,
             created_at: subscriptionDetails.status_update_time,
             company_id: company_id,
 
@@ -258,7 +351,7 @@ export class SubscriptionsService {
           },
           data: {
             paypal_id: subscriptionDetails.subscriber.payer_id,
-            company_paypal_email: subscriptionDetails.subscription_email,
+            company_paypal_email: subscriptionDetails.subscriber.email_address,
             status: CompanyStatus.ACTIVE // set it to active because he has subscribe to a plan.
           }
         })
@@ -270,13 +363,13 @@ export class SubscriptionsService {
 
       if (data)
         return {
-          status: 201,
+          status: HttpStatus.CREATED,
           message: `Subscription created successfully`,
           data: data
         };
       else
         return {
-          status: 500,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
           message: `Failed to create subscription`,
           data: null
         }
@@ -287,7 +380,38 @@ export class SubscriptionsService {
       throw new InternalServerErrorException(`failed to unsubscribe company ${company_id}`);
     }
 
+  }
+
+  async updateCompanySubscription(subscription_id: string, subscriptionDetails: Partial<Subscription>) {
+
+    try {
+
+      const updatedSubscription = await this.prismaService.subscription.update({
+        where: { id: subscription_id },
+        data: subscriptionDetails
+      });
+
+      if (updatedSubscription)
+        return {
+          status: HttpStatus.OK,
+          message: `Subscription updated successfully`,
+          data: updatedSubscription
+        }
+      else
+        return {
+          status: HttpStatus.NOT_MODIFIED,
+          message: `Failed to update subscription`,
+          data: null
+        }
+    } catch (error) {
+
+      this.logger.error(`failed to update subscription with id ${subscription_id} \n\n ${error}`, SubscriptionsService.name,);
+      throw new HttpException(`failed to update subscription with id ${subscription_id}`, HttpStatus.NOT_MODIFIED);
+    }
+
 
   }
+
+
 
 }

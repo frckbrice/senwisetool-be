@@ -59,6 +59,8 @@ enum SubscriptionStatus {
   CANCELLED
   SUSPENDED
   APPROVAL_PENDING
+  EXPIRED
+  GRACE_PERIOD
 }
 
 enum PaymentMethod {
@@ -121,8 +123,9 @@ model Company {
   email  String @unique
   logo  String @unique
 
-  payment_mode String
-  company_paypal_email String
+  payment_mode String ?
+  company_paypal_email String ?
+  // the choice of paypal_id is a design decision. we would have chose to use the subscription_status boolean.
   paypal_id String ?
   sector_of_activity String 
   website  String ?
@@ -131,6 +134,8 @@ model Company {
   phone_number  String
   city  String
   description String
+
+  timezone String @default("UTC")
 
 // the case where the company account will be deactivate
   status CompanyStatus ?
@@ -310,17 +315,20 @@ model Farm_coordinates{
 
 model Subscription {
   id                      String @id @default(cuid())
-  price_id                String
+  plan_id                String
   company_id              String
 
   start_date              DateTime
   end_date                DateTime
   status                  SubscriptionStatus   @default(INACTIVE)
-  
+
   payment_mode            String
+  last_notification_date       DateTime ? @updatedAt
+
+  grace_period_end DateTime ? @updatedAt
 
   company              Company @relation(fields: [company_id], references: [id])
-  price                Price_plan @relation(fields: [price_id], references: [id])
+  price                Price_plan @relation(fields: [plan_id], references: [id])
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
 }

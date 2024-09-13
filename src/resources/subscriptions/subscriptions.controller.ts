@@ -1,15 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
-import { Prisma, Role, User } from '@prisma/client';
+import { CacheTTL } from "@nestjs/cache-manager";
 import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
+import { Role, User } from '@prisma/client';
 
 @ApiTags('subscriptions')
 @ApiBearerAuth()
+@CacheTTL(50)
 @Controller('subscriptions')
 export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) { }
@@ -22,14 +24,15 @@ export class SubscriptionsController {
   }
 
   @Get()
+  @CacheTTL(20)
   async findAll() {
     return this.subscriptionsService.findAll();
   }
 
   // TODO: add gards all over here where it's necessary
   @Get(':company_id/company')
-  // @UseGuards(RolesGuard)
-  // @Roles(Role.ADG, Role.PDG, Role.IT_SUPPORT)
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADG, Role.PDG,)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get company subscription' })
   @ApiResponse({ status: 200, description: 'this is the company subscription' })
@@ -38,6 +41,8 @@ export class SubscriptionsController {
   }
 
   // unSBubscribe a company
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADG, Role.PDG,)
   @Patch(':subscription_id/company_id/company')
   @ApiOperation({ summary: 'Unsubscribe company from subscription' })
   @ApiBearerAuth()
@@ -47,12 +52,16 @@ export class SubscriptionsController {
   }
 
   // upgrade plqn
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADG, Role.PDG,)
   @Patch(':subscription_id/revise')
   upgradeSubscriptionPlan(@Param('subscription_id') subscription_id: string, @Body() updateSubscriptionDto: UpdateSubscriptionDto) {
     return this.subscriptionsService.upgradeSubscriptionPlan(subscription_id, updateSubscriptionDto);
   }
 
   @Delete(':subscription_id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADG, Role.PDG,)
   remove(@Param('subscription_id') subscription_id: string) {
     return this.subscriptionsService.remove(subscription_id);
   }
@@ -74,6 +83,8 @@ export class SubscriptionsController {
   }
 
   // get subscription details
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADG, Role.PDG,)
   @Get(':subscription_id')
   @ApiResponse({ status: 200, description: 'Successfully fetch subscription details' })
   @ApiOperation({ summary: 'Get subscription details' })

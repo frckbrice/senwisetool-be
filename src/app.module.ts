@@ -32,6 +32,9 @@ import { HealthModule } from './resources/health/health.module';
 import { TrainingSessionModule } from './resources/training_session/training_session.module';
 import { MailModule } from './share/mail/mail.module';
 import { RequirementPricePlanModule } from './resources/requirement_price-plan/requirement_price-plan.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -43,6 +46,12 @@ import { RequirementPricePlanModule } from './resources/requirement_price-plan/r
       isGlobal: true,
     }),
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
+    CacheModule.register({
+      ttl: 5, // seconds
+      // max: 10, // maximum number of items in cache
+      isGlobal: true,
+    }),
     CompaniesModule,
     ProjectsModule,
     InspectionDataModule,
@@ -65,28 +74,28 @@ import { RequirementPricePlanModule } from './resources/requirement_price-plan/r
     HealthModule,
     TrainingSessionModule,
     MailModule,
-    RequirementPricePlanModule
+    RequirementPricePlanModule,
   ],
   controllers: [AppController],
   providers: [AppService, RequestService,
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-
-    },
     // {
-    //   provide: APP_FILTER,
-    //   useClass: AllExceptionsFilter,
+    //   provide: APP_GUARD,
+    //   useClass: RolesGuard,
+
     // },
     {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard
-    }
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor, // caching
+    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: ThrottlerGuard
+    // }
   ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     // consumer.apply(AuthMiddleware).forRoutes({ path: "/", method: RequestMethod.GET });
-    consumer.apply(AuthMiddleware).forRoutes("*");
+    // consumer.apply(AuthMiddleware).forRoutes("*");
   }
 }

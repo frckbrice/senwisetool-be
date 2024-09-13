@@ -5,11 +5,12 @@
         {
             "title": "Coûts de Production et Revenu Vital",
             "numero": "3.1",
-            "N&#176;": "Amélioration librement choisie",
+            "specification": "",
             "content": [
                 {
                     " text": "La direction du groupe collecte les données sur les facteurs déterminants des coûts de production (ex : coûts des engrais, des produits agrochimiques, travail payé, équipement) et calcule le revenu net d'un culture agricole certifié pour un échantillon des membres du groupe (c’est-à-dire : revenu brut – coûts de production = revenu net) . La direction du groupe partage les données analysées avec les membres du groupe. &#13; <strong>Indicateur </strong>: <ul><li>Coûts de production par kg de produit récolté</li><li>Revenu net issu de la culture certifiée par kg de produit récolté.</li></ul>",
                     "num": "3.1.1",
+                    "N&#176;": "Amélioration librement choisie",
                     "certif_de_group": {
                         "direction_du_group": "NO",
                         "petite_exploitation_agricole": "NO",
@@ -19,6 +20,7 @@
                 },
                 {
                     "num": "3.1.2",
+                    "N&#176;": "Amélioration librement choisie",
                     " text": "Le revenu net réel des ménages des membres du groupe est évalué sur la base de la valeur de référence du revenu vital appliqué à un échantillon de membres. <ul><li>La production totale récoltée certifiée (en kg, en tiges pour les fleurs)  &#13; <strong>Indicateur </strong>: <ul><li>Revenu net moyen et médian</li><li>Écart moyen et médian par rapport à la valeur de référence du revenu vital (monétaire et %)</li><li>&#37; de producteurs atteignant la référence du revenu vital</li></ul>",
                     "certif_de_group": {
                         "direction_du_group": "NO",

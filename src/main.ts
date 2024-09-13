@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './global/filter/http-exception.filter';
 import "reflect-metadata"; // is used to allow the usage of class transformers to be applied to remove password.
 
+
 const PORT = process.env.PORT ?? 5000;
 const dev_server_url = `${process.env.LOCAL_API_URL} `
 const production_server_url = `${process.env.PROD_API_URL} `;
