@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { CampaignsService } from './campaigns.service';
+import { CampaignService } from './campaigns.service';
 import { CampaignsController } from './campaigns.controller';
 
 @Module({
   controllers: [CampaignsController],
-  providers: [CampaignsService],
+  providers: [CampaignService],
 })
-export class CampaignsModule {}
+export class CampaignsModule { }

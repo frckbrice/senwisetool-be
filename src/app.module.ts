@@ -35,6 +35,7 @@ import { RequirementPricePlanModule } from './resources/requirement_price-plan/r
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { CompanyCampaignModule } from './resources/company_campaign/company_campaign.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     TrainingSessionModule,
     MailModule,
     RequirementPricePlanModule,
+    CompanyCampaignModule,
   ],
   controllers: [AppController],
   providers: [AppService, RequestService,

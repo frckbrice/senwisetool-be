@@ -1,38 +1,41 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { CampaignsService } from './campaigns.service';
-import { CreateCampaignDto } from './dto/create-campaign.dto';
+import { CampaignService } from './campaigns.service';
 import { UpdateCampaignDto } from './dto/update-campaign.dto';
-import { Throttle, SkipThrottle } from '@nestjs/throttler'
 import { LoggerService } from 'src/global/logger/logger.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Prisma } from '@prisma/client';
+import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
+import { PaginationCampaignQueryDto } from './dto/paginate-campaign.dto';
 
+
+@ApiBearerAuth()
 @ApiTags('campaigns')
 @Controller('campaigns')
 export class CampaignsController {
-  constructor(private readonly campaignsService: CampaignsService) { }
+  constructor(private readonly campaignsService: CampaignService) { }
   private readonly logger = new LoggerService(CampaignsController.name)
   @Post()
-  create(@Body() createCampaignDto: CreateCampaignDto) {
-    return this.campaignsService.create(createCampaignDto);
+  create(@Body() createCampaignDto: Prisma.CampaignCreateInput, @CurrentUser() user: any) {
+    return this.campaignsService.create(createCampaignDto, user);
   }
 
   @Get()
-  findAll() {
-    return this.campaignsService.findAll();
+  findAll(query: Partial<PaginationCampaignQueryDto>) {
+    return this.campaignsService.findAll(query);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.campaignsService.findOne(+id);
+    return this.campaignsService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCampaignDto: UpdateCampaignDto) {
-    return this.campaignsService.update(+id, updateCampaignDto);
+    return this.campaignsService.update(id, updateCampaignDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.campaignsService.remove(+id);
+    return this.campaignsService.remove(id);
   }
 }
