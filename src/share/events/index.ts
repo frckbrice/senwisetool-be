@@ -12,4 +12,9 @@ export const localEvents = {
   subscriptionExpired: `subscription.expired`,
 
   companyCreated: 'company.created',
+
+  // subscription checking notification
+  subscriptionRenewalReminder: 'subscription.renewalReminder',
+  accountDeactivated: 'account.deactivated',
+  gracePeriodStarted: 'gracePeriod.started',
 }
