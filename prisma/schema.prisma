@@ -322,8 +322,6 @@ model Farm_coordinates{
   updated_at DateTime @updatedAt
 }
 
-
-
 model Subscription {
   id                      String @id @default(cuid())
   plan_id                String

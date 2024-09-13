@@ -87,7 +87,7 @@ export class TrainingService {
         }
       else
         return {
-          status: 400,
+          status: 404,
           message: "No trainings found",
           data: [],
           total,

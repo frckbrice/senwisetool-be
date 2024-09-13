@@ -35,4 +35,10 @@ export class RequirementController {
   getAllPricePlan(@Param('plan_id') plan_id: string, @CurrentUser() user: UserType) {
     return this.requirementService.findAllRequirements({ plan_id: plan_id ?? "", company_id: <string>user?.company_id });
   }
+
+
+  @Get()
+  async getAllfiles() {
+    return this.requirementService.getAllFile();
+  }
 }
