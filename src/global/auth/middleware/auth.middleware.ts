@@ -48,7 +48,7 @@ export class AuthMiddleware implements NestMiddleware {
         try {
             //get the token frm the req.
             const token = this.extractTokenFromHeader(req)
-
+console.log("existing user ", token)
             if (!token) {
                 throw new UnauthorizedException("user not authenticated")
             }
@@ -74,11 +74,13 @@ export class AuthMiddleware implements NestMiddleware {
                     userRole = Role.PDG;
 
                 user = {
+
                     id: existingUser.id ?? payload.sub,
                     email: existingUser.email ?? payload.user_email,
                     first_name: existingUser.first_name ?? payload.user_first_name,
                     role: existingUser.role ?? userRole,
                     company_id: existingUser.company_id,
+
                 };
                 req['user'] = user;
                 this.requestService.setUserId(payload.sub);
@@ -99,8 +101,10 @@ export class AuthMiddleware implements NestMiddleware {
      * @return {string | undefined} the xtracted token  or undefined
      */
     private extractTokenFromHeader(request: Request): string | undefined {
+
         // console.log(" the request   headers auth: ", request.headers.authorization);
         // console.log("the request body: ", request.body);
+
         const [type, token] = request.headers.authorization?.split(' ') ?? []
 
         return type === 'Bearer' ? token : undefined

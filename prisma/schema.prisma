@@ -127,7 +127,9 @@ model Company {
   slug  String ?
   country String
   email  String @unique
+
   logo  String ? 
+
 
   payment_mode String ?
   company_paypal_email String ?
