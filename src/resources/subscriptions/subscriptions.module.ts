@@ -8,11 +8,14 @@ import { CurrentPlanIds } from 'src/global/utils/current-plan-ids';
 import { PricesModule } from '../prices/prices.module';
 import { ApplyNixins } from 'src/global/utils/create-object-type';
 import { SubscriptionManagementService } from './subscribe.deactivation';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [FetchModule.register({
-    baseUrl: "https://api-m.sandbox.paypal.com"
-  }),
+  imports: [
+    UsersModule,
+    FetchModule.register({
+      baseUrl: "https://api-m.sandbox.paypal.com"
+    }),
     PricesModule
   ],
   controllers: [SubscriptionsController],

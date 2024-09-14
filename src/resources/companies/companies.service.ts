@@ -1,9 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException, UseGuards } from '@nestjs/common';
+import { HttpStatus, Injectable, InternalServerErrorException, NotFoundException, UseGuards } from '@nestjs/common';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { CompanyStatus, Prisma, User } from '@prisma/client';
 import { PaginationCompanyQueryDto } from "./dto/paginate-company.dto";
 import { LoggerService } from 'src/global/logger/logger.service';
-import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { UsersService } from '../users/users.service';
 import { Slugify } from 'src/global/utils/slugilfy';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -22,7 +21,7 @@ export class ComapnyService {
 
   async create(createCompanyDto: Prisma.CompanyCreateInput, user: Partial<User>) {
     // avoid creating company twice
-    console.log(createCompanyDto)
+    console.log("company payload: ", createCompanyDto)
     const company = await this.prismaService.company.findFirst({
       where: {
         email: createCompanyDto.email
@@ -61,13 +60,13 @@ export class ComapnyService {
       if (result)
         return {
           data: result,
-          status: 201,
+          status: HttpStatus.CREATED,
           message: `company created successfully`
         }
       else
         return {
           data: null,
-          status: 500,
+          status: HttpStatus.BAD_REQUEST,
           message: `Failed to create company`
         }
     } catch (error) {

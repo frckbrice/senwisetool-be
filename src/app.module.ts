@@ -98,6 +98,6 @@ import { CompanyCampaignModule } from './resources/company_campaign/company_camp
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     // consumer.apply(AuthMiddleware).forRoutes({ path: "/", method: RequestMethod.GET });
-    // consumer.apply(AuthMiddleware).forRoutes("*");
+    consumer.apply(AuthMiddleware).forRoutes("*");
   }
 }

@@ -127,7 +127,7 @@ model Company {
   slug  String ?
   country String
   email  String @unique
-  logo  String ? @unique
+  logo  String ? 
 
   payment_mode String ?
   company_paypal_email String ?
@@ -136,7 +136,7 @@ model Company {
   sector_of_activity String 
   website  String ?
   address  String 
-
+  state String
   phone_number  String
   city  String
   description String
@@ -144,7 +144,7 @@ model Company {
   timezone String @default("UTC")
 
 // the case where the company account will be deactivate
-  status CompanyStatus ?
+  status CompanyStatus ? 
   users  User[]
   projects Project[]
   campaigns Company_Campaign[]

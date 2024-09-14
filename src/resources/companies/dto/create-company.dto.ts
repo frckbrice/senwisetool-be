@@ -60,5 +60,9 @@ export class CreateCompanyDto {
      * website: "https://example.com"
      */
     website: string | null;
+    /**
+        * state: "mbalmayo"
+        */
+    state: string
 
 }

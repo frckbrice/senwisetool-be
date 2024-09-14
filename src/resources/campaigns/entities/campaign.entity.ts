@@ -1,4 +1,4 @@
-import { Campaign } from "@prisma/client";
+import { $Enums, Campaign } from "@prisma/client";
 
 export class CampaignType implements Campaign {
     created_at: Date;
@@ -7,6 +7,6 @@ export class CampaignType implements Campaign {
     id: string;
     name: string;
     start_date: Date;
-    status: string;
+    status: $Enums.CampaignStatus;
     updated_at: Date;
 }
