@@ -54,10 +54,10 @@ console.log("existing user ", token)
 
                 user = {
                     id: payload.sub,
-                    email: payload.user_email,
-                    first_name: payload.user_first_name,
+                    email:  existingUser.email ?? payload.user_email,
+                    first_name:  existingUser.first_name ?? payload.user_first_name,
                     role: existingUser ? existingUser.role : "ADG",
-                    company_id: payload.company_id ,
+                    company_id:  existingUser.company_id ?? payload.company_id ,
                 };
                 req['user'] = user;
                 this.requestService.setUserId(payload.sub);
