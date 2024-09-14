@@ -57,7 +57,7 @@ export class AuthMiddleware implements NestMiddleware {
                     email: payload.user_email,
                     first_name: payload.user_first_name,
                     role: existingUser ? existingUser.role : "ADG",
-                    company_id: payload.company_id ?? "cm0jhl9ro0000iprrvi6zesue",
+                    company_id: payload.company_id,
                 };
                 req['user'] = user;
                 this.requestService.setUserId(payload.sub);

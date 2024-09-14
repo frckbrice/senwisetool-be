@@ -214,4 +214,6 @@ export class ComapnyService {
   }
 
 
+  // get all companies 
+
 }
