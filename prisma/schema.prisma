@@ -119,10 +119,10 @@ model User {
 model Company {
   id  String @id @default(cuid())
   name  String
-  slug  String
+  slug  String ?
   country String
   email  String @unique
-  logo  String @unique
+  logo  String ? @unique
 
   payment_mode String ?
   company_paypal_email String ?
