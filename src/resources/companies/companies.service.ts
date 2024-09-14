@@ -22,7 +22,7 @@ export class ComapnyService {
 
   async create(createCompanyDto: Prisma.CompanyCreateInput, user: Partial<User>) {
     // avoid creating company twice
-
+    console.log(createCompanyDto)
     const company = await this.prismaService.company.findFirst({
       where: {
         email: createCompanyDto.email

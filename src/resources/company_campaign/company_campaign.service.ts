@@ -30,16 +30,16 @@ export class CompanyCampaignService {
     return `This action removes a #${id} companyCampaign`;
   }
 
-  async getAllCompaniesForSingleCampaign(campaign_name: string) {
+  // async getAllCompaniesForSingleCampaign(campaign_name: string) {
 
-    const data = await this.prismaService.company.findMany({
-      where: {
-        campaigns: {
-          some: {
-            name: campaign_name
-          }
-        }
-      }
-    })
-  }
+  //   const data = await this.prismaService.company.findMany({
+  //     where: {
+  //       campaigns: {
+  //         some: {
+  //           name: campaign_name
+  //         }
+  //       }
+  //     }
+  //   })
+  // }
 }

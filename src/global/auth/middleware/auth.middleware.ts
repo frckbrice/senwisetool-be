@@ -39,14 +39,14 @@ export class AuthMiddleware implements NestMiddleware {
         try {
             //get the token frm the req.
             const token = this.extractTokenFromHeader(req)
-
+            console.log("token ", token)
             if (!token) {
                 throw new UnauthorizedException("user not authenticated")
             }
             /** here we can do the authentication and attach the user to the request */
             const payload = await this.jwtService.decode(token)
 
-            const existingUser = await this.prismaService.user.findUnique({ where: { id: payload.sub }, select: { role: true } }) as User;
+            const existingUser = <User>(await this.prismaService.user.findUnique({ where: { id: payload.sub }, select: { role: true } }));
 
             // console.log("existing user ", payload)
             let user: Partial<User>;
@@ -78,8 +78,8 @@ export class AuthMiddleware implements NestMiddleware {
      * @return {string | undefined} the xtracted token  or undefined
      */
     private extractTokenFromHeader(request: Request): string | undefined {
-        // console.log(" the request headers auth: ", request.headers.authorization);
-        // console.log("the request body: ", request.body);
+        console.log(" the request headers auth: ", request.headers.authorization);
+        console.log("the request body: ", request.body);
         const [type, token] = request.headers.authorization?.split(' ') ?? []
 
         return type === 'Bearer' ? token : undefined
