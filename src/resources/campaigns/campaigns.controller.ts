@@ -30,7 +30,7 @@ export class CampaignsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCampaignDto: UpdateCampaignDto) {
+  update(@Param('id') id: string, @Body() updateCampaignDto: Prisma.CampaignUpdateInput) {
     return this.campaignsService.update(id, updateCampaignDto);
   }
 

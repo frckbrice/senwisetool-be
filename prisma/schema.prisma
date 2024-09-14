@@ -90,6 +90,11 @@ enum CompanyStatus {
   EXPIRED
 }
 
+enum CampaignStatus {
+  OPEN
+  CLOSED
+}
+
 
 model User {
   id           String    @id @default(cuid())
@@ -122,7 +127,9 @@ model Company {
   slug  String ?
   country String
   email  String @unique
-  logo  String ? @unique
+
+  logo  String ? 
+
 
   payment_mode String ?
   company_paypal_email String ?
@@ -131,7 +138,7 @@ model Company {
   sector_of_activity String 
   website  String ?
   address  String 
-
+  state String
   phone_number  String
   city  String
   description String
@@ -139,10 +146,10 @@ model Company {
   timezone String @default("UTC")
 
 // the case where the company account will be deactivate
-  status CompanyStatus ?
+  status CompanyStatus ? 
   users  User[]
   projects Project[]
-  campaign Company_Campaign[]
+  campaigns Company_Campaign[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   trainings Training[]
@@ -183,11 +190,12 @@ model Project {
 
 model Campaign {
   id  String @id @default(cuid())
-  name  String
+  name  String @unique
   description  String
-
   start_date  DateTime
   end_date  DateTime
+  status CampaignStatus @default(OPEN)
+
   companies Company_Campaign[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

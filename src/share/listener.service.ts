@@ -7,6 +7,8 @@ import { MailerService } from '@nestjs-modules/mailer'
 import { CompanyType } from 'src/resources/companies/entities/company.entity'
 import { LoggerService } from 'src/global/logger/logger.service'
 import { MailServiceEvent } from './mail/mail.service'
+import { Request } from 'express'
+import { Role, User, UserStatus } from '@prisma/client'
 
 @Injectable()
 export class ListenerService {
@@ -63,16 +65,34 @@ export class ListenerService {
       subject: `${payload.name} COMPANY CREATED IN SENWISETOOL PLATEFORM✔`,
       text: 'Thanks for joining us. We are glad you are member of senwisetool plateform. You can now enjoy all the features of our platform.',
     });
-    if (res.endWith("gsmtp")) {
+    if (res) {
       // TODO: send email to Customer company
       this.logger.log('Company created \n\n ' + JSON.stringify(payload), ListenerService.name);
     }
     else {
+      // TODO: will find a better way the handle this later
       while (this.counter < 4) {
         this.handleCompanyCreated(payload)
         this.counter++;
       }
     }
     this.counter = 1;
+  }
+
+  @OnEvent(localEvents.userCreated)
+  async updateRequestCurrentUserPayload(payload: Partial<User>, req: Request & {
+    user: Partial<User>
+  }) {
+
+    const user = {
+      id: payload.id,
+      first_name: <string>payload.first_name,
+      email: payload.email,
+      role: <Role>payload.role,
+      status: UserStatus.ACTIVE,
+      company_id: <string>payload.company_id,
+    }
+
+    return req["user"] = user;
   }
 }

@@ -30,40 +30,22 @@ export class MailServiceEvent {
   async senMail({ toEmail, subject, text }: Partial<MailOptions>): Promise<any> {
 
 
-    try {
-      return this.mailerService
-        .sendMail({
-          to: toEmail, // list of receivers
-          from: 'noreply@sendwisetool.com', // sender address
-          subject, // Subject line
-          text, // plaintext body
-          //  html: '<b>welcome</b>', // HTML body content
-        })
-        .then((resp) => {
-          this.logger.log(` mail sent to ${toEmail}`, MailServiceEvent.name);
-          return resp.response;
-        })
-        .catch((err) => {
-          this.logger.error(`mail service event :error sending mail \n\n ${err}`, MailServiceEvent.name);
-        });
-    } catch (error) {
-      console.error(error);
-    }
+    return this.mailerService
+      .sendMail({
+        to: toEmail, // list of receivers
+        from: 'noreply@sendwisetool.com', // sender address
+        subject, // Subject line
+        text, // plaintext body
+        //  html: '<b>welcome</b>', // HTML body content
+      })
+      .then((resp) => {
+        this.logger.log(` mail sent to ${toEmail}`, MailServiceEvent.name);
+        return resp.response;
+      })
+      .catch((err) => {
+        this.logger.error(`mail service event :error sending mail \n\n ${err}`, MailServiceEvent.name);
+      });
+
   }
 
-  findAll() {
-    return `This action returns all mail`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} mail`;
-  }
-
-  update(id: number,) {
-    return `This action updates a #${id} mail`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} mail`;
-  }
 }

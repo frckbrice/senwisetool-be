@@ -1,27 +1,27 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
+import { HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { CreateUserDto } from './dto/create-user.dto'
 import { Prisma, Role, User, UserStatus } from '@prisma/client'
 import { PrismaService } from 'src/adapters/config/prisma.service'
 import { PaginationQueryDto } from './dto/pagination-query.dto'
 import { LoggerService } from 'src/global/logger/logger.service'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 
 @Injectable()
 export class UsersService {
   private readonly logger = new LoggerService(UsersService.name)
   constructor(
     private readonly prismaService: PrismaService,
-
+    private eventEmitter: EventEmitter2
   ) { }
 
   async findOne(id: string) {
 
     try {
-      const where = {} as { id: string | undefined, email: string | undefined }
+      const where = { id: "", email: "" } as { id: string | undefined, email: string | undefined }
       if (id.toString().includes("@")) {
         where["email"] = id as string
-      }
-
-      else where["id"] = id as string
+      } else
+        where["id"] = id as string
 
 
       const user = await this.prismaService.user.findUnique({
@@ -43,13 +43,13 @@ export class UsersService {
       if (user)
         return {
           data: user,
-          status: 200,
+          status: HttpStatus.OK,
           message: `User fetched  successfully`
         }
       else
         return {
           data: null,
-          status: 500,
+          status: HttpStatus.BAD_REQUEST,
           message: `Failed to fetch user`
         }
     } catch (error) {
@@ -129,7 +129,7 @@ export class UsersService {
       if (user)
         return;
       else {
-        await this.prismaService.user.create({
+        const user = await this.prismaService.user.create({
           data: {
             id: data.id,
             first_name: <string>data.first_name,
@@ -137,13 +137,10 @@ export class UsersService {
             role: <Role>data.role,
             status: UserStatus.ACTIVE,
             company_id: <string>data.company_id,
-            phone_number: null,
-            username: null,
-            famer_attached_contract_url: null,
-            last_name: null,
-            profileUrls: null,
           },
-        })
+        });
+        // send message for company created in senwisetool system
+        this.eventEmitter.emit('user.created', user)
       }
 
     } catch (error) {

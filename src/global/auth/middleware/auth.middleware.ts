@@ -4,23 +4,29 @@ import { RequestService } from "src/global/current-logged-in/request.service";
 import { HttpException, HttpStatus, Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common'
 import { NextFunction, Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
-import { User } from "@prisma/client";
+import { Role, User } from "@prisma/client";
 import { LoggerService } from "src/global/logger/logger.service";
 import { PrismaService } from "src/adapters/config/prisma.service";
 import { UserType } from "src/resources/users/entities/user.entity";
+import { UsersService } from "src/resources/users/users.service";
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
-    private allowRoutes = [
+    private allowGetRoutes = [
         "/v1",
         "/v1/health",
+    ]
+
+    private allowPostRoutes = [
+        '/v1/companies/',
         '/v1/subscriptions/successPayPalPayment/?subscription_id',
     ]
 
     constructor(
         private readonly requestService: RequestService,
         private jwtService: JwtService,
-        private prismaService: PrismaService
+        private prismaService: PrismaService,
+
     ) { }
     private readonly logger = new LoggerService(AuthMiddleware.name);
 
@@ -28,13 +34,16 @@ export class AuthMiddleware implements NestMiddleware {
         user: Partial<User>
     }, res: Response, next: NextFunction): Promise<void> {
 
-        // allow some routes to be public
-        if (this.allowRoutes.includes(req.originalUrl)) {
+        if (req.method == "GET" && this.allowGetRoutes.includes(req.originalUrl)) {
+            this.logger.log('Allowing public  access to route ', AuthMiddleware.name)
+            return next()
+        } else if (req.method == "POST" && this.allowPostRoutes.includes(req.originalUrl)) {
+            // allow some routes to be public
             this.logger.log('Allowing public  access to route ', AuthMiddleware.name)
             return next()
         }
-        this.logger.log('Not allowing public access, start authentication ', AuthMiddleware.name);
 
+        this.logger.log('Not allowing public access, start authentication ', AuthMiddleware.name);
 
         try {
             //get the token frm the req.
@@ -45,19 +54,33 @@ console.log("existing user ", token)
             }
             /** here we can do the authentication and attach the user to the request */
             const payload = await this.jwtService.decode(token)
+            console.log("user payload ", payload)
+            const existingUser = <User>(await this.prismaService.user.findUnique({
+                where: { id: payload.sub },
+                select: {
+                    role: true,
+                    id: true,
+                    email: true,
+                    company_id: true,
+                    first_name: true,
+                }
+            }));
 
-            const existingUser = await this.prismaService.user.findUnique({ where: { id: payload.sub }, select: { role: true } }) as User;
-
-            // console.log("existing user ", payload)
+            console.log("existing user ", existingUser)
             let user: Partial<User>;
             if (payload) {
+                let userRole: Role = Role.ADG;
+                if (payload.org_role)
+                    userRole = Role.PDG;
 
                 user = {
-                    id: payload.sub,
-                    email:  existingUser.email ?? payload.user_email,
-                    first_name:  existingUser.first_name ?? payload.user_first_name,
-                    role: existingUser ? existingUser.role : "ADG",
-                    company_id:  existingUser.company_id ?? payload.company_id ,
+
+                    id: existingUser.id ?? payload.sub,
+                    email: existingUser.email ?? payload.user_email,
+                    first_name: existingUser.first_name ?? payload.user_first_name,
+                    role: existingUser.role ?? userRole,
+                    company_id: existingUser.company_id,
+
                 };
                 req['user'] = user;
                 this.requestService.setUserId(payload.sub);
@@ -78,8 +101,10 @@ console.log("existing user ", token)
      * @return {string | undefined} the xtracted token  or undefined
      */
     private extractTokenFromHeader(request: Request): string | undefined {
-        console.log(" the request headers auth: ", request.headers.authorization);
-        console.log("the request body: ", request.body);
+
+        // console.log(" the request   headers auth: ", request.headers.authorization);
+        // console.log("the request body: ", request.body);
+
         const [type, token] = request.headers.authorization?.split(' ') ?? []
 
         return type === 'Bearer' ? token : undefined

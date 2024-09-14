@@ -80,24 +80,24 @@ import { CompanyCampaignModule } from './resources/company_campaign/company_camp
   ],
   controllers: [AppController],
   providers: [AppService, RequestService,
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: RolesGuard,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
 
-    // },
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: CacheInterceptor, // caching
     },
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: ThrottlerGuard
-    // }
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard
+    }
   ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     // consumer.apply(AuthMiddleware).forRoutes({ path: "/", method: RequestMethod.GET });
-    // consumer.apply(AuthMiddleware).forRoutes("*");
+    consumer.apply(AuthMiddleware).forRoutes("*");
   }
 }

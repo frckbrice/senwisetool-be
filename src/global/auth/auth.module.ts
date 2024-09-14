@@ -7,7 +7,6 @@ import { UsersService } from 'src/resources/users/users.service'
 @Module({
   imports: [
     UsersModule,
-
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRETE,
