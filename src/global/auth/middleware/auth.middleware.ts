@@ -20,7 +20,7 @@ export class AuthMiddleware implements NestMiddleware {
     private allowGetRoutes = ['/v1', '/v1/health'];
 
     private allowPostRoutes = [
-        '/v1/companies/',
+        '/v1/companies',
         '/v1/subscriptions/successPayPalPayment/?subscription_id',
     ];
 
