@@ -24,11 +24,10 @@ import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator
 @Controller('companies')
 @SkipThrottle()
 export class CompanyController {
-  constructor(private readonly companyService: ComapnyService) {}
+  constructor(private readonly companyService: ComapnyService) { }
 
   @Post()
   @ApiOperation({ summary: 'create project data' })
-  @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
   create(
     @Body() createInspectionDatumDto: Prisma.CompanyCreateInput,
