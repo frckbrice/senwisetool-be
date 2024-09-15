@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { StockCampaignsService } from './stock_campaigns.service';
 import { CreateStockCampaignDto } from './dto/create-stock_campaign.dto';
 import { UpdateStockCampaignDto } from './dto/update-stock_campaign.dto';
@@ -7,7 +15,7 @@ import { ApiTags } from '@nestjs/swagger';
 @ApiTags('stock-campaigns')
 @Controller('stock-campaigns')
 export class StockCampaignsController {
-  constructor(private readonly stockCampaignsService: StockCampaignsService) { }
+  constructor(private readonly stockCampaignsService: StockCampaignsService) {}
 
   @Post()
   create(@Body() createStockCampaignDto: CreateStockCampaignDto) {
@@ -25,7 +33,10 @@ export class StockCampaignsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStockCampaignDto: UpdateStockCampaignDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateStockCampaignDto: UpdateStockCampaignDto,
+  ) {
     return this.stockCampaignsService.update(+id, updateStockCampaignDto);
   }
 

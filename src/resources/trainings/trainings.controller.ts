@@ -1,8 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { TrainingService } from './trainings.service';
 
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Prisma, Role, User } from "@prisma/client";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Prisma, Role, User } from '@prisma/client';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { SkipThrottle } from '@nestjs/throttler';
@@ -16,13 +31,16 @@ import { TrainingEntity } from './entities/training.entity';
 @ApiBearerAuth()
 @SkipThrottle() // TODO: set this throttler later to correct value
 export class TrainingController {
-  constructor(private readonly trainingService: TrainingService) { }
+  constructor(private readonly trainingService: TrainingService) {}
 
   @Post()
   @ApiOperation({ summary: 'create training model object' })
-  @Roles(Role.ADG,)
+  @Roles(Role.ADG)
   @UseGuards(RolesGuard)
-  create(@Body() createTrainingDatumDto: Prisma.TrainingCreateInput, @CurrentUser() user: Partial<User>) {
+  create(
+    @Body() createTrainingDatumDto: Prisma.TrainingCreateInput,
+    @CurrentUser() user: Partial<User>,
+  ) {
     return this.trainingService.create(createTrainingDatumDto, user);
   }
 
@@ -33,7 +51,6 @@ export class TrainingController {
   @ApiResponse({
     status: 200,
     description: 'The trainings has been successfully fetched.',
-
   })
   findAll(@Query() query: PaginationTrainingQueryDto) {
     return this.trainingService.findAll(query);
@@ -46,7 +63,6 @@ export class TrainingController {
   @ApiResponse({
     status: 200,
     description: 'The training has been successfully fetched.',
-
   })
   findOne(@Param('training_id') training_id: string) {
     return this.trainingService.findOne(training_id);
@@ -56,7 +72,10 @@ export class TrainingController {
   @UseGuards(RolesGuard)
   @Patch(':training_id')
   @ApiOperation({ summary: 'update one training with its training_id' })
-  update(@Param('training_id') training_id: string, @Body() updateTrainingDatumDto: Prisma.TrainingUpdateInput) {
+  update(
+    @Param('training_id') training_id: string,
+    @Body() updateTrainingDatumDto: Prisma.TrainingUpdateInput,
+  ) {
     return this.trainingService.update(training_id, updateTrainingDatumDto);
   }
 

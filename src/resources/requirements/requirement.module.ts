@@ -10,4 +10,4 @@ import { ReadCompanyFiles } from './read-company-files';
   controllers: [RequirementController],
   providers: [RequirementService, ReadCompanyFiles],
 })
-export class RequirementModule { }
+export class RequirementModule {}

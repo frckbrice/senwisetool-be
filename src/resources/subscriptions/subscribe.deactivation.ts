@@ -34,8 +34,6 @@
 //         const now = moment().tz(userTimezone);
 //         // convert the end date to customer time zone a
 
-
-
 //         const end_date = moment(subscription.end_date).tz(userTimezone);
 
 //         if (now.isAfter(end_date)) {
@@ -100,7 +98,6 @@
 //     }
 // }
 
-
 //             // Add 3 weeks of free usage
 //             // const freeEndDate = moment(subscription.end_date).add(21, 'days').toDate();
 //             // const data = {
@@ -119,8 +116,14 @@
 
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
-import { $Enums, Company, CompanyStatus, Prisma, SubscriptionStatus } from '@prisma/client';
-import * as moment from 'moment-timezone'
+import {
+  $Enums,
+  Company,
+  CompanyStatus,
+  Prisma,
+  SubscriptionStatus,
+} from '@prisma/client';
+import * as moment from 'moment-timezone';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { SubscriptionEntity } from './entities/subscription.entity';
 import { SubscriptionsService } from './subscriptions.service';
@@ -131,146 +134,177 @@ import { CronJob } from 'cron';
 
 moment.tz.setDefault('Africa/Douala');
 type CompanySubscription = {
-    company: {
-        id: string;
-        timezone: string;
-    };
-} & {
+  company: {
     id: string;
-    plan_id: string;
-    company_id: string;
-    start_date: Date;
-    end_date: Date;
-    status: $Enums.SubscriptionStatus;
-    updated_at: Date;
-}
+    timezone: string;
+  };
+} & {
+  id: string;
+  plan_id: string;
+  company_id: string;
+  start_date: Date;
+  end_date: Date;
+  status: $Enums.SubscriptionStatus;
+  updated_at: Date;
+};
 @Injectable()
 export class SubscriptionManagementService {
-    private logger = new LoggerService(SubscriptionManagementService.name);
+  private logger = new LoggerService(SubscriptionManagementService.name);
 
-    constructor(
-        private prismaService: PrismaService,
-        private subscriptionService: SubscriptionsService,
-        private eventEmitter: EventEmitter2,
-        private schedulerRegistry: SchedulerRegistry
-    ) {
+  constructor(
+    private prismaService: PrismaService,
+    private subscriptionService: SubscriptionsService,
+    private eventEmitter: EventEmitter2,
+    private schedulerRegistry: SchedulerRegistry,
+  ) {}
+
+  @Cron(CronExpression.EVERY_12_HOURS, {
+    name: 'check_subscriptions',
+  })
+  private async checkSubscriptions() {
+    const subscriptions = (
+      await this.subscriptionService.getSubscriptionsExpireInNextTwoMonthsOrThreeWeeksAfterExpiration()
+    ).data;
+    console.log('subscriptions: start ', subscriptions);
+    for (const subscription of subscriptions) {
+      await this.checkSubscriptionStatus(subscription);
     }
+  }
 
+  // add cron job;
+  addCronJob(name: string, seconds: string) {
+    const job = new CronJob(`${seconds} * * * * *`, () => {
+      this.logger.warn(`time (${seconds}) for job ${name} to run!`);
+    });
 
-    @Cron(CronExpression.EVERY_12_HOURS, {
-        name: 'check_subscriptions',
-    })
-    private async checkSubscriptions() {
+    this.schedulerRegistry.addCronJob(name, job);
+    job.start();
 
-        const subscriptions = (await this.subscriptionService.getSubscriptionsExpireInNextTwoMonthsOrThreeWeeksAfterExpiration()).data;
-        console.log("subscriptions: start ", subscriptions)
-        for (const subscription of subscriptions) {
-            await this.checkSubscriptionStatus(subscription);
-        }
+    this.logger.warn(
+      `job ${name} added for each minute at ${seconds} seconds!`,
+    );
+  }
+
+  private async checkSubscriptionStatus(subscription: CompanySubscription) {
+    const user_time_zone = subscription.company?.timezone || 'UTC';
+    const now = moment().tz(user_time_zone);
+
+    const end_date = moment(subscription.end_date).tz(user_time_zone);
+    const grace_end_date = moment(end_date).add(3, 'weeks');
+
+    if (now.isAfter(grace_end_date)) {
+      this.logger.log(
+        `Subscription ${subscription.id} definitly expired`,
+        SubscriptionManagementService.name,
+      );
+      await this.deactivateAccount(subscription);
+    } else if (now.isAfter(end_date) && now.isBefore(grace_end_date)) {
+      this.logger.log(
+        `Subscription ${subscription.id} passes in grace period`,
+        SubscriptionManagementService.name,
+      );
+      await this.startGracePeriod(subscription);
+    } else if (this.shouldSendNotification(subscription, now)) {
+      this.logger.log(
+        `Subscription ${subscription.id} has should be notified`,
+        SubscriptionManagementService.name,
+      );
+      await this.sendNotificationForSoonExpiration(subscription);
     }
+  }
 
+  private async deactivateAccount(subscription: CompanySubscription) {
+    await this.prismaService.$transaction(async () => {
+      await this.subscriptionService.updateCompanySubscription(
+        subscription.id,
+        {
+          status: SubscriptionStatus.EXPIRED,
+        },
+      );
 
-    // add cron job;
-    addCronJob(name: string, seconds: string) {
-        const job = new CronJob(`${seconds} * * * * *`, () => {
-            this.logger.warn(`time (${seconds}) for job ${name} to run!`);
-        });
+      await this.prismaService.company.update({
+        where: { id: subscription.company_id },
+        data: {
+          paypal_id: null,
+          status: CompanyStatus.INACTIVE,
+        },
+      });
+    });
+    this.logger.log(
+      `Subscription account No: ${subscription.id} has been deactivated`,
+      SubscriptionManagementService.name,
+    );
+    await this.notifyDeactivation(subscription.company_id);
+  }
 
-        this.schedulerRegistry.addCronJob(name, job);
-        job.start();
+  private async startGracePeriod(subscription: CompanySubscription) {
+    const grace_end_date = moment(subscription.end_date)
+      .add(3, 'weeks')
+      .toDate();
+    await this.subscriptionService.updateCompanySubscription(subscription.id, {
+      status: SubscriptionStatus.GRACE_PERIOD,
+      grace_period_end: grace_end_date,
+    });
 
-        this.logger.warn(
-            `job ${name} added for each minute at ${seconds} seconds!`,
-        );
-    }
+    await this.notifyGracePeriodStart(subscription.company_id);
+  }
 
-    private async checkSubscriptionStatus(subscription: CompanySubscription) {
+  private shouldSendNotification(
+    subscription: CompanySubscription,
+    now: moment.Moment,
+  ): boolean {
+    const twoMonthsBeforeEnd = moment(subscription.end_date).subtract(
+      2,
+      'months',
+    );
+    return (
+      now.isAfter(twoMonthsBeforeEnd) &&
+      now.isBefore(moment(subscription.end_date))
+    );
+  }
 
-        const user_time_zone = subscription.company?.timezone || 'UTC';
-        const now = moment().tz(user_time_zone);
+  private async sendNotificationForSoonExpiration(
+    subscription: CompanySubscription,
+  ) {
+    this.logger.log(
+      `Sending notification to company ${subscription.company_id}`,
+      SubscriptionManagementService.name,
+    );
+    this.eventEmitter.emit(
+      localEvents.subscriptionRenewalReminder,
+      subscription,
+    );
 
-        const end_date = moment(subscription.end_date).tz(user_time_zone);
-        const grace_end_date = moment(end_date).add(3, 'weeks');
+    await this.subscriptionService.updateCompanySubscription(subscription.id, {
+      last_notification_date: moment().toDate(),
+    });
+  }
 
-        if (now.isAfter(grace_end_date)) {
+  // notify company for account deactivation
+  private async notifyDeactivation(companyId: string) {
+    const company = await this.prismaService.company.findUnique({
+      where: { id: companyId },
+    });
+    if (!company) return;
 
-            this.logger.log(`Subscription ${subscription.id} definitly expired`, SubscriptionManagementService.name);
-            await this.deactivateAccount(subscription);
+    this.logger.log(
+      `Notifying company ${companyId} about account deactivation`,
+      SubscriptionManagementService.name,
+    );
+    this.eventEmitter.emit(localEvents.accountDeactivated, company);
+  }
 
-        } else if (now.isAfter(end_date) && now.isBefore(grace_end_date)) {
+  // notify the company for grace period
+  private async notifyGracePeriodStart(companyId: string) {
+    const company = await this.prismaService.company.findUnique({
+      where: { id: companyId },
+    });
+    if (!company) return;
 
-            this.logger.log(`Subscription ${subscription.id} passes in grace period`, SubscriptionManagementService.name);
-            await this.startGracePeriod(subscription);
-
-        } else if (this.shouldSendNotification(subscription, now)) {
-
-            this.logger.log(`Subscription ${subscription.id} has should be notified`, SubscriptionManagementService.name);
-            await this.sendNotificationForSoonExpiration(subscription);
-
-        }
-    }
-
-    private async deactivateAccount(subscription: CompanySubscription) {
-        await this.prismaService.$transaction(async () => {
-            await this.subscriptionService.updateCompanySubscription(subscription.id, {
-                status: SubscriptionStatus.EXPIRED
-            })
-
-            await this.prismaService.company.update({
-                where: { id: subscription.company_id },
-                data: {
-                    paypal_id: null,
-                    status: CompanyStatus.INACTIVE,
-                },
-            });
-        });
-        this.logger.log(`Subscription account No: ${subscription.id} has been deactivated`, SubscriptionManagementService.name);
-        await this.notifyDeactivation(subscription.company_id);
-    }
-
-    private async startGracePeriod(subscription: CompanySubscription) {
-        const grace_end_date = moment(subscription.end_date).add(3, 'weeks').toDate();
-        await this.subscriptionService.updateCompanySubscription(subscription.id, {
-            status: SubscriptionStatus.GRACE_PERIOD,
-            grace_period_end: grace_end_date,
-        });
-
-
-        await this.notifyGracePeriodStart(subscription.company_id);
-    }
-
-    private shouldSendNotification(subscription: CompanySubscription, now: moment.Moment): boolean {
-        const twoMonthsBeforeEnd = moment(subscription.end_date).subtract(2, 'months');
-        return now.isAfter(twoMonthsBeforeEnd) && now.isBefore(moment(subscription.end_date));
-    }
-
-
-    private async sendNotificationForSoonExpiration(subscription: CompanySubscription) {
-
-        this.logger.log(`Sending notification to company ${subscription.company_id}`, SubscriptionManagementService.name);
-        this.eventEmitter.emit(localEvents.subscriptionRenewalReminder, subscription);
-
-        await this.subscriptionService.updateCompanySubscription(subscription.id, {
-            last_notification_date: moment().toDate(),
-        });
-    }
-
-    // notify company for account deactivation
-    private async notifyDeactivation(companyId: string) {
-
-        const company = await this.prismaService.company.findUnique({ where: { id: companyId } });
-        if (!company) return;
-
-        this.logger.log(`Notifying company ${companyId} about account deactivation`, SubscriptionManagementService.name);
-        this.eventEmitter.emit(localEvents.accountDeactivated, company);
-    }
-
-    // notify the company for grace period
-    private async notifyGracePeriodStart(companyId: string) {
-        const company = await this.prismaService.company.findUnique({ where: { id: companyId } });
-        if (!company) return;
-
-        this.logger.log(`Notifying company ${companyId} about grace period start`, SubscriptionManagementService.name);
-        this.eventEmitter.emit(localEvents.gracePeriodStarted, company);
-    }
+    this.logger.log(
+      `Notifying company ${companyId} about grace period start`,
+      SubscriptionManagementService.name,
+    );
+    this.eventEmitter.emit(localEvents.gracePeriodStarted, company);
+  }
 }

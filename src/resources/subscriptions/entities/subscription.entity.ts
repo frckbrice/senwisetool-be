@@ -1,2 +1,1 @@
-
-export class SubscriptionEntity { }//+
+export class SubscriptionEntity {} //+

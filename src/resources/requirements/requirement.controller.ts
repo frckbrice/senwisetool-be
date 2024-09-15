@@ -1,7 +1,20 @@
-import { Controller, Post, Body, Patch, Param, UseGuards, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Patch,
+  Param,
+  UseGuards,
+  Get,
+} from '@nestjs/common';
 import { RequirementService } from './requirement.service';
 
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Prisma, Role } from '@prisma/client';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
@@ -12,7 +25,7 @@ import { UserType } from '../users/entities/user.entity';
 @ApiBearerAuth()
 @Controller('requirements')
 export class RequirementController {
-  constructor(private readonly requirementService: RequirementService) { }
+  constructor(private readonly requirementService: RequirementService) {}
 
   // create a new requirement  (only for ADG and PDG)
   @Post()
@@ -26,16 +39,24 @@ export class RequirementController {
 
   // update a spcific requirement
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateChapterDto: Prisma.RequirementUpdateInput) {
+  update(
+    @Param('id') id: string,
+    @Body() updateChapterDto: Prisma.RequirementUpdateInput,
+  ) {
     return this.requirementService.update(id, updateChapterDto);
   }
 
   // get all requirements for a specific price plan
   @Get('price_plan/:plan_id')
-  getAllPricePlan(@Param('plan_id') plan_id: string, @CurrentUser() user: UserType) {
-    return this.requirementService.findAllRequirements({ plan_id: plan_id ?? "", company_id: <string>user?.company_id });
+  getAllPricePlan(
+    @Param('plan_id') plan_id: string,
+    @CurrentUser() user: UserType,
+  ) {
+    return this.requirementService.findAllRequirements({
+      plan_id: plan_id ?? '',
+      company_id: <string>user?.company_id,
+    });
   }
-
 
   @Get()
   async getAllfiles() {

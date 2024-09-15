@@ -6,4 +6,4 @@ import { TrainingSessionController } from './training_session.controller';
   controllers: [TrainingSessionController],
   providers: [TrainingSessionService],
 })
-export class TrainingSessionModule { }
+export class TrainingSessionModule {}

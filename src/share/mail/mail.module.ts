@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common'
-import { MailServiceEvent } from './mail.service'
-import { MailerModule } from '@nestjs-modules/mailer'
-import * as path from 'path'
+import { Module } from '@nestjs/common';
+import { MailServiceEvent } from './mail.service';
+import { MailerModule } from '@nestjs-modules/mailer';
+import * as path from 'path';
 
 @Module({
   imports: [
@@ -31,4 +31,4 @@ import * as path from 'path'
   providers: [MailServiceEvent],
   exports: [MailServiceEvent],
 })
-export class MailModule { }
+export class MailModule {}

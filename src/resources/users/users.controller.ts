@@ -1,8 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiBearerAuth, ApiCreatedResponse, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UserInterceptor } from './interceptors/user.interceptor';
 import { Prisma, Role } from '@prisma/client';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
@@ -16,14 +34,19 @@ import { UserType } from './entities/user.entity';
 @Controller('users')
 @SkipThrottle() // avoid rate limit
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
   @ApiOperation({ summary: 'create user' })
   @ApiBearerAuth()
-  @ApiCreatedResponse({ description: 'The record has been successfully created.' })
+  @ApiCreatedResponse({
+    description: 'The record has been successfully created.',
+  })
   @ApiForbiddenResponse({ description: 'Forbidden.' })
-  create(@Body() createUserDto: Partial<Prisma.UserCreateInput & { company_id: string }>) {
+  create(
+    @Body()
+    createUserDto: Partial<Prisma.UserCreateInput & { company_id: string }>,
+  ) {
     return this.usersService.createUser(createUserDto);
   }
 
@@ -32,7 +55,7 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'get all users' })
   @ApiResponse({
-    description: "successfully fetch all users",
+    description: 'successfully fetch all users',
     status: 200,
   })
   @UseInterceptors(UserInterceptor)
@@ -40,8 +63,8 @@ export class UsersController {
     const queryParams = {
       limit: Number(query.perPage || 30), // current default for pagination on admin dashboard
       skip: Number(query.page || 0),
-      role: query?.role as Role | undefined
-    }
+      role: query?.role as Role | undefined,
+    };
     return this.usersService.findAll({ ...queryParams });
   }
 
@@ -68,7 +91,10 @@ export class UsersController {
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'delete by id' })
-  punishUser(@Param('id') id: string, @Query() query: { deactivate: "INACTIVE", ban: "BANNED" }) {
+  punishUser(
+    @Param('id') id: string,
+    @Query() query: { deactivate: 'INACTIVE'; ban: 'BANNED' },
+  ) {
     return this.usersService.punishUser(id, query);
   }
 
@@ -76,7 +102,7 @@ export class UsersController {
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'delete by id' })
-  remove(@Param('id') id: string,) {
+  remove(@Param('id') id: string) {
     return this.usersService.removeUser(id);
   }
 }

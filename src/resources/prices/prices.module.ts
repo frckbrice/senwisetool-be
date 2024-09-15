@@ -8,4 +8,4 @@ import { CurrentPlanIds } from 'src/global/utils/current-plan-ids';
   controllers: [PricesController],
   providers: [PricesService, CurrentPlanIds],
 })
-export class PricesModule { }
+export class PricesModule {}

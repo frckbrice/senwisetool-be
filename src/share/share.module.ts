@@ -7,7 +7,7 @@ import { MailModule } from './mail/mail.module';
   controllers: [],
   providers: [
     // ShareService,
-    ListenerService
+    ListenerService,
   ],
 })
-export class ShareModule { }
+export class ShareModule {}

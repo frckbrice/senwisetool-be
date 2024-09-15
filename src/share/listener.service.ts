@@ -1,26 +1,24 @@
-import { Injectable, Logger } from '@nestjs/common'
-import { OnEvent } from '@nestjs/event-emitter'
-import { localEvents } from './events'
+import { Injectable, Logger } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
+import { localEvents } from './events';
 // import { MailService } from 'src/mail/mail.service'
-import { PrismaService } from 'src/adapters/config/prisma.service'
-import { MailerService } from '@nestjs-modules/mailer'
-import { CompanyType } from 'src/resources/companies/entities/company.entity'
-import { LoggerService } from 'src/global/logger/logger.service'
-import { MailServiceEvent } from './mail/mail.service'
-import { Request } from 'express'
-import { Role, User, UserStatus } from '@prisma/client'
+import { PrismaService } from 'src/adapters/config/prisma.service';
+import { MailerService } from '@nestjs-modules/mailer';
+import { CompanyType } from 'src/resources/companies/entities/company.entity';
+import { LoggerService } from 'src/global/logger/logger.service';
+import { MailServiceEvent } from './mail/mail.service';
+import { Request } from 'express';
+import { Role, User, UserStatus } from '@prisma/client';
 
 @Injectable()
 export class ListenerService {
-  counter: number = 1
-  private logger = new LoggerService(ListenerService.name)
+  counter: number = 1;
+  private logger = new LoggerService(ListenerService.name);
   constructor(
     private readonly mailerService: MailerService,
     private prismaService: PrismaService,
-    private sendMailService: MailServiceEvent
-  ) { }
-
-
+    private sendMailService: MailServiceEvent,
+  ) {}
 
   /**
    * Handle the event when a participant is created.
@@ -29,30 +27,24 @@ export class ListenerService {
    */
   @OnEvent(localEvents.paymentSuccess)
   async handleSuccessPaymentLogic(payload: any) {
-
     // TODO: send email to Customer company
     this.logger.log('handleSuccessPaymentLogic', JSON.stringify(payload));
-
   }
 
   @OnEvent(localEvents.paymentCanceled)
   async handleCancelPaymentLogic(payload: any) {
-
     // TODO: send email to Customer company
     this.logger.log('handleCancelPaymentLogic', JSON.stringify(payload));
   }
 
   @OnEvent(localEvents.paymentSuccess)
   async handleUnsubscribePaymentLogic(payload: any) {
-
     // TODO: send email to Customer company
     this.logger.log('handleUnsubscribePaymentLogic', JSON.stringify(payload));
-
   }
 
   @OnEvent(localEvents.paymentCanceled)
   async handleupgradePaymentLogic(payload: any) {
-
     // TODO: send email to Customer company
     this.logger.log('handleupgradePaymentLogic', JSON.stringify(payload));
   }
@@ -67,12 +59,14 @@ export class ListenerService {
     });
     if (res) {
       // TODO: send email to Customer company
-      this.logger.log('Company created \n\n ' + JSON.stringify(payload), ListenerService.name);
-    }
-    else {
+      this.logger.log(
+        'Company created \n\n ' + JSON.stringify(payload),
+        ListenerService.name,
+      );
+    } else {
       // TODO: will find a better way the handle this later
       while (this.counter < 4) {
-        this.handleCompanyCreated(payload)
+        this.handleCompanyCreated(payload);
         this.counter++;
       }
     }
@@ -80,10 +74,12 @@ export class ListenerService {
   }
 
   @OnEvent(localEvents.userCreated)
-  async updateRequestCurrentUserPayload(payload: Partial<User>, req: Request & {
-    user: Partial<User>
-  }) {
-
+  async updateRequestCurrentUserPayload(
+    payload: Partial<User>,
+    req: Request & {
+      user: Partial<User>;
+    },
+  ) {
     const user = {
       id: payload.id,
       first_name: <string>payload.first_name,
@@ -91,8 +87,8 @@ export class ListenerService {
       role: <Role>payload.role,
       status: UserStatus.ACTIVE,
       company_id: <string>payload.company_id,
-    }
+    };
 
-    return req["user"] = user;
+    return (req['user'] = user);
   }
 }

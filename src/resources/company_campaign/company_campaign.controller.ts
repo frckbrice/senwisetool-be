@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { CompanyCampaignService } from './company_campaign.service';
 import { CreateCompanyCampaignDto } from './dto/create-company_campaign.dto';
 import { UpdateCompanyCampaignDto } from './dto/update-company_campaign.dto';
@@ -6,7 +14,9 @@ import { Prisma } from '@prisma/client';
 
 @Controller('company-campaign')
 export class CompanyCampaignController {
-  constructor(private readonly companyCampaignService: CompanyCampaignService) { }
+  constructor(
+    private readonly companyCampaignService: CompanyCampaignService,
+  ) {}
 
   @Post()
   create(@Body() createCompanyCampaignDto: Prisma.Company_CampaignCreateInput) {
@@ -24,7 +34,10 @@ export class CompanyCampaignController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCompanyCampaignDto: UpdateCompanyCampaignDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateCompanyCampaignDto: UpdateCompanyCampaignDto,
+  ) {
     return this.companyCampaignService.update(id, updateCompanyCampaignDto);
   }
 

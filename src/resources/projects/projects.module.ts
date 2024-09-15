@@ -7,4 +7,4 @@ import { Slugify } from 'src/global/utils/slugilfy';
   controllers: [ProjectsController],
   providers: [ProjectsService, Slugify],
 })
-export class ProjectsModule { }
+export class ProjectsModule {}

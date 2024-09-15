@@ -14,9 +14,9 @@ import { UsersModule } from '../users/users.module';
   imports: [
     UsersModule,
     FetchModule.register({
-      baseUrl: "https://api-m.sandbox.paypal.com"
+      baseUrl: 'https://api-m.sandbox.paypal.com',
     }),
-    PricesModule
+    PricesModule,
   ],
   controllers: [SubscriptionsController],
   providers: [
@@ -24,8 +24,8 @@ import { UsersModule } from '../users/users.module';
     SubscribeToPayPalService,
     CurrentPlanIds,
     ApplyNixins,
-    SubscriptionManagementService
+    SubscriptionManagementService,
   ],
-  exports: [SubscriptionsService, SubscriptionManagementService]
+  exports: [SubscriptionsService, SubscriptionManagementService],
 })
-export class SubscriptionsModule { }
+export class SubscriptionsModule {}

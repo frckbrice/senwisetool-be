@@ -1,7 +1,7 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from '@prisma/client';
 
 export class CreateRequirementDto {
-    /**
+  /**
      * example:  {
         title: "Coûts de Production et Revenu Vital",
         numero: "3.1",
@@ -16,13 +16,13 @@ export class CreateRequirementDto {
             }
           },
      */
-    content: Prisma.JsonValue;
-    /**
-     * example: "3.1"
-     */
-    numero: string;
-    /**
-     * example: "Coûts de Production et Revenu Vital"
-     */
-    title: string;
+  content: Prisma.JsonValue;
+  /**
+   * example: "3.1"
+   */
+  numero: string;
+  /**
+   * example: "Coûts de Production et Revenu Vital"
+   */
+  title: string;
 }
