@@ -1,8 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { TrainingSessionService } from './training_session.service';
 
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Prisma, Role, } from "@prisma/client";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Prisma, Role } from '@prisma/client';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { SkipThrottle } from '@nestjs/throttler';
@@ -14,14 +29,16 @@ import { PaginationTrainingSessionQueryDto } from './dto/paginate-training_sessi
 @ApiBearerAuth()
 @SkipThrottle() // TODO: set this throttler later to correct value
 export class TrainingSessionController {
-  constructor(private readonly training_sessionservice: TrainingSessionService) { }
+  constructor(
+    private readonly training_sessionservice: TrainingSessionService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'create training session model object' })
   @ApiResponse({ status: 201, description: 'Success' })
-  @Roles(Role.ADG,)
+  @Roles(Role.ADG)
   @UseGuards(RolesGuard)
-  create(@Body() createSessionDatumDto: Prisma.training_sessionCreateInput,) {
+  create(@Body() createSessionDatumDto: Prisma.training_sessionCreateInput) {
     return this.training_sessionservice.create(createSessionDatumDto);
   }
 
@@ -32,7 +49,6 @@ export class TrainingSessionController {
   @ApiResponse({
     status: 200,
     description: 'The training_sessions has been successfully fetched.',
-
   })
   findAll(@Query() query: PaginationTrainingSessionQueryDto) {
     return this.training_sessionservice.findAll(query);
@@ -45,7 +61,6 @@ export class TrainingSessionController {
   @ApiResponse({
     status: 200,
     description: 'The session has been successfully fetched.',
-
   })
   findOne(@Param('session_id') session_id: string) {
     return this.training_sessionservice.findOne(session_id);
@@ -55,8 +70,14 @@ export class TrainingSessionController {
   @UseGuards(RolesGuard)
   @Patch(':session_id')
   @ApiOperation({ summary: 'update one training with its session_id' })
-  update(@Param('session_id') session_id: string, @Body() updateSessionDatumDto: Prisma.training_sessionUpdateInput) {
-    return this.training_sessionservice.update(session_id, updateSessionDatumDto);
+  update(
+    @Param('session_id') session_id: string,
+    @Body() updateSessionDatumDto: Prisma.training_sessionUpdateInput,
+  ) {
+    return this.training_sessionservice.update(
+      session_id,
+      updateSessionDatumDto,
+    );
   }
 
   @Roles(Role.ADG)

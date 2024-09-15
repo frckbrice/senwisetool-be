@@ -5,6 +5,6 @@ import { RequirementPricePlanController } from './requirement_price-plan.control
 @Module({
   controllers: [RequirementPricePlanController],
   providers: [RequirementPricePlanService],
-  exports: [RequirementPricePlanService]
+  exports: [RequirementPricePlanService],
 })
-export class RequirementPricePlanModule { }
+export class RequirementPricePlanModule {}

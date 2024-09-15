@@ -11,7 +11,9 @@ describe('RequirementPricePlanController', () => {
       providers: [RequirementPricePlanService],
     }).compile();
 
-    controller = module.get<RequirementPricePlanController>(RequirementPricePlanController);
+    controller = module.get<RequirementPricePlanController>(
+      RequirementPricePlanController,
+    );
   });
 
   it('should be defined', () => {

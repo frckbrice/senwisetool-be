@@ -1,8 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { ComapnyService } from './companies.service';
 
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Prisma, Role, User } from "@prisma/client";
+import { Prisma, Role, User } from '@prisma/client';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { PaginationCompanyQueryDto } from './dto/paginate-company.dto';
@@ -14,13 +24,16 @@ import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator
 @Controller('companies')
 @SkipThrottle()
 export class CompanyController {
-  constructor(private readonly companyService: ComapnyService) { }
+  constructor(private readonly companyService: ComapnyService) {}
 
   @Post()
   @ApiOperation({ summary: 'create project data' })
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)
-  create(@Body() createInspectionDatumDto: Prisma.CompanyCreateInput, @CurrentUser() user: Partial<User>) {
+  create(
+    @Body() createInspectionDatumDto: Prisma.CompanyCreateInput,
+    @CurrentUser() user: Partial<User>,
+  ) {
     return this.companyService.create(createInspectionDatumDto, user);
   }
 
@@ -38,17 +51,19 @@ export class CompanyController {
   @Get('current')
   @ApiOperation({ summary: 'find the current company of the connected user' })
   findOne(@CurrentUser() user: Partial<User>) {
-    console.log("hit company controller: ", user);
-    const id = <string>user?.company_id
+    console.log('hit company controller: ', user);
+    const id = <string>user?.company_id;
     return this.companyService.findOne(id);
   }
-
 
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
   @Patch(':id')
   @ApiOperation({ summary: 'update one company with its id' })
-  update(@Param('id') id: string, @Body() updateInspectionDatumDto: Prisma.CompanyUpdateInput) {
+  update(
+    @Param('id') id: string,
+    @Body() updateInspectionDatumDto: Prisma.CompanyUpdateInput,
+  ) {
     return this.companyService.update(id, updateInspectionDatumDto);
   }
 
@@ -59,7 +74,4 @@ export class CompanyController {
   remove(@Param('id') id: string) {
     return this.companyService.remove(id);
   }
-
-
-
 }

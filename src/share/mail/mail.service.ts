@@ -3,7 +3,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { LoggerService } from 'src/global/logger/logger.service';
 
-
 // https://documentation.mailgun.com/docs/mailgun/sdk/nodejs_sdk/
 // import FormData from 'form-data';
 // import Mailgun from 'mailgun.js';
@@ -23,13 +22,13 @@ interface MailOptions {
 @Injectable()
 export class MailServiceEvent {
   private readonly logger = new LoggerService(MailServiceEvent.name);
-  constructor(
-    private readonly mailerService: MailerService,
-  ) { }
+  constructor(private readonly mailerService: MailerService) {}
 
-  async senMail({ toEmail, subject, text }: Partial<MailOptions>): Promise<any> {
-
-
+  async senMail({
+    toEmail,
+    subject,
+    text,
+  }: Partial<MailOptions>): Promise<any> {
     return this.mailerService
       .sendMail({
         to: toEmail, // list of receivers
@@ -43,9 +42,10 @@ export class MailServiceEvent {
         return resp.response;
       })
       .catch((err) => {
-        this.logger.error(`mail service event :error sending mail \n\n ${err}`, MailServiceEvent.name);
+        this.logger.error(
+          `mail service event :error sending mail \n\n ${err}`,
+          MailServiceEvent.name,
+        );
       });
-
   }
-
 }

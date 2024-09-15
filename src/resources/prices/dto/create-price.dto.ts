@@ -1,70 +1,68 @@
-import { Prisma, PlanStatus, } from "@prisma/client";
+import { Prisma, PlanStatus } from '@prisma/client';
 
 export class CreatePriceDto {
+  /**
+   * plan_id: "P-8BL55559UG9018049N3GNKVQ"
+   */
+  id: string;
 
-    /**
-        * plan_id: "P-8BL55559UG9018049N3GNKVQ"
-     */
-    id: string;
+  /**
+   * product_name: "Bronze plan"
+   */
+  product_name: string;
 
-    /**
-     * product_name: "Bronze plan"
-     */
-    product_name: string;
+  /**
+   * plan_name: "Bronze"
+   */
+  plan_name: string;
 
-    /**
-     * plan_name: "Bronze"
-     */
-    plan_name: string;
+  /**
+   * active: true
+   */
+  active: boolean;
 
-    /**
-     * active: true
-     */
-    active: boolean;
+  /**
+   * status: "on"
+   */
+  status: PlanStatus;
 
-    /**
-     * status: "on"
-     */
-    status: PlanStatus
+  /**
+   * description: "The Bronze plan offers access to one of the two chapters one and two"
+   */
+  description: string;
 
+  /**
+   * currency: "USD"
+   */
+  currency: string;
 
-    /**
-     * description: "The Bronze plan offers access to one of the two chapters one and two"
-     */
-    description: string;
+  /**
+   * price: "1800"
+   */
+  price: string;
 
-    /**
-     * currency: "USD"
-     */
-    currency: string;
+  /**
+   * billing_cycle: every 1 year
+   */
+  billing_cycle: string;
 
-    /**
-     * price: "1800"
-     */
-    price: string;
+  /**
+   * price_type: "fixed pricing"
+   */
+  price_type: string;
 
-    /**
-     * billing_cycle: every 1 year
-     */
-    billing_cycle: string;
+  /**
+   * number_of_billing_cycles: illimited
+   */
+  number_of_billing_cycles: number;
 
-    /**
-     * price_type: "fixed pricing"
-     */
-    price_type: string;
+  /**
+   * auto_renewal: false
+   */
+  auto_renewal: boolean;
 
-    /**
-     * number_of_billing_cycles: illimited
-     */
-    number_of_billing_cycles: number;
-
-    /**
-     * auto_renewal: false
-     */
-    auto_renewal: boolean;
-
-    /**
-     * cancellation_policy: "No refunds"
-     */
-    cancellation_policy: string;
+  /**
+   * cancellation_policy: "No refunds"
+   */
+  cancellation_policy: string;
 }

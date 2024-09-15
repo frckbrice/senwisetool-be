@@ -1,38 +1,37 @@
-import { $Enums, Company } from "@prisma/client";
+import { $Enums, Company } from '@prisma/client';
 export class CompanyType implements Company {
+  name: string;
 
-    name: string;
+  country: string;
 
-    country: string;
+  email: string;
 
-    email: string;
+  logo: string;
 
-    logo: string;
+  payment_mode: string;
 
-    payment_mode: string;
+  company_paypal_email: string;
 
-    company_paypal_email: string;
+  paypal_id: string | null;
 
-    paypal_id: string | null;
+  sector_of_activity: string;
 
-    sector_of_activity: string;
+  address: string;
 
-    address: string;
+  city: string;
 
-    city: string;
+  description: string;
 
-    description: string;
+  phone_number: string;
 
-    phone_number: string;
+  status: $Enums.CompanyStatus | null;
 
-    status: $Enums.CompanyStatus | null;
+  state: string;
+  website: string | null;
 
-    state: string
-    website: string | null;
-
-    created_at: Date;
-    id: string;
-    slug: string | null;
-    timezone: string;
-    updated_at: Date;
+  created_at: Date;
+  id: string;
+  slug: string | null;
+  timezone: string;
+  updated_at: Date;
 }

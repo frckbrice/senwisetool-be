@@ -6,4 +6,4 @@ import { CampaignsController } from './campaigns.controller';
   controllers: [CampaignsController],
   providers: [CampaignService],
 })
-export class CampaignsModule { }
+export class CampaignsModule {}

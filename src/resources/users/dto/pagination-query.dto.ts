@@ -1,16 +1,13 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Role } from "@prisma/client";
+import { ApiProperty } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 
 export class PaginationQueryDto {
-
+  @ApiProperty()
+  perPage?: number = 40; // number of users to query at a time. defaults to 40;
 
   @ApiProperty()
-  perPage?: number = 40 // number of users to query at a time. defaults to 40;
+  page?: number = 0; // number of users to skip;
 
   @ApiProperty()
-  page?: number = 0 // number of users to skip;
-
-  @ApiProperty()
-  role?: Role = Role.ADG
-
+  role?: Role = Role.ADG;
 }

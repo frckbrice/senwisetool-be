@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common'
-import { UsersModule } from 'src/resources/users/users.module'
-import { JwtModule } from '@nestjs/jwt'
-import { CurrentPlanIds } from '../utils/current-plan-ids'
-import { UsersService } from 'src/resources/users/users.service'
+import { Module } from '@nestjs/common';
+import { UsersModule } from 'src/resources/users/users.module';
+import { JwtModule } from '@nestjs/jwt';
+import { CurrentPlanIds } from '../utils/current-plan-ids';
+import { UsersService } from 'src/resources/users/users.service';
 
 @Module({
   imports: [
@@ -16,4 +16,4 @@ import { UsersService } from 'src/resources/users/users.service'
 
   providers: [],
 })
-export class AuthModule { }
+export class AuthModule {}

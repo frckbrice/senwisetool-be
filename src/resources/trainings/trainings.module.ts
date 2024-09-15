@@ -9,4 +9,4 @@ import { Slugify } from 'src/global/utils/slugilfy';
   controllers: [TrainingController],
   providers: [TrainingService, Slugify],
 })
-export class TrainingsModule { }
+export class TrainingsModule {}

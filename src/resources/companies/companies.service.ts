@@ -1,7 +1,13 @@
-import { HttpStatus, Injectable, InternalServerErrorException, NotFoundException, UseGuards } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UseGuards,
+} from '@nestjs/common';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { CompanyStatus, Prisma, User } from '@prisma/client';
-import { PaginationCompanyQueryDto } from "./dto/paginate-company.dto";
+import { PaginationCompanyQueryDto } from './dto/paginate-company.dto';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { UsersService } from '../users/users.service';
 import { Slugify } from 'src/global/utils/slugilfy';
@@ -15,31 +21,33 @@ export class ComapnyService {
     private readonly prismaService: PrismaService,
     private readonly userService: UsersService,
     private slugifyService: Slugify,
-    private eventEmitter: EventEmitter2
-  ) { }
+    private eventEmitter: EventEmitter2,
+  ) {}
 
-
-  async create(createCompanyDto: Prisma.CompanyCreateInput, user: Partial<User>) {
+  async create(
+    createCompanyDto: Prisma.CompanyCreateInput,
+    user: Partial<User>,
+  ) {
     // avoid creating company twice
-    console.log("company payload: ", createCompanyDto)
+    console.log('company payload: ', createCompanyDto);
     const company = await this.prismaService.company.findFirst({
       where: {
-        email: createCompanyDto.email
-      }
-    })
+        email: createCompanyDto.email,
+      },
+    });
     if (company)
       return {
         data: company,
         status: 409,
-        message: `Company ${createCompanyDto.name} already exists`
-      }
+        message: `Company ${createCompanyDto.name} already exists`,
+      };
     try {
       const result = await this.prismaService.$transaction(async (tx) => {
         const result = await this.prismaService.company.create({
           data: {
             ...createCompanyDto,
             slug: this.slugifyService.slugify(createCompanyDto.name),
-            status: CompanyStatus.INACTIVE // has not yet subscribe to a price plan.
+            status: CompanyStatus.INACTIVE, // has not yet subscribe to a price plan.
           },
         });
 
@@ -50,38 +58,46 @@ export class ComapnyService {
           email: <string>user.email,
           role: <string>user.role,
           company_id: <string>result.id,
-        })
+        });
         this.logger.log(`start emitting company.created`, ComapnyService.name);
         // send message for company created in senwisetool system
-        this.eventEmitter.emit('company.created', result)
+        this.eventEmitter.emit('company.created', result);
 
         return result;
-      })
+      });
       if (result)
         return {
           data: result,
           status: HttpStatus.CREATED,
-          message: `company created successfully`
-        }
+          message: `company created successfully`,
+        };
       else
         return {
           data: null,
           status: HttpStatus.BAD_REQUEST,
-          message: `Failed to create company`
-        }
+          message: `Failed to create company`,
+        };
     } catch (error) {
-
       if (error instanceof Prisma.PrismaClientValidationError) {
-        this.logger.error(`Error while creating company ${error.name}: Validation error \n\n ${error}`, ComapnyService.name);
-        throw new InternalServerErrorException(`Validation Error while creating company ` + createCompanyDto.name);
+        this.logger.error(
+          `Error while creating company ${error.name}: Validation error \n\n ${error}`,
+          ComapnyService.name,
+        );
+        throw new InternalServerErrorException(
+          `Validation Error while creating company ` + createCompanyDto.name,
+        );
       }
-      this.logger.error(`Error while creating company ${createCompanyDto.name} \n\n ${error}`, ComapnyService.name);
-      throw new InternalServerErrorException(`Error while creating company ` + createCompanyDto.name);
+      this.logger.error(
+        `Error while creating company ${createCompanyDto.name} \n\n ${error}`,
+        ComapnyService.name,
+      );
+      throw new InternalServerErrorException(
+        `Error while creating company ` + createCompanyDto.name,
+      );
     }
   }
 
   async findAll(query: Partial<PaginationCompanyQueryDto>) {
-
     // find all the company with the latest start date with its status and type
     const { page, perPage } = query;
     let Query = Object.create({});
@@ -91,128 +107,137 @@ export class ComapnyService {
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
         created_at: 'desc',
-      }
-    }
+      },
+    };
     // find all the companies
     try {
       const [total, comapnies] = await this.prismaService.$transaction([
         this.prismaService.company.count(),
-        this.prismaService.company.findMany(Query)
+        this.prismaService.company.findMany(Query),
       ]);
       if (comapnies.length)
         return {
           status: 200,
-          message: "comapnies fetched successfully",
+          message: 'comapnies fetched successfully',
           data: comapnies,
           total,
           page: query.page ?? 0,
           perPage: query.perPage ?? 20,
-          totalPages: Math.ceil(total / (query.perPage ?? 20))
-        }
+          totalPages: Math.ceil(total / (query.perPage ?? 20)),
+        };
       else
         return {
           status: 400,
-          message: "No comapnies found",
+          message: 'No comapnies found',
           data: [],
           total,
           page: query.page ?? 0,
           perPage: query.perPage ?? 20,
-          totalPages: Math.ceil(total / (query.perPage ?? 20))
-        }
+          totalPages: Math.ceil(total / (query.perPage ?? 20)),
+        };
     } catch (error) {
-      this.logger.error(`Error fetching comapnies \n\n ${error}`, ComapnyService.name);
-      throw new NotFoundException("Error fetching comapnies");
+      this.logger.error(
+        `Error fetching comapnies \n\n ${error}`,
+        ComapnyService.name,
+      );
+      throw new NotFoundException('Error fetching comapnies');
     }
   }
 
   async findOne(company_id: string) {
-
     try {
       const result = await this.prismaService.company.findUnique({
         where: {
-          id: company_id
+          id: company_id,
         },
         select: {
           id: true,
           paypal_id: true,
           email: true,
           status: true,
-        }
-      })
+        },
+      });
 
       if (result)
         return {
           data: result,
           status: 200,
-          message: `company fetched successfully`
-        }
+          message: `company fetched successfully`,
+        };
       else
         return {
           data: null,
           status: 404,
-          message: `NO FOUND company with id: "${company_id}"`
-        }
+          message: `NO FOUND company with id: "${company_id}"`,
+        };
     } catch (err) {
       this.logger.error("Can't find a company with id ", ComapnyService.name);
       throw new NotFoundException("Can't find a company with id " + company_id);
-    };
+    }
   }
 
   async update(id: string, updateCompanyDto: Prisma.CompanyUpdateInput) {
-
     try {
       const result = await this.prismaService.company.update({
         data: updateCompanyDto,
         where: {
-          id
-        }
+          id,
+        },
       });
 
       if (result)
         return {
           data: result,
           status: 204,
-          message: `company updated successfully`
-        }
+          message: `company updated successfully`,
+        };
       else
         return {
           data: null,
           status: 400,
-          message: `Failed to update company`
-        }
+          message: `Failed to update company`,
+        };
     } catch (err) {
-      this.logger.error("Can't update a company with id " + id, ComapnyService.name);
-      throw new InternalServerErrorException("Can't update a company with id " + id);
-    };
+      this.logger.error(
+        "Can't update a company with id " + id,
+        ComapnyService.name,
+      );
+      throw new InternalServerErrorException(
+        "Can't update a company with id " + id,
+      );
+    }
   }
 
   async remove(company_id: string) {
     try {
       const result = await this.prismaService.company.delete({
         where: {
-          id: company_id
-        }
+          id: company_id,
+        },
       });
 
       if (result)
         return {
           data: result,
           status: 200,
-          message: `company deleted successfully`
-        }
+          message: `company deleted successfully`,
+        };
       else
         return {
           data: null,
           status: 400,
-          message: `Failed to delete company`
-        }
+          message: `Failed to delete company`,
+        };
     } catch (err) {
-      this.logger.error("Can't delete a company with company_id " + company_id, ComapnyService.name);
-      throw new InternalServerErrorException("Can't delete a company with company_id " + company_id);
-    };
+      this.logger.error(
+        "Can't delete a company with company_id " + company_id,
+        ComapnyService.name,
+      );
+      throw new InternalServerErrorException(
+        "Can't delete a company with company_id " + company_id,
+      );
+    }
   }
 
-
-  // get all companies 
-
+  // get all companies
 }

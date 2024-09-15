@@ -6,8 +6,7 @@ import { PrismaService } from 'src/adapters/config/prisma.service';
 
 @Injectable()
 export class CompanyCampaignService {
-
-  constructor(private prismaService: PrismaService) { }
+  constructor(private prismaService: PrismaService) {}
 
   create(createCompanyCampaignDto: Prisma.Company_CampaignCreateInput) {
     //  create a ccmpany alon

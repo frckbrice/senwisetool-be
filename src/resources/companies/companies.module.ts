@@ -10,4 +10,4 @@ import { MailModule } from 'src/share/mail/mail.module';
   controllers: [CompanyController],
   providers: [ComapnyService, Slugify],
 })
-export class CompaniesModule { }
+export class CompaniesModule {}
