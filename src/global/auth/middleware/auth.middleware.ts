@@ -39,17 +39,24 @@ export class AuthMiddleware implements NestMiddleware {
         next: NextFunction,
     ): Promise<void> {
         if (req.method == 'GET' && this.allowGetRoutes.includes(req.originalUrl)) {
-            this.logger.log('Allowing public  access to route ', AuthMiddleware.name);
+            console.log("method : ",req.method )
+            console.log("url: ", req.originalUrl)
+            console
+            this.logger.log('Allowing public  access to route  for method' + req.method , AuthMiddleware.name);
             return next();
-        } else if (
+        } 
+        if (
             req.method == 'POST' &&
             this.allowPostRoutes.includes(req.originalUrl)
         ) {
+                        console.log("method : ",req.method )
+            console.log("url: ", req.originalUrl)
             // allow some routes to be public
-            this.logger.log('Allowing public  access to route ', AuthMiddleware.name);
+            this.logger.log('Allowing public  access to route for method'+req.method , AuthMiddleware.name);
             return next();
         }
-
+            console.log("method : ",req.method )
+            console.log("url: ", req.originalUrl)
         this.logger.log(
             'Not allowing public access, start authentication ',
             AuthMiddleware.name,
