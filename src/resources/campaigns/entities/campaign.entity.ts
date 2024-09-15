@@ -7,6 +7,6 @@ export class CampaignType implements Campaign {
     id: string;
     name: string;
     start_date: Date;
-    status: $Enums.CampaignStatus;
+   status: $Enums.CampaignStatus;
     updated_at: Date;
 }
