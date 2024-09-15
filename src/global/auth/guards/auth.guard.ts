@@ -7,13 +7,18 @@ import { LoggerService } from 'src/global/logger/logger.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
   private readonly logger = new LoggerService(RolesGuard.name);
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
+
+    const request = context.switchToHttp().getRequest();
+    if (request.originalUrl.includes("/v1/companies") && request.method === "POST") {
+      return true
+    }
 
     // we make sure the user is connected and authenticated
     const { user } = context.switchToHttp().getRequest();
@@ -27,9 +32,9 @@ export class RolesGuard implements CanActivate {
       !user
         ? this.logger.error('user not authenticated', RolesGuard.name)
         : this.logger.error(
-            'user not allowed access to route handler: no role attached',
-            RolesGuard.name,
-          );
+          'user not allowed access to route handler: no role attached',
+          RolesGuard.name,
+        );
       return false;
     }
     this.logger.log('user allowed access to route handler', RolesGuard.name);
