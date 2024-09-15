@@ -20,7 +20,6 @@ export class AuthMiddleware implements NestMiddleware {
     private allowGetRoutes = ['/v1', '/v1/health'];
 
     private allowPostRoutes = [
-        '/v1/companies',
         '/v1/subscriptions/successPayPalPayment/?subscription_id',
     ];
 
@@ -38,30 +37,22 @@ export class AuthMiddleware implements NestMiddleware {
         res: Response,
         next: NextFunction,
     ): Promise<void> {
+
+        // allow health check 
         if (req.method == 'GET' && this.allowGetRoutes.includes(req.originalUrl)) {
-            console.log("method : ",req.method )
-            console.log("url: ", req.originalUrl)
-            console
-            this.logger.log('Allowing public  access to route  for method' + req.method , AuthMiddleware.name);
+            this.logger.log('Allowing public  access to route ', AuthMiddleware.name);
             return next();
-        } 
+        }
+
+        // to handle the paypal payment success return payload
         if (
             req.method == 'POST' &&
             this.allowPostRoutes.includes(req.originalUrl)
         ) {
-                        console.log("method : ",req.method )
-            console.log("url: ", req.originalUrl)
             // allow some routes to be public
-            this.logger.log('Allowing public  access to route for method'+req.method , AuthMiddleware.name);
+            this.logger.log('Allowing public  access to route ', AuthMiddleware.name);
             return next();
         }
-            console.log("method : ",req.method )
-            console.log("url: ", req.originalUrl)
-        this.logger.log(
-            'Not allowing public access, start authentication ',
-            AuthMiddleware.name,
-        );
-
         try {
             //get the token frm the req.
             const token = this.extractTokenFromHeader(req);
@@ -69,41 +60,31 @@ export class AuthMiddleware implements NestMiddleware {
             if (!token) {
                 throw new UnauthorizedException('user not authenticated');
             }
-            /** here we can do the authentication and attach the user to the request */
+            // decode the token to get the request payload
             const payload = await this.jwtService.decode(token);
-            console.log('user payload ', payload);
-            const existingUser = <User>await this.prismaService.user.findUnique({
-                where: { id: payload.sub },
-                select: {
-                    role: true,
-                    id: true,
-                    email: true,
-                    company_id: true,
-                    first_name: true,
-                },
-            });
 
-            console.log('existing user ', existingUser);
-            let user: Partial<User>;
-            if (payload) {
-                let userRole: Role = Role.ADG;
-                if (payload.org_role) userRole = Role.PDG;
+            // get the user obeject from the token
+            const currentUser = await this.requestService.getUserWithSub(payload)
 
-                user = {
-                    id: existingUser.id ?? payload.sub,
-                    email: existingUser.email ?? payload.user_email,
-                    first_name: existingUser.first_name ?? payload.user_first_name,
-                    role: existingUser.role ?? userRole,
-                    company_id: existingUser.company_id,
-                };
-                req['user'] = user;
-                this.requestService.setUserId(payload.sub);
-                next();
-            } else
-                throw new HttpException(
-                    'Unprocessable entity',
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                );
+            // set the current user to the request for next processing in guard.
+            req['user'] = currentUser;
+
+            // allow company creation to be public access.
+            // we need the current user to help creating him alongside the company creation.
+            if (
+                req.method == 'POST' &&
+                this.allowPostRoutes.includes('/v1/companies')
+            ) {
+                // allow some routes to be public
+                this.logger.log('Allowing public  access to route to create company ', AuthMiddleware.name);
+                return next();
+            }
+
+            // set the current user id
+            this.requestService.currentUserId = <string>currentUser.id;
+
+            next();
+
         } catch (error) {
             this.logger.error(
                 `Authenticification failed \n\n${error}`,
