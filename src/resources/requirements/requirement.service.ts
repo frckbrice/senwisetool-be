@@ -4,27 +4,32 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { CompanyStatus, Prisma } from '@prisma/client';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { RequirementPricePlanService } from '../requirement_price-plan/requirement_price-plan.service';
-import { ReadCompanyFiles } from './read-company-files';
+import { ReadCompanyFilesFactory } from './read-company-files';
 import { cwd } from 'node:process';
-import path, { join } from 'path';
-import fsPromises, {
+import { join } from 'path';
+import {
   readFile,
-  readdir,
-  appendFile,
-  mkdir,
+  rmdir,
+  writeFile,
+
 } from 'node:fs/promises';
+import { CurrentPlanIds } from 'src/global/utils/current-plan-ids';
+import { existsSync } from 'node:fs';
 @Injectable()
 export class RequirementService {
   private readonly logger = new LoggerService(RequirementService.name);
+  private readonly currentDirectory = cwd() + '/src/global/utils/requirement-files/';
+  private readonly targetDirectory = join(__dirname, '..', 'data', 'data.json');
 
   constructor(
     private prismaService: PrismaService,
     private requiredPricePlans: RequirementPricePlanService,
-    private readFileService: ReadCompanyFiles,
+    private readFileService: ReadCompanyFilesFactory,
+    private currentPlanIds: CurrentPlanIds,
   ) { }
   async create(createRequirementDto: Prisma.RequirementCreateInput) {
     // preve
@@ -107,7 +112,7 @@ export class RequirementService {
       // const hasSubscribe = this.prismaService.subscription.findFirst({
       //   where: {
       //     company_id: params.company_id,
-      //     status: 'ACTIVE'
+      //     status:  CompanyStatus.ACTIVE
       //   }
       // });
 
@@ -153,20 +158,72 @@ export class RequirementService {
     }
   }
 
-  async getAllFile() {
+  async getAllFile({
+    company_id }: { company_id: string }) {
     try {
-      // get the path to the current working directory: requirement
-      const curreCWD = cwd() + '/src/global/utils/requirement-files/';
 
-      // read all files and copy them to the data folder
-      await this.readFileService.getGoldPlanRequirements(curreCWD);
+      // get the current plan for the current company
+      const plan_id = await this.getPlanID({ company_id });
 
-      // get the path to the data folder and read its content.
-      const newDir = join(__dirname, '..', 'data', 'data.json');
-      const fileContent = await readFile(newDir, { encoding: 'utf8' });
+      // get the corresponding plan name
+      const plan_name = await this.currentPlanIds.getPlanName({ plan_id: plan_id as string });
 
-      // return the content of the new file.
-      return fileContent;
+      // check the corresponding plan name and return the corresponding requirements.
+
+      if (plan_name && plan_name === "gold")
+        // read all files and copy them to the data folder
+        await this.readFileService.getGoldPlanRequirements(this.currentDirectory);
+
+      if (plan_name && plan_name === 'silver')
+        await this.readFileService.getSilverPlanRequirements(this.currentDirectory);
+
+      if (plan_name && plan_name === 'bronze')
+        await this.readFileService.getBronzePlanRequirements(this.currentDirectory);
+
+      // get the path to the above targetdata folder and read its content.
+      const fileContent = await readFile(this.targetDirectory, { encoding: 'utf8' }).catch(err => {
+        console.error(err);
+      });
+      for (let i = 0; i < 2; i++) {
+        const fileContent = await readFile(this.targetDirectory, { encoding: 'utf8' });
+        if (typeof fileContent !== "undefined") {
+          return [fileContent];
+        }
+      }
+
+    } catch (error) {
+      this.logger.error(
+        `Error fetching requirements for this plan  \n\n ${error}`,
+        RequirementService.name,
+      );
+      throw new HttpException('Error fetching comapnies', HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    // if there is already target data  directory, empty it before adding new data
+    // if (existsSync(join(__dirname, '..', 'data'))) {
+    //   await writeFile(join(__dirname, '..', 'data', 'data.json'), '');
+    //   // await rmdir(join(__dirname, '..', 'data'), { recursive: true });
+    // }
+  }
+
+  async getPlanID({ company_id }: { company_id: string }): Promise<string | null> {
+    try {
+      /* we need to verify if the company has subscribe first */
+      const hasSubscribe = await this.prismaService.subscription.findFirst({
+        where: {
+          company_id: company_id,
+          status: CompanyStatus.ACTIVE
+        },
+        select: {
+          plan_id: true
+        }
+      });
+
+      // throw if not subscribed
+      if (!Boolean(hasSubscribe?.plan_id))
+        throw new HttpException("Company has not subscribed on this plan", HttpStatus.FORBIDDEN);
+
+      return <string>hasSubscribe?.plan_id;
     } catch (error) {
       this.logger.error(
         `Error fetching requirements for this plan  \n\n ${error}`,
@@ -175,4 +232,13 @@ export class RequirementService {
       throw new HttpException('Error fetching comapnies', HttpStatus.NOT_FOUND);
     }
   }
+
 }
+
+/**
+ * TODO: use a worker thread for this operation: 
+ * 1. create a worker service file
+ * 2. listen to message frm the main thread
+ * 3. read the file and write them to specified folder file
+ * 4. return the address of file 
+ */

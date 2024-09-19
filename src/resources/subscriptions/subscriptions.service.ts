@@ -11,7 +11,7 @@ import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SubscribeToPayPalService } from './subscribe.service.dao';
 import { LoggerService } from 'src/global/logger/logger.service';
-import { localEvents } from 'src/share/events';
+import { localEvents } from 'src/global/share/events';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { CurrentPlanIds } from 'src/global/utils/current-plan-ids';
 import {
@@ -35,7 +35,7 @@ export class SubscriptionsService {
     private prismaService: PrismaService,
     private currentplanIds: CurrentPlanIds,
     private createNewtype: ApplyNixins,
-  ) {}
+  ) { }
 
   // this operation is done in the client by the paypal SDK.
   async subscribeToPlanService(createSubscriptionDto: CreateSubscriptionDto) {
@@ -118,13 +118,13 @@ export class SubscriptionsService {
 
         return {
           data: result,
-          status: 200,
+          status: HttpStatus.OK,
           message: `Subscription details successfully fetched`,
         };
       } else
         return {
           data: null,
-          status: 400,
+          status: HttpStatus.BAD_REQUEST,
           message: `Failed to fetch subscription details`,
         };
     } catch (error) {
@@ -205,13 +205,13 @@ export class SubscriptionsService {
       if (data.length)
         return {
           data,
-          status: 200,
+          status: HttpStatus.OK,
           message: `Subscription that expire in next two months or three weeks after expiration.`,
         };
       else
         return {
           data: [],
-          status: 400,
+          status: HttpStatus.BAD_REQUEST,
           message: `Failed to fetch subscription that expire in next two months or three weeks after expiration.`,
         };
     } catch (error) {
@@ -321,12 +321,19 @@ export class SubscriptionsService {
           },
         },
       });
-
-      return {
-        data,
-        status: 200,
-        message: `Subscription fetched successfully`,
-      };
+      if (data?.id)
+        return {
+          data,
+          status: HttpStatus.OK,
+          message: `Subscription fetched successfully`,
+        };
+      else {
+        return {
+          data: null,
+          status: HttpStatus.NOT_FOUND,
+          message: `Cannot find Subscription not found`,
+        }
+      }
     } catch (error) {
       this.logger.error(
         `failed to fetch subscription for company ${company_id}`,
@@ -411,7 +418,7 @@ export class SubscriptionsService {
             id: subscriptionDetails.id,
             plan_id: subscriptionDetails.plan_id,
             status:
-              subscriptionDetails.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE', // found difficulties to load prisma SubscriptionStatus enum here.
+              subscriptionDetails.status === 'ACTIVE' ? SubscriptionStatus.ACTIVE : SubscriptionStatus.INACTIVE,
             start_date: subscriptionDetails.start_date,
             end_date: end_date,
             created_at: subscriptionDetails.status_update_time,
@@ -419,9 +426,7 @@ export class SubscriptionsService {
 
             // TODO: update this billing cycle with correct dynamic value: consider using prisma value and paypal incoming value. also above
             payment_mode:
-              subscriptionDetails.billing_info.payment_method === 'paypal'
-                ? 'PAYPAL'
-                : 'PAYPAL',
+              subscriptionDetails.billing_info.payment_method
           },
         });
 
@@ -499,3 +504,12 @@ export class SubscriptionsService {
     }
   }
 }
+
+/**
+ * TODO: use a worker thread for this operation: 
+ * 1. create a worker service file
+ * 2. listen to message frm the main thread
+ * 3. read all subscription fullflling the condition ~ 2months for expire date and within grace period 
+ * 4. make specified checking and update subscription status
+ * 5. return the result 
+ */

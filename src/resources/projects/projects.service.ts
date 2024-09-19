@@ -1,4 +1,5 @@
 import {
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -18,7 +19,7 @@ export class ProjectsService {
   constructor(
     private readonly prismaService: PrismaService,
     private slugify: Slugify,
-  ) {}
+  ) { }
 
   @UseGuards(RolesGuard)
   async create({
@@ -29,7 +30,7 @@ export class ProjectsService {
     user_id: string;
   }) {
     // avoid creating the same project twice
-
+    console.log("create project", createProjectDto)
     const project = await this.prismaService.project.findFirst({
       where: {
         slug: this.slugify.slugify(createProjectDto.title),
@@ -47,7 +48,7 @@ export class ProjectsService {
     if (createProjectDto.start_date > createProjectDto.end_date)
       return {
         data: null,
-        status: 400,
+        status: HttpStatus.BAD_REQUEST,
         message: `End date should be greater than or equal to start date`,
       };
 
@@ -94,7 +95,7 @@ export class ProjectsService {
   }
 
   async findAll(query: Partial<PaginationProjectQueryDto>) {
-    const { status, type, page, perPage } = query;
+    const { status, type, page, perPage, search, campaign_id, company_id } = query;
     const where = Object.create({});
     let Query = Object.create({ where });
     if (status) {
@@ -104,6 +105,17 @@ export class ProjectsService {
     if (type) {
       where['type'] = type;
     }
+
+    if (company_id) {
+      where['company_id'] = company_id;
+    }
+
+    if (campaign_id) {
+      where['campaign_id'] = campaign_id;
+    }
+
+    if (search)
+      where["search"] = search
 
     Query = {
       ...Query,
@@ -193,6 +205,22 @@ export class ProjectsService {
     user_id: string;
     updateProjectDto: Prisma.ProjectUpdateInput;
   }) {
+
+    // check the type of action and set the corresponding date
+    if (updateProjectDto.hasOwnProperty('status')) {
+      if (updateProjectDto.status === ProjectStatus.ARCHIVED) {
+        updateProjectDto.archived_at = new Date().toISOString();
+      }
+      if (updateProjectDto.status === ProjectStatus.DRAFT) {
+        updateProjectDto.draft_at = new Date().toISOString();
+      }
+      if (updateProjectDto.status === ProjectStatus.DEPLOYED) {
+        updateProjectDto.deployed_at = new Date().toISOString();
+      }
+      if (updateProjectDto.status === ProjectStatus.DELETED) {
+        updateProjectDto.deleted_at = new Date().toISOString();
+      }
+    }
     try {
       const result = await this.prismaService.$transaction(async (tx) => {
         const result = await this.prismaService.project.update({
@@ -202,25 +230,30 @@ export class ProjectsService {
           },
         });
 
-        // set who updated the project
-        const audit = await tx.project_audit.findFirst({
-          where: {
-            AND: [{ project_id: result.id }, { user_id: user_id }],
-          },
-        });
+        /* TODO: Review this audit well and make sure it works and is correct */
 
-        // set the update date.
-        if (audit) {
-          await tx.project_audit.update({
-            where: {
-              id: audit.id,
-              user_id: user_id,
-            },
-            data: {
-              type_of_project: result.type,
-            },
-          });
-        }
+
+
+        // set who updated the project
+        // const audit = await tx.project_audit.findFirst({
+        //   where: {
+        //     AND: [{ project_id: result.id }, { user_id: user_id }],
+        //   },
+        // });
+
+        // // set the update date.
+        // if (audit) {
+        //   await tx.project_audit.update({
+        //     where: {
+        //       id: audit.id,
+        //       user_id: user_id,
+        //     },
+        //     data: {
+        //       type_of_project: result.type,
+        //       action: updateProjectDto.status
+        //     },
+        //   });
+        // }
 
         return result;
       });
@@ -228,13 +261,13 @@ export class ProjectsService {
       if (result)
         return {
           data: result,
-          status: 200, // the resource is return to be used by the client
+          status: HttpStatus.OK, // the resource is return to be used by the client
           message: `project updated successfully`,
         };
       else
         return {
           data: null,
-          status: 400,
+          status: HttpStatus.BAD_REQUEST,
           message: `Failed to update project`,
         };
     } catch (err) {
@@ -247,25 +280,86 @@ export class ProjectsService {
       );
     }
   }
-
-  async remove(project_id: string) {
+  // update many projects
+  async archiveProjects(projectIds: string[]) {
     try {
-      const result = await this.prismaService.project.delete({
+      const result = await this.prismaService.project.updateMany({
         where: {
-          id: project_id,
+          id: { in: projectIds },
+        },
+        data: {
+          status: ProjectStatus.ARCHIVED,
+          archived_at: new Date().toISOString(),
         },
       });
 
       if (result)
         return {
           data: result,
-          status: 204,
+          status: HttpStatus.OK, // the resource is return to be used by the client
+          message: `project archive successfully`,
+        };
+      else
+        return {
+          data: null,
+          status: HttpStatus.BAD_REQUEST,
+          message: `Failed to archive project`,
+        };
+    } catch (error) {
+      this.logger.error(
+        `Can't archieve a project list \n\n ${error}`,
+        ProjectsService.name,
+      );
+      throw new InternalServerErrorException(
+        "Can't update a project list ",
+      );
+    }
+  }
+
+  // update a single project
+  async remove({ project_id, user_id }: { project_id: string, user_id: string }) {
+    try {
+      const result = await this.prismaService.$transaction(async (tx) => {
+        const result = await this.prismaService.project.delete({
+          where: {
+            id: project_id,
+          },
+        });
+
+        // set who deleted the project
+        // const audit = await tx.project_audit.findFirst({
+        //   where: {
+        //     AND: [{ project_id: result.id }, { user_id: user_id }],
+        //   },
+        // });
+
+        // // set the update date.
+        // if (audit) {
+        //   await tx.project_audit.update({
+        //     where: {
+        //       id: audit.id,
+        //       user_id: user_id,
+        //     },
+        //     data: {
+        //       type_of_project: result.type,
+        //       action: ProjectStatus.DELETED,
+        //     },
+        //   });
+        // }
+
+        return result;
+      })
+
+      if (result)
+        return {
+          data: null,
+          status: HttpStatus.NO_CONTENT,
           message: `project deleted successfully`,
         };
       else
         return {
           data: null,
-          status: 400,
+          status: HttpStatus.BAD_REQUEST,
           message: `Failed to delete project`,
         };
     } catch (err) {
@@ -278,4 +372,64 @@ export class ProjectsService {
       );
     }
   }
+
+  async deleteManyByIds(ids: string[], user_id: string) {
+    try {
+      const result = await this.prismaService.$transaction(async (tx) => {
+        const result = await this.prismaService.project.deleteMany({
+          where: {
+            id: { in: ids },
+          },
+        });
+
+        // set who deleted the project
+        // const audits = await tx.project_audit.findMany({
+        //   where: {
+        //     AND: [{ project_id: { in: ids } }, { user_id: user_id }],
+        //   },
+        // });
+
+        // // set the update date.
+        // if (audits) {
+        //   await tx.project_audit.updateMany({
+        //     where: {
+        //       id: { in: audits.map((audit) => audit.id) },
+
+        //     },
+        //     data: {
+        //       type_of_project: audits[0].type_of_project,
+        //       action: ProjectStatus.DELETED,
+        //       user_id: user_id
+        //     },
+        //   });
+        // }
+        return result;
+      })
+
+
+      if (result)
+        return {
+          data: null,
+          status: HttpStatus.NO_CONTENT,
+          message: `project list deleted successfully`,
+        };
+      else
+        return {
+          data: null,
+          status: HttpStatus.BAD_REQUEST,
+          message: `Failed to delete project list`,
+        };
+    } catch (error) {
+      this.logger.error(
+        "Can't delete a project list with project_ids " + '\n\n ' + error,
+        ProjectsService.name,
+      );
+      throw new InternalServerErrorException(
+        "Can't delete a project list with project_ids ",
+      );
+    }
+  }
+
+
+
 }

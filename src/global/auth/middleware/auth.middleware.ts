@@ -12,8 +12,6 @@ import { JwtService } from '@nestjs/jwt';
 import { Role, User } from '@prisma/client';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { PrismaService } from 'src/adapters/config/prisma.service';
-import { UserType } from 'src/resources/users/entities/user.entity';
-import { UsersService } from 'src/resources/users/users.service';
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
@@ -62,7 +60,7 @@ export class AuthMiddleware implements NestMiddleware {
             }
             // decode the token to get the request payload
             const payload = await this.jwtService.decode(token);
-
+            // console.log("from auth middleware: ", payload)
             // get the user obeject from the token
             const currentUser = await this.requestService.getUserWithSub(payload)
 

@@ -39,6 +39,7 @@ enum ProjectStatus {
   ARCHIVED
   ACTIVE
   DELETED
+  DEPLOYED
 }
 
 enum TypeProject {
@@ -162,7 +163,7 @@ model Project {
   id  String @id @default(cuid())
   type TypeProject
   slug  String
-
+campaign_id  String
   company_id   String
   title  String
   description  String
@@ -174,7 +175,7 @@ model Project {
   start_date  DateTime
   end_date  DateTime
   project_structure Json    @default("{}")  @db.JsonB
-
+  another_logo  String ?
   // archived Boolean @default(false) 
   // draft Boolean @default(false)
   projectAudit Project_audit[]
@@ -291,6 +292,7 @@ model Project_audit {
   project_id String
   user_id String
   type_of_project TypeProject
+  action ProjectStatus @default(DRAFT)
   user User @relation(fields: [user_id], references: [id])
   project Project @relation(fields: [project_id], references: [id])
   created_at DateTime @default(now())
@@ -342,7 +344,7 @@ model Subscription {
   payment_mode            String
   last_notification_date       DateTime ? @updatedAt
 
-  grace_period_end DateTime @updatedAt
+  grace_period_end DateTime ? @updatedAt
 
   company              Company @relation(fields: [company_id], references: [id])
   price                Price_plan @relation(fields: [plan_id], references: [id])
@@ -364,7 +366,6 @@ model Price_plan {
   billing_cycle      String @default("Every 1 year")
   number_of_billing_cycles String ?  @default("Unlimited")
   auto_renewal       Boolean
-
 
   cancellation_policy String[]
   subscription Subscription[]

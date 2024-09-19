@@ -34,7 +34,7 @@ import { UserType } from './entities/user.entity';
 @Controller('users')
 @SkipThrottle() // avoid rate limit
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Post()
   @ApiOperation({ summary: 'create user' })
@@ -74,6 +74,7 @@ export class UsersController {
   @UseInterceptors(UserInterceptor)
   @ApiOperation({ summary: 'get single user by id' })
   findOne(@CurrentUser() user: Partial<UserType>) {
+
     return this.usersService.findOne(<string>user?.email);
   }
 

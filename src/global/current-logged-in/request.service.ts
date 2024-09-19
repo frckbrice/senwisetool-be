@@ -26,7 +26,6 @@ export class RequestService {
       },
     });
 
-    console.log('existing user ', existingUser);
 
     let userRole: Role = Role.ADG;
     if (tokenPayload.org_role) userRole = Role.PDG;

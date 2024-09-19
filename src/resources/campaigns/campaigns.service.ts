@@ -1,4 +1,5 @@
 import {
+  HttpException,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
@@ -71,14 +72,20 @@ export class CampaignService {
 
   async findAll(query: Partial<PaginationCampaignQueryDto>) {
     // find all the campaign with the latest start date with its status and type
-    const { page, perPage } = query;
+    const { status, page, perPage } = query;
     let Query = Object.create({});
+
+    if (page)
+      Query["take"] = +page;
+    if (page && perPage) {
+      Query["take"] = +page;
+      Query["skip"] = (+page) * (+perPage - 1);
+    }
+
     Query = {
       ...Query,
-      take: perPage ?? 20,
-      skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
-        created_at: 'desc',
+        start_date: 'desc',
       },
     };
     // find all the companies
@@ -87,6 +94,7 @@ export class CampaignService {
         this.prismaService.campaign.count(),
         this.prismaService.campaign.findMany(Query),
       ]);
+      console.log("campaigns: ",)
       if (campaigns.length)
         return {
           status: HttpStatus.OK,
@@ -94,8 +102,8 @@ export class CampaignService {
           data: campaigns,
           total,
           page: query.page ?? 0,
-          perPage: query.perPage ?? 20,
-          totalPages: Math.ceil(total / (query.perPage ?? 20)),
+          perPage: query.perPage ?? 10,
+          totalPages: Math.ceil(total / (query.perPage ?? 10)),
         };
       else
         return {
@@ -104,15 +112,15 @@ export class CampaignService {
           data: [],
           total,
           page: query.page ?? 0,
-          perPage: query.perPage ?? 20,
-          totalPages: Math.ceil(total / (query.perPage ?? 20)),
+          perPage: query.perPage ?? 10,
+          totalPages: Math.ceil(total / (query.perPage ?? 10)),
         };
     } catch (error) {
       this.logger.error(
         `Error fetching campaigns \n\n ${error}`,
         CampaignService.name,
       );
-      throw new NotFoundException('Error fetching campaigns');
+      throw new HttpException('Error fetching campaigns', HttpStatus.NOT_FOUND);
     }
   }
 

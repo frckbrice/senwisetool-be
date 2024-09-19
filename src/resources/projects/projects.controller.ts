@@ -32,7 +32,7 @@ import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator
 @ApiBearerAuth()
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(private readonly projectsService: ProjectsService) { }
   private readonly logger = new LoggerService(ProjectsController.name);
 
   @Post()
@@ -80,6 +80,8 @@ export class ProjectsController {
     status: 200, // returned as this resource is again used in front end
     description: 'The project has been successfully updated.',
   })
+
+
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @ApiOperation({ summary: 'update one project with its Project_id' })
   update(
@@ -102,7 +104,13 @@ export class ProjectsController {
   })
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @ApiOperation({ summary: 'delete one project with its Project_id' })
-  remove(@Param('project_id') project_id: string) {
-    return this.projectsService.remove(project_id);
+  remove(@Param('project_id') project_id: string, @CurrentUser() user: Partial<User>,) {
+    return this.projectsService.remove({ project_id, user_id: <string>user.id });
+  }
+
+  // delete multiple projects
+  @Delete('/delete-many')
+  async deleteMany(@Body() ids: string[], @CurrentUser() user: Partial<User>) {
+    return await this.projectsService.deleteManyByIds(ids, <string>user.id);
   }
 }
