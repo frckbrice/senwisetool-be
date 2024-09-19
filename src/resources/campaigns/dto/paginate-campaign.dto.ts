@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { $Enums } from '@prisma/client';
 
 export class PaginationCampaignQueryDto {
   @ApiProperty()
@@ -6,4 +7,6 @@ export class PaginationCampaignQueryDto {
 
   @ApiProperty()
   page?: number = 0; // number of users to skip;
+
+  status: $Enums.CampaignStatus | undefined;
 }

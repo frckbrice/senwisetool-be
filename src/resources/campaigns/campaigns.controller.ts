@@ -6,22 +6,28 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  Query,
 } from '@nestjs/common';
 import { CampaignService } from './campaigns.service';
 import { UpdateCampaignDto } from './dto/update-campaign.dto';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
 import { PaginationCampaignQueryDto } from './dto/paginate-campaign.dto';
+import { RolesGuard } from 'src/global/auth/guards/auth.guard';
+import { Roles } from 'src/global/auth/guards/roles.decorator';
 
 @ApiBearerAuth()
 @ApiTags('campaigns')
 @Controller('campaigns')
 export class CampaignsController {
-  constructor(private readonly campaignsService: CampaignService) {}
+  constructor(private readonly campaignsService: CampaignService) { }
   private readonly logger = new LoggerService(CampaignsController.name);
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADG)
   create(
     @Body() createCampaignDto: Prisma.CampaignCreateInput,
     @CurrentUser() user: any,
@@ -30,7 +36,8 @@ export class CampaignsController {
   }
 
   @Get()
-  findAll(query: Partial<PaginationCampaignQueryDto>) {
+  @Roles(Role.ADG)
+  findAll(@Query() query: Partial<PaginationCampaignQueryDto>) {
     return this.campaignsService.findAll(query);
   }
 
@@ -47,8 +54,5 @@ export class CampaignsController {
     return this.campaignsService.update(id, updateCampaignDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.campaignsService.remove(id);
-  }
+
 }

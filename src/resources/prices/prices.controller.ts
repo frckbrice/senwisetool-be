@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { PricesService } from './prices.service';
 import { CreatePriceDto } from './dto/create-price.dto';
@@ -16,17 +17,19 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
+import { Roles } from 'src/global/auth/guards/roles.decorator';
+import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 
 @ApiTags('price_plans')
 @ApiBearerAuth('access-token')
 @Controller('price_plans')
 export class PricesController {
-  constructor(private readonly pricesService: PricesService) {}
+  constructor(private readonly pricesService: PricesService) { }
 
   @Post()
-  // @Roles(Role.ADG, Role.PDG, Role.IT_SUPPORT)
-  // @UseGuards(RolesGuard)
+  @Roles(Role.ADG, Role.PDG, Role.IT_SUPPORT)
+  @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'Create price plan' })
   @ApiResponse({
     status: 201,

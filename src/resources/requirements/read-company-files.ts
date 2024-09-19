@@ -4,17 +4,18 @@ import fsPromises, {
   readdir,
   appendFile,
   mkdir,
+  writeFile,
 } from 'node:fs/promises';
 import fs, { existsSync } from 'fs';
 import path, { join } from 'path';
 
 @Injectable()
-export class ReadCompanyFiles {
+export class ReadCompanyFilesFactory {
   async getGoldPlanRequirements(directory: string) {
-    let fileArr: string[] = [];
 
+    // TODO: look for a way to customize this action.
     try {
-      // TODO: look for a way to customize this action.
+
       const files = await readdir(directory);
       files.forEach(async (file) => {
         const fileContent = await readFile(directory + file, {
@@ -24,6 +25,7 @@ export class ReadCompanyFiles {
         if (!existsSync(join(__dirname, '..', 'data'))) {
           await mkdir(join(__dirname, '..', 'data'));
         }
+
         await appendFile(join(__dirname, '..', 'data', 'data.json'), jsonData);
       });
     } catch (err) {
@@ -32,13 +34,12 @@ export class ReadCompanyFiles {
   }
 
   async getSilverPlanRequirements(directory: string) {
-    let fileArr: string[] = [];
+    // TODO: look for a way to customize this action.
 
     try {
-      // TODO: look for a way to customize this action.
       const files = await readdir(directory);
       files.forEach(async (file) => {
-        if (file.includes("1" || "2")) {
+        if (file.toString().includes("_1") || file.toString().includes("_2")) {
           const fileContent = await readFile(directory + file, {
             encoding: 'utf8',
           });
@@ -55,13 +56,11 @@ export class ReadCompanyFiles {
   }
 
   async getBronzePlanRequirements(directory: string) {
-    let fileArr: string[] = [];
 
     try {
-      // TODO: look for a way to customize this action.
       const files = await readdir(directory);
       files.forEach(async (file) => {
-        if (file.includes("1" || "2")) {
+        if (file.toString().includes("_2")) {
           const fileContent = await readFile(directory + file, {
             encoding: 'utf8',
           });

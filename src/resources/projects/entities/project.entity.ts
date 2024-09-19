@@ -4,6 +4,7 @@ export class ProjectEntity implements Project {
   id: string;
   type: $Enums.TypeProject;
   company_id: string;
+  campaign_id: string
   title: string;
   description: string;
   sector_activity: string;
@@ -23,4 +24,5 @@ export class ProjectEntity implements Project {
   slug: string;
   updated_at: Date;
   deployed_at: Date;
+  another_logo: string | null;
 }

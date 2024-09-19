@@ -13,4 +13,11 @@ export class PaginationProjectQueryDto {
 
   @ApiProperty()
   type: TypeProject = 'INITIAL_INSPECTION';
+
+  @ApiProperty()
+  search?: string;
+
+  campaign_id?: string;
+
+  company_id?: string;
 }

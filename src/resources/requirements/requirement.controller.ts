@@ -20,17 +20,20 @@ import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
 import { UserType } from '../users/entities/user.entity';
+import { existsSync, mkdirSync, writeFile, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 @ApiTags('requirements')
 @ApiBearerAuth()
+@UseGuards(RolesGuard)
+@Roles(Role.ADG, Role.PDG)
 @Controller('requirements')
 export class RequirementController {
-  constructor(private readonly requirementService: RequirementService) {}
+  constructor(private readonly requirementService: RequirementService) { }
 
   // create a new requirement  (only for ADG and PDG)
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADG, Role.PDG)
+
   @ApiResponse({ status: 201, description: 'successfully created requirement' })
   @ApiOperation({ summary: 'Create requirement' })
   create(@Body() createChapterDto: Prisma.RequirementCreateInput) {
@@ -59,7 +62,21 @@ export class RequirementController {
   }
 
   @Get()
-  async getAllfiles() {
-    return this.requirementService.getAllFile();
+  async getCurrentCompanySubscriptionRequirements(@CurrentUser() user: UserType) {
+    const company_id = <string>user?.company_id;
+
+    if (!existsSync(join(__dirname, '..', 'data'))) {
+      mkdirSync(join(__dirname, '..', 'data'));
+    }
+    const data = await this.requirementService.getAllFile({
+      company_id
+    });
+
+    if (existsSync(join(__dirname, '..', 'data'))) {
+      writeFileSync(join(__dirname, '..', 'data', 'data.json'), '');
+      // await rmdir(join(__dirname, '..', 'data'), { recursive: true });
+    }
+
+    return data;
   }
 }

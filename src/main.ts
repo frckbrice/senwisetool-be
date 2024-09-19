@@ -6,7 +6,8 @@ import {
 } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './global/filter/http-exception.filter';
-import 'reflect-metadata'; // is used to allow the usage of class transformers to be applied to remove password.
+// reflect-metadata is used to allow the usage of class transformers to be applied to remove password.
+import 'reflect-metadata';
 
 const PORT = process.env.PORT ?? 5000;
 const dev_server_url = `${process.env.LOCAL_API_URL} `;
@@ -14,13 +15,13 @@ const production_server_url = `${process.env.PROD_API_URL} `;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
+
   // call the http adapter here
   const { httpAdapter } = app.get(HttpAdapterHost);
+
   // apply global filters for not handled exceptions
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
 
-  // app.enableCors();
-  // app.useGlobalGuards(new AuthGuard());
   app.setGlobalPrefix('v1');
   const config = new DocumentBuilder()
     .addBearerAuth() // bearer auth enabled

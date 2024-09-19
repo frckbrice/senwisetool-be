@@ -23,4 +23,13 @@ export class CurrentPlanIds {
       id: this.PAYPAL_GOLD_PLAN_ID,
     },
   ];
+
+  async getPlanName({ plan_id }: { plan_id: string }) {
+    return this.PLAN_ID.find(plans => plans.id === plan_id)?.name;
+  }
+
+  // we use includes method in prevision of adding new products like bi-annual gold, bi-annual silver, etc.
+  async getPlanId({ plan_name }: { plan_name: string }) {
+    return this.PLAN_ID.find(plan => plan.name.includes(plan_name))?.id;
+  }
 }

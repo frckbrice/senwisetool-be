@@ -128,7 +128,7 @@ import { PrismaService } from 'src/adapters/config/prisma.service';
 import { SubscriptionEntity } from './entities/subscription.entity';
 import { SubscriptionsService } from './subscriptions.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { localEvents } from 'src/share/events';
+import { localEvents } from 'src/global/share/events';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { CronJob } from 'cron';
 
@@ -156,7 +156,7 @@ export class SubscriptionManagementService {
     private subscriptionService: SubscriptionsService,
     private eventEmitter: EventEmitter2,
     private schedulerRegistry: SchedulerRegistry,
-  ) {}
+  ) { }
 
   @Cron(CronExpression.EVERY_12_HOURS, {
     name: 'check_subscriptions',

@@ -20,8 +20,10 @@ export class UsersService {
   ) { }
 
   async findOne(id: string) {
+
+
     try {
-      const where = { id: '', email: '' } as {
+      const where = {} as {
         id: string | undefined;
         email: string | undefined;
       };
