@@ -94,8 +94,8 @@ export class ProjectsService {
     }
   }
 
-  async findAll(query: Partial<PaginationProjectQueryDto>) {
-    const { status, type, page, perPage, search, campaign_id, company_id } = query;
+  async findAll(query: Partial<PaginationProjectQueryDto>, company_id: string) {
+    const { status, type, page, perPage, search, campaign_id } = query;
     const where = Object.create({});
     let Query = Object.create({ where });
     if (status) {
@@ -104,10 +104,6 @@ export class ProjectsService {
 
     if (type) {
       where['type'] = type;
-    }
-
-    if (company_id) {
-      where['company_id'] = company_id;
     }
 
     if (campaign_id) {

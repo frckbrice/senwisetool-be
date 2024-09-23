@@ -8,7 +8,7 @@ import { CompanyStatus, Prisma } from '@prisma/client';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { RequirementPricePlanService } from '../requirement_price-plan/requirement_price-plan.service';
-import { ReadCompanyFilesFactory } from './read-company-files';
+import { ReadFileWorkerHost } from './read-file-worker-host';
 import { cwd } from 'node:process';
 import { join } from 'path';
 import {
@@ -28,7 +28,7 @@ export class RequirementService {
   constructor(
     private prismaService: PrismaService,
     private requiredPricePlans: RequirementPricePlanService,
-    private readFileService: ReadCompanyFilesFactory,
+    private readFileService: ReadFileWorkerHost,
     private currentPlanIds: CurrentPlanIds,
   ) { }
   async create(createRequirementDto: Prisma.RequirementCreateInput) {
@@ -170,26 +170,31 @@ export class RequirementService {
 
       // check the corresponding plan name and return the corresponding requirements.
 
-      if (plan_name && plan_name === "gold")
+      if (plan_name) {
         // read all files and copy them to the data folder
-        await this.readFileService.getGoldPlanRequirements(this.currentDirectory);
+        const data = await this.readFileService.getRequirementsFromPlan(plan_name);
+        return JSON.parse(data);
+      }
 
-      if (plan_name && plan_name === 'silver')
-        await this.readFileService.getSilverPlanRequirements(this.currentDirectory);
+      // if (plan_name)
+      //   // read all files and copy them to the data folder
+      //   await this.readFileService.getRequirementsFromPlan(plan_name);
+      // if (plan_name && plan_name === 'silver')
+      //   await this.readFileService.getSilverPlanRequirements(this.currentDirectory);
 
-      if (plan_name && plan_name === 'bronze')
-        await this.readFileService.getBronzePlanRequirements(this.currentDirectory);
+      // if (plan_name && plan_name === 'bronze')
+      //   await this.readFileService.getBronzePlanRequirements(this.currentDirectory);
 
       // get the path to the above targetdata folder and read its content.
-      const fileContent = await readFile(this.targetDirectory, { encoding: 'utf8' }).catch(err => {
-        console.error(err);
-      });
-      for (let i = 0; i < 2; i++) {
-        const fileContent = await readFile(this.targetDirectory, { encoding: 'utf8' });
-        if (typeof fileContent !== "undefined") {
-          return [fileContent];
-        }
-      }
+      // await readFile(this.targetDirectory, { encoding: 'utf8' }).catch(err => {
+      //   console.error(err);
+      // });
+      // for (let i = 0; i < 2; i++) {
+      //   const fileContent = await readFile(this.targetDirectory, { encoding: 'utf8' });
+      //   if (typeof fileContent !== "undefined") {
+      //     return [fileContent];
+      //   }
+      // }
 
     } catch (error) {
       this.logger.error(

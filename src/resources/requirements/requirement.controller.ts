@@ -20,7 +20,10 @@ import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
 import { UserType } from '../users/entities/user.entity';
-import { existsSync, mkdirSync, writeFile, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync, writeFile, writeFileSync
+} from 'node:fs';
 import { join } from 'node:path';
 
 @ApiTags('requirements')
@@ -65,18 +68,10 @@ export class RequirementController {
   async getCurrentCompanySubscriptionRequirements(@CurrentUser() user: UserType) {
     const company_id = <string>user?.company_id;
 
-    if (!existsSync(join(__dirname, '..', 'data'))) {
-      mkdirSync(join(__dirname, '..', 'data'));
-    }
-    const data = await this.requirementService.getAllFile({
+
+    return this.requirementService.getAllFile({
       company_id
     });
 
-    if (existsSync(join(__dirname, '..', 'data'))) {
-      writeFileSync(join(__dirname, '..', 'data', 'data.json'), '');
-      // await rmdir(join(__dirname, '..', 'data'), { recursive: true });
-    }
-
-    return data;
   }
 }

@@ -59,8 +59,8 @@ export class ProjectsController {
     description: 'The projects has been successfully fetched.',
   })
   @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
-  findAll(@Query() query: PaginationProjectQueryDto) {
-    return this.projectsService.findAll(query);
+  findAll(@Query() query: PaginationProjectQueryDto, @CurrentUser() user: Partial<User>) {
+    return this.projectsService.findAll(query, <string>user.company_id);
   }
 
   @Get(':project_id')
