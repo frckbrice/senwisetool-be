@@ -17,9 +17,10 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role, User } from '@prisma/client';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
+import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
 
 @ApiTags('price_plans')
 @ApiBearerAuth('access-token')
@@ -46,7 +47,7 @@ export class PricesController {
   }
 
   @Get(':plan_name')
-  @ApiOperation({ summary: 'Create price plan' })
+  @ApiOperation({ summary: 'get a price plan' })
   @ApiResponse({
     status: 200,
     type: CreatePriceDto,
@@ -57,6 +58,19 @@ export class PricesController {
   async findOne(@Param('plan_name') plan_name: string) {
     console.log('findOne: ', plan_name);
     return await this.pricesService.findOne(plan_name);
+  }
+
+  @Get('current')
+  @ApiOperation({ summary: 'get current price plan' })
+  @ApiResponse({
+    status: 200,
+    type: CreatePriceDto,
+    schema: Prisma.Price_planScalarFieldEnum,
+    content: {},
+    description: 'successfully fetch a plan',
+  })
+  async findCompanyCurrentPlan(@CurrentUser() user: Partial<User>) {
+    return this.pricesService.findCurrentcompanyPlan(<string>user.company_id);
   }
 
   @Patch(':id')
