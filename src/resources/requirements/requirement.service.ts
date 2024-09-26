@@ -11,14 +11,9 @@ import { RequirementPricePlanService } from '../requirement_price-plan/requireme
 import { ReadFileWorkerHost } from './read-file-worker-host';
 import { cwd } from 'node:process';
 import { join } from 'path';
-import {
-  readFile,
-  rmdir,
-  writeFile,
-
-} from 'node:fs/promises';
 import { CurrentPlanIds } from 'src/global/utils/current-plan-ids';
-import { existsSync } from 'node:fs';
+
+
 @Injectable()
 export class RequirementService {
   private readonly logger = new LoggerService(RequirementService.name);
@@ -27,9 +22,7 @@ export class RequirementService {
 
   constructor(
     private prismaService: PrismaService,
-    private requiredPricePlans: RequirementPricePlanService,
     private readFileService: ReadFileWorkerHost,
-    private currentPlanIds: CurrentPlanIds,
   ) { }
   async create(createRequirementDto: Prisma.RequirementCreateInput) {
     // preve
@@ -98,43 +91,9 @@ export class RequirementService {
   }
 
   // get all the requipemt
-  async findAllRequirements(params: { plan_id?: string; company_id?: string }) {
-    // TODO: make this function follow the SOLID princple of SRP
-
+  async findAllRequirements() {
     try {
-      /* check if there is a need of all or some of the requirements */
-      const { plan_id } = params;
-      // Object.create() isn't supported in some legacy browsers
-      const where = {} as { price_plan_id: string | undefined };
-      if (plan_id) where['price_plan_id'] = plan_id ?? '';
-
-      /* we need to verify if the company has subscribe first */
-      // const hasSubscribe = this.prismaService.subscription.findFirst({
-      //   where: {
-      //     company_id: params.company_id,
-      //     status:  CompanyStatus.ACTIVE
-      //   }
-      // });
-
-      // if (!Boolean(hasSubscribe))
-      //   throw new HttpException("Company has not subscribed", HttpStatus.FORBIDDEN);
-
-      // if there is no plan_id, then return all the requirements for the company
-
-      /** get all the corresponding requirements IDs for the price plan*/
-      const allReqIds =
-        await this.requiredPricePlans.findAllRequirements(where);
-      // filter only the requirment Ids
-      const reqIds = allReqIds.data.map(
-        ({ req_id }: { req_id: string }) => req_id,
-      ); // just for the sake of performace
-
-      //filter the request
-      const data = await this.prismaService.requirement.findMany({
-        where: {
-          id: { in: reqIds },
-        },
-      });
+      const data = await this.prismaService.requirement.findMany({});
 
       if (data && data.length)
         return {
@@ -151,51 +110,34 @@ export class RequirementService {
         };
     } catch (error) {
       this.logger.error(
-        `Error fetching requirements for this plan id: ${params.plan_id} \n\n ${error}`,
+        `Error fetching requirements  \n\n ${error}`,
         RequirementService.name,
       );
       throw new HttpException('Error fetching comapnies', HttpStatus.NOT_FOUND);
     }
   }
 
-  async getAllFile({
-    company_id }: { company_id: string }) {
+  // async getAllFile({
+  //   company_id }: { company_id: string }) {
+  async getAllFile() {
     try {
-
+      console.log("fetching all requirements")
       // get the current plan for the current company
-      const plan_id = await this.getPlanID({ company_id });
+      // const plan_id = await this.getPlanID({ company_id });
 
-      // get the corresponding plan name
-      const plan_name = await this.currentPlanIds.getPlanName({ plan_id: plan_id as string });
+      // // get the corresponding plan name
+      // const plan_name = await this.currentPlanIds.getPlanName({ plan_id: plan_id as string });
 
-      // check the corresponding plan name and return the corresponding requirements.
+      // // check the corresponding plan name and return the corresponding requirements.
 
-      if (plan_name) {
-        // read all files and copy them to the data folder
-        const data = await this.readFileService.getRequirementsFromPlan(plan_name);
-        return JSON.parse(data);
-      }
-
-      // if (plan_name)
+      // if (plan_name) {
       //   // read all files and copy them to the data folder
-      //   await this.readFileService.getRequirementsFromPlan(plan_name);
-      // if (plan_name && plan_name === 'silver')
-      //   await this.readFileService.getSilverPlanRequirements(this.currentDirectory);
-
-      // if (plan_name && plan_name === 'bronze')
-      //   await this.readFileService.getBronzePlanRequirements(this.currentDirectory);
-
-      // get the path to the above targetdata folder and read its content.
-      // await readFile(this.targetDirectory, { encoding: 'utf8' }).catch(err => {
-      //   console.error(err);
-      // });
-      // for (let i = 0; i < 2; i++) {
-      //   const fileContent = await readFile(this.targetDirectory, { encoding: 'utf8' });
-      //   if (typeof fileContent !== "undefined") {
-      //     return [fileContent];
-      //   }
+      //   const data = await this.readFileService.getRequirementsFromPlan(plan_name);
+      //   return JSON.parse(data);
       // }
+      const data = await this.readFileService.getRequirementsFromPlan("gold", this.currentDirectory);
 
+      return JSON.parse(data);
     } catch (error) {
       this.logger.error(
         `Error fetching requirements for this plan  \n\n ${error}`,
@@ -203,12 +145,6 @@ export class RequirementService {
       );
       throw new HttpException('Error fetching comapnies', HttpStatus.UNPROCESSABLE_ENTITY);
     }
-
-    // if there is already target data  directory, empty it before adding new data
-    // if (existsSync(join(__dirname, '..', 'data'))) {
-    //   await writeFile(join(__dirname, '..', 'data', 'data.json'), '');
-    //   // await rmdir(join(__dirname, '..', 'data'), { recursive: true });
-    // }
   }
 
   async getPlanID({ company_id }: { company_id: string }): Promise<string | null> {

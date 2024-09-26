@@ -14,7 +14,7 @@ parentPort?.on('message', async ({ plan_name, directory, id }) => {
             plan_name,
             directory
         );
-
+        console.log("fetching all Reqs from worker : ", plan_name, directory, id);
         // read current files content and write in the target file for later reading.
         await planObject?.getRequirementData();
 
@@ -35,9 +35,7 @@ parentPort?.on('message', async ({ plan_name, directory, id }) => {
                 parentPort?.postMessage({ result, id });
             }
         }
-        if (!existsSync(join(__dirname, '..', 'data'))) {
-            mkdirSync(join(__dirname, '..', 'data'));
-        }
+
     } catch (error) {
         console.error(`Error inside worker: ${error}`);
     }

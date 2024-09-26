@@ -11,6 +11,7 @@ import { filter, firstValueFrom, fromEvent, map, Observable } from 'rxjs'; // Im
 import { Worker } from 'worker_threads'; // Importing Worker class to create and manage worker threads
 import { cwd } from 'node:process';
 import { LoggerService } from 'src/global/logger/logger.service';
+import { existsSync, mkdirSync } from 'node:fs';
 
 @Injectable()
 export class ReadFileWorkerHost implements OnApplicationBootstrap, OnApplicationShutdown {
@@ -40,7 +41,7 @@ export class ReadFileWorkerHost implements OnApplicationBootstrap, OnApplication
 
 
     // Method to send a task to the worker thread and get the result
-    async getRequirementsFromPlan(plan_name: string) {
+    async getRequirementsFromPlan(plan_name: string, directory: string) {
 
         const uniqueId = randomUUID(); // Generating a unique ID for the task
 
@@ -48,11 +49,11 @@ export class ReadFileWorkerHost implements OnApplicationBootstrap, OnApplication
             // Sending a message to the worker thread with the input number and unique ID
             const workerPostmessage = this.worker.postMessage({
                 plan_name: plan_name,
-                directory: this.currentDirectory,
+                directory,
                 id: uniqueId
             });
 
-            // Returning a promise that resolves with the result of the Fibonacci calculation
+            // Returning a promise that resolves with the result of the files 
             const returnValue = firstValueFrom(
                 // Convert the observable to a promise
                 this.messages$.pipe(
@@ -62,7 +63,9 @@ export class ReadFileWorkerHost implements OnApplicationBootstrap, OnApplication
                     map(({ result }) => result),
                 ),
             );
-
+            if (!existsSync(join(__dirname, '..', 'data'))) {
+                mkdirSync(join(__dirname, '..', 'data'));
+            }
             return returnValue;
         } catch (error) {
             this.logger.error(

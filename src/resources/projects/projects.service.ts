@@ -3,13 +3,11 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UseGuards,
 } from '@nestjs/common';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { Prisma, ProjectStatus, TypeProject } from '@prisma/client';
 import { PaginationProjectQueryDto } from './dto/paginate-project.dto';
 import { LoggerService } from 'src/global/logger/logger.service';
-import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Slugify } from 'src/global/utils/slugilfy';
 
 @Injectable()
@@ -21,7 +19,7 @@ export class ProjectsService {
     private slugify: Slugify,
   ) { }
 
-  @UseGuards(RolesGuard)
+
   async create({
     createProjectDto,
     user_id,
@@ -30,7 +28,6 @@ export class ProjectsService {
     user_id: string;
   }) {
     // avoid creating the same project twice
-    console.log("create project", createProjectDto)
     const project = await this.prismaService.project.findFirst({
       where: {
         slug: this.slugify.slugify(createProjectDto.title),
@@ -40,7 +37,7 @@ export class ProjectsService {
     if (project)
       return {
         data: project,
-        status: 409,
+        status: HttpStatus.CONFLICT,
         message: `Project  ${createProjectDto.title} already exists`,
       };
 
@@ -58,6 +55,10 @@ export class ProjectsService {
           data: {
             ...createProjectDto,
             slug: this.slugify.slugify(createProjectDto.title),
+            deployed_at: undefined,
+            archived_at: undefined,
+            deleted_at: undefined,
+            updated_at: undefined
           },
         });
 
@@ -67,6 +68,7 @@ export class ProjectsService {
             project_id: result.id,
             user_id: user_id,
             type_of_project: result.type,
+            action: createProjectDto.status
           },
         });
 
@@ -202,18 +204,42 @@ export class ProjectsService {
     updateProjectDto: Prisma.ProjectUpdateInput;
   }) {
 
+    // check if the project exists first
+    const existingProject = await this.findOne(id);
+    if (typeof existingProject == 'undefined')
+      return {
+        data: null,
+        status: HttpStatus.BAD_REQUEST,
+        message: `No project with this ID`,
+      };
+
+
     // check the type of action and set the corresponding date
     if (updateProjectDto.hasOwnProperty('status')) {
       if (updateProjectDto.status === ProjectStatus.ARCHIVED) {
         updateProjectDto.archived_at = new Date().toISOString();
+        updateProjectDto.deployed_at = existingProject.data?.deployed_at;
+        updateProjectDto.draft_at = existingProject.data?.draft_at;
+        updateProjectDto.deleted_at = existingProject.data?.deleted_at;
+
       }
       if (updateProjectDto.status === ProjectStatus.DRAFT) {
+        updateProjectDto.archived_at = existingProject.data?.archived_at;
+        updateProjectDto.deployed_at = existingProject.data?.deployed_at;
         updateProjectDto.draft_at = new Date().toISOString();
+        updateProjectDto.deleted_at = existingProject.data?.deleted_at;
+
       }
       if (updateProjectDto.status === ProjectStatus.DEPLOYED) {
         updateProjectDto.deployed_at = new Date().toISOString();
+        updateProjectDto.archived_at = existingProject.data?.archived_at;
+        updateProjectDto.draft_at = existingProject.data?.draft_at;
+        updateProjectDto.deleted_at = existingProject.data?.deleted_at;
       }
       if (updateProjectDto.status === ProjectStatus.DELETED) {
+        updateProjectDto.deployed_at = existingProject.data?.deployed_at;
+        updateProjectDto.archived_at = existingProject.data?.archived_at;
+        updateProjectDto.draft_at = existingProject.data?.draft_at;
         updateProjectDto.deleted_at = new Date().toISOString();
       }
     }
@@ -226,30 +252,17 @@ export class ProjectsService {
           },
         });
 
-        /* TODO: Review this audit well and make sure it works and is correct */
-
-
-
-        // set who updated the project
-        // const audit = await tx.project_audit.findFirst({
-        //   where: {
-        //     AND: [{ project_id: result.id }, { user_id: user_id }],
-        //   },
-        // });
-
-        // // set the update date.
-        // if (audit) {
-        //   await tx.project_audit.update({
-        //     where: {
-        //       id: audit.id,
-        //       user_id: user_id,
-        //     },
-        //     data: {
-        //       type_of_project: result.type,
-        //       action: updateProjectDto.status
-        //     },
-        //   });
-        // }
+        // set the project audit to keep track of who did this action
+        await tx.project_audit.update({
+          where: {
+            id: result.id,
+            user_id: user_id,
+          },
+          data: {
+            type_of_project: result.type,
+            action: updateProjectDto.status
+          },
+        });
 
         return result;
       });
@@ -277,21 +290,28 @@ export class ProjectsService {
     }
   }
   // update many projects
-  async archiveProjects(projectIds: string[]) {
-    try {
-      const result = await this.prismaService.project.updateMany({
-        where: {
-          id: { in: projectIds },
-        },
-        data: {
-          status: ProjectStatus.ARCHIVED,
-          archived_at: new Date().toISOString(),
-        },
-      });
+  async updateMany(projectIds: string[], updateProjectDto: Prisma.ProjectUpdateInput, user_id: string) {
 
-      if (result)
+    try {
+      const updatedProjects = await this.prismaService.$transaction(async (tx) => {
+        // update only existing prejects
+        const updatedProjects = Promise.all(projectIds.map(async (project_id) => {
+          const existingProject = await this.findOne(project_id);
+
+          if (typeof existingProject != 'undefined')
+            return await this.update({
+              id: <string>existingProject.data?.id,
+              user_id,
+              updateProjectDto
+            })
+        }));
+        return updatedProjects;
+      })
+
+
+      if (updatedProjects.length)
         return {
-          data: result,
+          data: updatedProjects,
           status: HttpStatus.OK, // the resource is return to be used by the client
           message: `project archive successfully`,
         };
@@ -319,29 +339,20 @@ export class ProjectsService {
         const result = await this.prismaService.project.delete({
           where: {
             id: project_id,
-          },
+          }
         });
 
         // set who deleted the project
-        // const audit = await tx.project_audit.findFirst({
-        //   where: {
-        //     AND: [{ project_id: result.id }, { user_id: user_id }],
-        //   },
-        // });
-
-        // // set the update date.
-        // if (audit) {
-        //   await tx.project_audit.update({
-        //     where: {
-        //       id: audit.id,
-        //       user_id: user_id,
-        //     },
-        //     data: {
-        //       type_of_project: result.type,
-        //       action: ProjectStatus.DELETED,
-        //     },
-        //   });
-        // }
+        await tx.project_audit.update({
+          where: {
+            id: result.id,
+            user_id: user_id,
+          },
+          data: {
+            type_of_project: result.type,
+            action: ProjectStatus.DELETED,
+          },
+        });
 
         return result;
       })
@@ -372,36 +383,18 @@ export class ProjectsService {
   async deleteManyByIds(ids: string[], user_id: string) {
     try {
       const result = await this.prismaService.$transaction(async (tx) => {
-        const result = await this.prismaService.project.deleteMany({
-          where: {
-            id: { in: ids },
-          },
-        });
 
-        // set who deleted the project
-        // const audits = await tx.project_audit.findMany({
-        //   where: {
-        //     AND: [{ project_id: { in: ids } }, { user_id: user_id }],
-        //   },
-        // });
+        const updatedProjects = Promise.all(ids.map(async (project_id) => {
+          const existingProject = await this.findOne(project_id);
 
-        // // set the update date.
-        // if (audits) {
-        //   await tx.project_audit.updateMany({
-        //     where: {
-        //       id: { in: audits.map((audit) => audit.id) },
-
-        //     },
-        //     data: {
-        //       type_of_project: audits[0].type_of_project,
-        //       action: ProjectStatus.DELETED,
-        //       user_id: user_id
-        //     },
-        //   });
-        // }
-        return result;
+          if (typeof existingProject != 'undefined')
+            return await this.remove({
+              project_id: <string>existingProject.data?.id,
+              user_id,
+            })
+        }))
+        return updatedProjects;
       })
-
 
       if (result)
         return {

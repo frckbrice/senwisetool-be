@@ -80,8 +80,6 @@ export class ProjectsController {
     status: 200, // returned as this resource is again used in front end
     description: 'The project has been successfully updated.',
   })
-
-
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @ApiOperation({ summary: 'update one project with its Project_id' })
   update(
@@ -109,8 +107,16 @@ export class ProjectsController {
   }
 
   // delete multiple projects
-  @Delete('/delete-many')
+  @Delete('delete-many')
   async deleteMany(@Body() ids: string[], @CurrentUser() user: Partial<User>) {
-    return await this.projectsService.deleteManyByIds(ids, <string>user.id);
+    return this.projectsService.deleteManyByIds(ids, <string>user.id);
+  }
+
+  // update multiple projects
+  @Patch('update-many')
+  async updateMany(
+    @Body() data: Prisma.ProjectUpdateInput & { ids: string[] },
+    @CurrentUser() user: Partial<User>) {
+    return this.projectsService.updateMany(data.ids, data, <string>user.id);
   }
 }

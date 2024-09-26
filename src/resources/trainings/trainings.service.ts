@@ -1,4 +1,5 @@
 import {
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -20,7 +21,7 @@ export class TrainingService {
     private readonly prismaService: PrismaService,
     private readonly userService: UsersService,
     private slugifyService: Slugify,
-  ) {}
+  ) { }
 
   async create(
     createTrainingDto: Prisma.TrainingCreateInput,
@@ -69,13 +70,14 @@ export class TrainingService {
     }
   }
 
-  async findAll(query: Partial<PaginationTrainingQueryDto>) {
+  async findAll(query: Partial<PaginationTrainingQueryDto>, company_id: string) {
     // find all the training with the latest start date with its status and type
     const { page, perPage, locality } = query;
     let Query = Object.create({});
     Query = {
       ...Query,
       where: {
+        company_id,
         ...(locality && { locality }),
       },
       take: perPage ?? 20,
@@ -90,6 +92,7 @@ export class TrainingService {
         this.prismaService.training.count(),
         this.prismaService.training.findMany(Query),
       ]);
+      console.log("trainings:", trainings)
       if (trainings.length)
         return {
           status: 200,
@@ -130,13 +133,13 @@ export class TrainingService {
       if (result)
         return {
           data: result,
-          status: 200,
+          status: HttpStatus.OK,
           message: `training fetched successfully`,
         };
       else
         return {
           data: null,
-          status: 400,
+          status: HttpStatus.BAD_REQUEST,
           message: `Failed to fetch training`,
         };
     } catch (err) {
@@ -193,13 +196,13 @@ export class TrainingService {
       if (result)
         return {
           data: result,
-          status: 200,
+          status: HttpStatus.NO_CONTENT,
           message: `training deleted successfully`,
         };
       else
         return {
           data: null,
-          status: 400,
+          status: HttpStatus.BAD_REQUEST,
           message: `Failed to delete training`,
         };
     } catch (err) {

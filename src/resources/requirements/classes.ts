@@ -29,8 +29,7 @@ export class GoldPlanRequirements extends RequirementData {
         super(plan_name, directory);
     }
     async getRequirementData() {
-
-        // TODO: look for a way to customize this action.
+        console.log("fetching all Reqs for gold plan : ",)       // TODO: look for a way to customize this action.
         try {
             const files = await readdir(this.directory);
             files.forEach(async (file) => {

@@ -31,7 +31,7 @@ import { TrainingEntity } from './entities/training.entity';
 @ApiBearerAuth()
 @SkipThrottle() // TODO: set this throttler later to correct value
 export class TrainingController {
-  constructor(private readonly trainingService: TrainingService) {}
+  constructor(private readonly trainingService: TrainingService) { }
 
   @Post()
   @ApiOperation({ summary: 'create training model object' })
@@ -52,8 +52,9 @@ export class TrainingController {
     status: 200,
     description: 'The trainings has been successfully fetched.',
   })
-  findAll(@Query() query: PaginationTrainingQueryDto) {
-    return this.trainingService.findAll(query);
+  findAll(@Query() query: PaginationTrainingQueryDto, @CurrentUser() user: Partial<User>) {
+    console.log("hit tranings controler: ", query)
+    return this.trainingService.findAll(query, <string>user.company_id);
   }
 
   @Roles(Role.ADG, Role.AUDITOR)
