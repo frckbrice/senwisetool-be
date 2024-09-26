@@ -34,7 +34,6 @@ export class SubscriptionsService {
     private payalService: SubscribeToPayPalService,
     private prismaService: PrismaService,
     private currentplanIds: CurrentPlanIds,
-    private createNewtype: ApplyNixins,
   ) { }
 
   // this operation is done in the client by the paypal SDK.
@@ -501,6 +500,30 @@ export class SubscriptionsService {
         `failed to update subscription with id ${subscription_id}`,
         HttpStatus.NOT_MODIFIED,
       );
+    }
+  }
+
+  // get current company last valid subscription
+  async getLastValidSubscription(company_id: string) {
+
+    try {
+      return await this.prismaService.subscription.findFirst({
+        where: {
+          AND: [
+            { company_id, },
+            { status: SubscriptionStatus.ACTIVE },
+          ]
+
+        },
+        select: {
+          plan_id: true,
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Error while  getting subscription \n\n ${error}`);
     }
   }
 }

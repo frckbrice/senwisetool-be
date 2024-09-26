@@ -7,7 +7,9 @@ import { Slugify } from 'src/global/utils/slugilfy';
 @Module({
   controllers: [ProjectsController],
   providers: [
-    ProjectsService, 
+
+    ProjectsService,
+
     Slugify,
     // ProjectInvitationService
   ],

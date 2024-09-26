@@ -1,15 +1,17 @@
 import {
+  HttpException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { CreatePriceDto } from './dto/create-price.dto';
 import { UpdatePriceDto } from './dto/update-price.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { CurrentPlanIds } from 'src/global/utils/current-plan-ids';
+// import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 @Injectable()
 export class PricesService {
@@ -17,7 +19,8 @@ export class PricesService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly currenPlanIds: CurrentPlanIds,
-  ) {}
+    // private readonly subscriptionService: SubscriptionsService
+  ) { }
 
   async create(createPriceDto: Prisma.Price_planCreateInput) {
     // validate plan id
@@ -119,6 +122,68 @@ export class PricesService {
       throw new NotFoundException(' Failed to fetch price plan');
     }
   }
+
+  async findCurrentcompanyPlan(company_id: string) {
+
+    // get current company subscrition
+    // const currentCompanySubscription = await this.subscriptionService.getLastValidSubscription(company_id)
+
+    try {
+      /*
+        this design (line 139-149) is not legal as it is not following SRP from SOLID method. 
+        but it's a technical debt that will be updated later. for now we can go with it since 
+        it is solving current issue of dependencies ...
+      */
+      const currentCompanySubscription = await this.prismaService.subscription.findFirst({
+        where: {
+          AND: [
+            { company_id, },
+            { status: SubscriptionStatus.ACTIVE },
+          ]
+        },
+        select: {
+          plan_id: true,
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      });
+
+      if (typeof currentCompanySubscription == 'undefined')
+        throw new HttpException(`Company has not subscribed on this plan`, HttpStatus.FORBIDDEN);
+
+      const resutl = await this.prismaService.price_plan.findUnique({
+        where: {
+          id: currentCompanySubscription?.plan_id
+        },
+        select: {
+          id: true,
+          product_name: true,
+        },
+      });
+      if (resutl && resutl.id)
+        return {
+          status: 200,
+          data: resutl,
+          message: 'CurrentPrice plan fetched successfully',
+        };
+      else
+        return {
+          status: 404,
+          data: null,
+          message: 'Failed to fetch current price plan',
+        };
+    } catch (error) {
+      console.error(`\n\nError while fetching current price plan : \n\n  ${error}`);
+      this.logger.error(
+        `Error while fetching current price plan: \n\n  ${error}`,
+        PricesService.name,
+      );
+      throw new NotFoundException(' Failed to fetch price plan');
+    }
+  }
+
+
 
   update(id: number, updatePriceDto: UpdatePriceDto) {
     return `This action updates a #${id} price`;
