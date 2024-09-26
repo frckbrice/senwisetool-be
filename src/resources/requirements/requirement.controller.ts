@@ -53,25 +53,22 @@ export class RequirementController {
   }
 
   // get all requirements for a specific price plan
-  @Get('price_plan/:plan_id')
-  getAllPricePlan(
-    @Param('plan_id') plan_id: string,
-    @CurrentUser() user: UserType,
-  ) {
-    return this.requirementService.findAllRequirements({
-      plan_id: plan_id ?? '',
-      company_id: <string>user?.company_id,
-    });
-  }
+  // @Get()
+  // getAllPricePlan(
+  //   @Param('plan_id') plan_id: string,
+  //   @CurrentUser() user: UserType,
+  // ) {
+  //   return this.requirementService.findAllRequirements();
+  // }
 
   @Get()
   async getCurrentCompanySubscriptionRequirements(@CurrentUser() user: UserType) {
     const company_id = <string>user?.company_id;
-
-
-    return this.requirementService.getAllFile({
-      company_id
-    });
-
+    // return this.requirementService.getAllFile({
+    //   company_id
+    // });
+     const data = await  this.requirementService.getAllFile();
+     console.log("the requirements data from controller: ", data)
+     return data;
   }
 }

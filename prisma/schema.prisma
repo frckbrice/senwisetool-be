@@ -96,6 +96,11 @@ enum CampaignStatus {
   CLOSED
 }
 
+enum InvitationStatus {
+  CONFIRMED
+  NOT_CONFIRMED
+}
+
 
 model User {
   id           String    @id @default(cuid())
@@ -130,7 +135,7 @@ model Company {
   email  String @unique
 
   logo  String ? 
-
+head_office_email String
 
   payment_mode String ?
   company_paypal_email String ?
@@ -292,7 +297,10 @@ model Project_audit {
   project_id String
   user_id String
   type_of_project TypeProject
-  action ProjectStatus @default(DRAFT)
+  invited_by String ?
+  invitation_status  InvitationStatus ? @default(NOT_CONFIRMED)
+
+  action ProjectStatus ? @default(DRAFT)
   user User @relation(fields: [user_id], references: [id])
   project Project @relation(fields: [project_id], references: [id])
   created_at DateTime @default(now())
