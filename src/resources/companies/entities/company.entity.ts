@@ -34,4 +34,5 @@ export class CompanyType implements Company {
   slug: string | null;
   timezone: string;
   updated_at: Date;
+  head_office_email: string
 }

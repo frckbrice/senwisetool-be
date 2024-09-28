@@ -78,8 +78,6 @@ export class UsersService {
       },
     });
 
-    console.log('existing user ', existingUser);
-
     let userRole: Role = Role.ADG;
     if (tokenPayload.org_role) userRole = Role.PDG;
 
@@ -275,12 +273,16 @@ export class UsersService {
           throw new InternalServerErrorException('Failed to update user');
         });
 
-      if (user)
+      if (typeof user != 'undefined') {
+        // set the new user the request
+        this.eventEmitter.emit('user.created', user);
         return {
           data: user,
           status: 204,
           message: `User updated successfully`,
         };
+      }
+
       else
         return {
           data: null,
@@ -318,12 +320,16 @@ export class UsersService {
         },
       });
 
-      if (deletedUser)
+      if (deletedUser) {
+        // set the new user the request
+        this.eventEmitter.emit('user.updated', deletedUser);
         return {
           data: deletedUser,
           status: 204,
           message: `User ${query.deactivate ? 'deactivated' : query.ban ? 'banned' : 'reactivated'} successfully`,
         };
+      }
+
       else
         return {
           data: null,

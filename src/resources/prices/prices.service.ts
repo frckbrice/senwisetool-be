@@ -161,6 +161,8 @@ export class PricesService {
           product_name: true,
         },
       });
+
+      console.log("current pice plan:", resutl);
       if (resutl && resutl.id)
         return {
           status: 200,
