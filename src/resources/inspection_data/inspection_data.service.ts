@@ -1,10 +1,9 @@
 import {
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateInspectionDatumDto } from './dto/create-inspection_datum.dto';
-import { UpdateInspectionDatumDto } from './dto/update-inspection_datum.dto';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { LoggerService } from 'src/global/logger/logger.service';
@@ -13,25 +12,46 @@ import { LoggerService } from 'src/global/logger/logger.service';
 export class InspectionDataService {
   private readonly logger = new LoggerService(InspectionDataService.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
   async create(createInspectionDatumDto: Prisma.Inspection_dataCreateInput) {
-    return this.prismaService.inspection_data.create({
-      data: createInspectionDatumDto,
-    });
+    try {
+      const data = await this.prismaService.inspection_data.create({
+        data: createInspectionDatumDto,
+      });
+
+      if (typeof data != 'undefined')
+        return {
+          data,
+          status: HttpStatus.CREATED,
+          message: `Project collected data was stored successfully in DB`
+        }
+      else
+        return {
+          data: null,
+          status: HttpStatus.BAD_REQUEST,
+          message: `Failed to store project collected data.`
+        }
+    } catch (error) {
+      this.logger.error(
+        'Failed to store project collected data',
+        InspectionDataService.name,
+      );
+      throw new InternalServerErrorException('Failed to store project collected data');
+    }
   }
 
   //TODO: create pagination for inspection_data resource
-  async findAll(query: { projectId: string; page?: number; perPage?: number }) {
+  async findAll(query: { project_id: string; page?: number; perPage?: number }) {
     try {
-      if (query.projectId) {
+      if (query?.project_id) {
         const [total, inspectionData] = await this.prismaService.$transaction([
           this.prismaService.inspection_data.count({}),
           this.prismaService.inspection_data.findMany({
             where: {
-              project_id: query.projectId,
+              project_id: query?.project_id,
             },
-            take: query.page,
-            skip: (query.page ?? 0) * (query.perPage ?? 20 - 1),
+            take: query?.page ?? 20,
+            skip: (query?.page ?? 0) * (query?.perPage ?? 20 - 1),
             orderBy: {
               created_at: 'desc',
             },
@@ -40,9 +60,9 @@ export class InspectionDataService {
         return {
           total,
           data: inspectionData,
-          page: query.page ?? 0,
-          perPage: query.perPage ?? 20,
-          totalPages: Math.ceil(total / (query.perPage ?? 20)),
+          page: query?.page ?? 0,
+          perPage: query?.perPage ?? 20,
+          totalPages: Math.ceil(total / (query?.perPage ?? 20)),
         };
       }
       //TODO: return right object here
@@ -57,58 +77,106 @@ export class InspectionDataService {
   }
 
   async findOne(id: string) {
-    return this.prismaService.inspection_data
-      .findUnique({
-        where: {
-          id,
-        },
-      })
-      .catch((err) => {
-        this.logger.error(
-          "Can't find a inspection project data with id " + id,
-          InspectionDataService.name,
-        );
-        throw new NotFoundException("Can't find a projec data with id " + id);
-      });
+    try {
+      const result = await this.prismaService.inspection_data
+        .findUnique({
+          where: {
+            id,
+          },
+        })
+
+      if (typeof result != 'undefined')
+        return {
+          data: result,
+          status: 201,
+          message: `Project collected data successfully updated`,
+        };
+      else
+        return {
+          data: null,
+          status: 400,
+          message: `Can't Fetch project collected data with id`,
+        };
+    }
+    catch (err) {
+      this.logger.error(
+        "Can't Fetch project collected data with id" + id + '\n\n ' + err,
+        InspectionDataService.name,
+      );
+      throw new InternalServerErrorException(
+        "Can't Fetch project collected data with id" + id,
+      );
+    }
   }
 
   async update(
     id: string,
-    updateInspectionDatumDto: Prisma.Inspection_dataUpdateInput,
+    updateProjectDatumDto: Prisma.Inspection_dataUpdateInput,
   ) {
-    return this.prismaService.inspection_data
-      .update({
-        where: {
-          id,
-        },
-        data: updateInspectionDatumDto,
-      })
-      .catch((err) => {
-        this.logger.error(
-          "Can't update a inspection project data with id " + id,
-          InspectionDataService.name,
-        );
-        throw new NotFoundException(
-          "Can't update a inspection project with id " + id,
-        );
-      });
+
+    try {
+      const result = await this.prismaService.inspection_data
+        .update({
+          where: {
+            id,
+          },
+          data: updateProjectDatumDto,
+        })
+
+      if (typeof result != 'undefined')
+        return {
+          data: null,
+          status: 204,
+          message: `project collected data successfully updated`,
+        };
+      else
+        return {
+          data: null,
+          status: 400,
+          message: `Failed to update project collected data`,
+        };
+    }
+    catch (err) {
+      this.logger.error(
+        "Can't update a inspection project data with id" + id + '\n\n ' + err,
+        InspectionDataService.name,
+      );
+      throw new InternalServerErrorException(
+        "Can't update a inspection project with id  " + id,
+      );
+    }
   }
 
   async remove(id: string) {
-    return this.prismaService.project
-      .delete({
-        where: {
-          id,
-        },
-      })
-      .catch((err) => {
-        this.logger.error(
-          "Can't delete a project with id " + id,
-          InspectionDataService.name,
-        );
-        throw new InternalServerErrorException(
-          "Can't delete a project with id " + id,
-        );
-      });
+    try {
+      const result = await this.prismaService.project
+        .delete({
+          where: {
+            id,
+          },
+        })
+
+      if (typeof result != 'undefined')
+        return {
+          data: null,
+          status: 204,
+          message: `project collected data deleted successfully`,
+        };
+      else
+        return {
+          data: null,
+          status: 400,
+          message: `Failed to project collected data deleted`,
+        };
+    }
+    catch (err) {
+      this.logger.error(
+        "Can't delete a project collected data with id  " + id + '\n\n ' + err,
+        InspectionDataService.name,
+      );
+      throw new InternalServerErrorException(
+        "Can't delete project collected data with id " + id,
+      );
+    }
   }
 }

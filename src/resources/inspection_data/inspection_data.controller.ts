@@ -20,7 +20,7 @@ import { Roles } from 'src/global/auth/guards/roles.decorator';
 @ApiTags('inspection_data')
 @Controller('inspection_data')
 export class InspectionDataController {
-  constructor(private readonly inspectionDataService: InspectionDataService) {}
+  constructor(private readonly inspectionDataService: InspectionDataService) { }
 
   @Post()
   @ApiOperation({ summary: 'create project data' })
@@ -33,7 +33,7 @@ export class InspectionDataController {
   @Get()
   @ApiOperation({ summary: 'find all inspection data' })
   findAll(
-    @Query() query: { projectId: string; page?: number; perPage?: number },
+    @Query() query: { project_id: string; page?: number; perPage?: number },
   ) {
     return this.inspectionDataService.findAll(query);
   }

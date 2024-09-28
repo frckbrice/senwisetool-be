@@ -1,4 +1,5 @@
 import {
+  HttpException,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
@@ -9,6 +10,7 @@ import { Prisma, ProjectStatus, TypeProject } from '@prisma/client';
 import { PaginationProjectQueryDto } from './dto/paginate-project.dto';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { Slugify } from 'src/global/utils/slugilfy';
+import { generateMapping, getUUIDFromCode } from './create-code-project-mapping';
 
 @Injectable()
 export class ProjectsService {
@@ -49,16 +51,24 @@ export class ProjectsService {
         message: `End date should be greater than or equal to start date`,
       };
 
+
+
     try {
+
+      // Example usage:
+      const { uuid, code } = generateMapping();
+
+
       const result = await this.prismaService.$transaction(async (tx) => {
         const result = await tx.project.create({
           data: {
             ...createProjectDto,
             slug: this.slugify.slugify(createProjectDto.title),
+            code: uuid,
             deployed_at: "",
             archived_at: "",
             deleted_at: "",
-            updated_at: ""
+            updated_at: "",
           },
         });
 
@@ -75,12 +85,15 @@ export class ProjectsService {
         return result;
       });
 
-      if (result)
+      if (result) {
+
         return {
-          data: result,
+          data: { ...result, code },
           status: 201,
           message: `project created successfully`,
         };
+      }
+
       else
         return {
           data: null,
@@ -166,6 +179,8 @@ export class ProjectsService {
       where['id'] = project_id;
     }
 
+
+
     try {
       const result = await this.prismaService.project.findUnique({
         where,
@@ -190,6 +205,53 @@ export class ProjectsService {
       );
       throw new NotFoundException(
         "Can't find a project with project_id " + project_id,
+      );
+    }
+  }
+
+  async findOneProjectFromPhone(project_code: string) {
+
+    // match the code with the corresponding uuid saved for this project
+    const retrievedUUID = getUUIDFromCode(project_code);
+
+    if (typeof retrievedUUID == 'undefined')
+      throw new HttpException(`No matching project code for this code`, HttpStatus.BAD_REQUEST)
+
+    try {
+      const result = await this.prismaService.project.findUnique({
+        where: {
+          code: <string>retrievedUUID,
+          status: ProjectStatus.DEPLOYED
+        },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          start_date: true,
+          end_date: true,
+          project_structure: true,
+        }
+      });
+
+      if (result)
+        return {
+          data: result,
+          status: 200,
+          message: `project fetched successfully`,
+        };
+      else
+        return {
+          data: null,
+          status: 400,
+          message: `Failed to fetch project`,
+        };
+    } catch (err) {
+      this.logger.error(
+        `Can't find a project with project_code ${project_code} \n\n ${err}`,
+        ProjectsService.name,
+      );
+      throw new NotFoundException(
+        "Can't find a project with project_code " + project_code,
       );
     }
   }
