@@ -96,6 +96,14 @@ enum CampaignStatus {
   CLOSED
 }
 
+enum MarketType {
+  COCOA
+  COFFEE
+  BANANA
+  WOOD
+  OTHER
+}
+
 enum InvitationStatus {
   CONFIRMED
   NOT_CONFIRMED
@@ -125,6 +133,8 @@ model User {
   receipt       Receipt?
   market_audit  Market_audit[]
   training_audits Company_training_audit[]
+
+  @@index([id, email, phone_number])
 }
 
 model Company {
@@ -135,7 +145,8 @@ model Company {
   email  String @unique
 
   logo  String ? 
-head_office_email String
+  // to constraint companies to add an email for reclamations directed to the head office support
+head_office_email String 
 
   payment_mode String ?
   company_paypal_email String ?
@@ -144,7 +155,6 @@ head_office_email String
   sector_of_activity String 
   website  String ?
   address  String 
-  state String
   phone_number  String
   city  String
   description String
@@ -161,6 +171,8 @@ head_office_email String
   trainings Training[]
   subscription Subscription[]
   markets Market[]
+
+  @@index([id, status, email ])
   
 }
 
@@ -181,8 +193,7 @@ campaign_id  String
   end_date  DateTime
   project_structure Json    @default("{}")  @db.JsonB
   another_logo  String ?
-  // archived Boolean @default(false) 
-  // draft Boolean @default(false)
+  code String @unique
   projectAudit Project_audit[]
   Company     Company @relation(fields: [company_id], references: [id])
   
@@ -191,7 +202,9 @@ campaign_id  String
   deleted_at DateTime @updatedAt
   archived_at DateTime @updatedAt
   draft_at DateTime @updatedAt
-  deployed_at DateTime @updatedAt
+  deployed_at DateTime 
+  
+  @@index([id, company_id, start_date, end_date, sector_activity, type])
 }
 
 model Campaign {
@@ -206,6 +219,8 @@ model Campaign {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   stockCampaigns Campaign_stock[]
+
+  @@index([id])
 }
 
 model Company_Campaign {
@@ -230,6 +245,8 @@ model Campaign_stock {
   projectId   Campaign @relation(fields: [campaign_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@index([campaign_id])
 }
 
 model Collector_agent {
@@ -251,6 +268,8 @@ model Inspection_data {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   collected_at DateTime @default(now())
+
+  @@index([project_id, collected_by])
 }
 
 model training_session {
@@ -270,6 +289,8 @@ model training_session {
   updated_at DateTime @updatedAt
   training_id String
   training Training @relation(fields: [training_id], references: [id])
+
+  @@index([email, id, training_id, first_name, last_name])
 }
 
 model Training {
@@ -290,6 +311,8 @@ model Training {
 
   training_session training_session[]
   training_audits Company_training_audit[]
+
+  @@index([company_id, start_date, end_date, title, id])
 }
 
 model Project_audit {
@@ -322,6 +345,8 @@ model Farm {
   mapping_coodinates Farm_coordinates[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@index([farmer_id, location])
 }
 
 //TODO: check the real data structure to store the geoPoints.
@@ -338,6 +363,8 @@ model Farm_coordinates{
   farm Farm @relation(fields: [farm_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@index([farm_id, located_at])
 }
 
 model Subscription {
@@ -358,6 +385,7 @@ model Subscription {
   price                Price_plan @relation(fields: [plan_id], references: [id])
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
+  @@index([company_id, plan_id, status, id])
 }
 
 model Price_plan {
@@ -381,6 +409,9 @@ model Price_plan {
   price_plan_requirement Price_plan_requirement[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  
+  @@index([product_name, id,plan_name, status])
 }
 
 
@@ -416,7 +447,6 @@ model Market_audit {
   market_id String
   user User @relation(fields: [user_id], references: [id])
   market Market @relation(fields: [market_id], references: [id])
-  date DateTime
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
@@ -430,17 +460,24 @@ model Market {
 
   description String
   location String
-  market_type String
+  type_of_market MarketType @default(COCOA)
   bordereau_vente_url String
   bon_entree_magazin_url String
 
-  
+  status CampaignStatus @default(CLOSED) 
+  // when the market is closed we generate a code that represent the stock for that market.
+  code String ?
+  // this represnt the total number of bags bought during this market.
+  product_quantity Int
   company Company @relation(fields: [company_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   market_audit Market_audit[]
   transaction Transaction[]
   receipts Receipt[]
+  campaign_id String
+
+  @@index([company_id, start_date, end_date])
 }
 
 model Receipt {

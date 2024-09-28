@@ -14,9 +14,11 @@ export class RequestService {
 
   private userId: string;
 
-  async getUserWithSub(tokenPayload: { user_first_name: string, user_email: string, sub: string, org_role: string }) {
+  async getUserWithSub({ user_first_name, user_email, sub, org_role }: { user_first_name: string, user_email: string, sub: string, org_role: string }) {
+
+    console.log("inside constructing user: \n\n", { user_first_name, user_email, sub, org_role })
     const existingUser = <User>await this.prismaService.user.findUnique({
-      where: { id: tokenPayload.sub },
+      where: { id: sub },
       select: {
         role: true,
         id: true,
@@ -26,18 +28,18 @@ export class RequestService {
       },
     });
 
-
+    console.log("after checking for existing user constructing user: \n\n", existingUser)
     let userRole: Role = Role.ADG;
-    if (tokenPayload.org_role) userRole = Role.PDG;
-
+    if (org_role) userRole = Role.PDG;
+    console.log("role: \n\n", userRole)
     const user: Partial<User> = {
-      id: existingUser.id ?? tokenPayload.sub,
-      email: existingUser.email ?? tokenPayload.user_email,
-      first_name: existingUser.first_name ?? tokenPayload.user_first_name,
-      role: existingUser.role ?? userRole,
-      company_id: existingUser.company_id,
+      id: existingUser?.id ?? sub,
+      email: existingUser?.email ?? user_email,
+      first_name: existingUser?.first_name ?? user_first_name,
+      role: existingUser?.role ?? userRole,
+      company_id: existingUser?.company_id ?? "",
     };
-
+    console.log("lastly this is the user: \n\n", user)
     return user;
   }
 

@@ -55,10 +55,10 @@ export class ProjectsService {
           data: {
             ...createProjectDto,
             slug: this.slugify.slugify(createProjectDto.title),
-            deployed_at: undefined,
-            archived_at: undefined,
-            deleted_at: undefined,
-            updated_at: undefined
+            deployed_at: "",
+            archived_at: "",
+            deleted_at: "",
+            updated_at: ""
           },
         });
 

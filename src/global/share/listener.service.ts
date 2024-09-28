@@ -18,7 +18,7 @@ export class ListenerService {
     private readonly mailerService: MailerService,
     private prismaService: PrismaService,
     private sendMailService: MailServiceEvent,
-  ) {}
+  ) { }
 
   /**
    * Handle the event when a participant is created.
@@ -44,7 +44,7 @@ export class ListenerService {
   }
 
   @OnEvent(localEvents.paymentCanceled)
-  async handleupgradePaymentLogic(payload: any) {
+  async handleUpgradePaymentLogic(payload: any) {
     // TODO: send email to Customer company
     this.logger.log('handleupgradePaymentLogic', JSON.stringify(payload));
   }
@@ -73,6 +73,7 @@ export class ListenerService {
     this.counter = 1;
   }
 
+  // To update the current user and add him to current user state. 
   @OnEvent(localEvents.userCreated)
   async updateRequestCurrentUserPayload(
     payload: Partial<User>,
@@ -85,7 +86,7 @@ export class ListenerService {
       first_name: <string>payload.first_name,
       email: payload.email,
       role: <Role>payload.role,
-      status: UserStatus.ACTIVE,
+      status: <UserStatus>payload.status,
       company_id: <string>payload.company_id,
     };
 

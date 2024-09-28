@@ -24,7 +24,6 @@ export class AuthMiddleware implements NestMiddleware {
     constructor(
         private readonly requestService: RequestService,
         private jwtService: JwtService,
-        private prismaService: PrismaService,
     ) { }
     private readonly logger = new LoggerService(AuthMiddleware.name);
 
@@ -60,9 +59,13 @@ export class AuthMiddleware implements NestMiddleware {
             }
             // decode the token to get the request payload
             const payload = await this.jwtService.decode(token);
-            // console.log("from auth middleware: ", payload)
+
             // get the user obeject from the token
-            const currentUser = await this.requestService.getUserWithSub(payload)
+
+            const { user_first_name, user_email, sub, org_role } = payload;
+            const currentUser = await this.requestService.getUserWithSub(
+                { user_first_name, user_email, sub, org_role }
+            )
 
             // set the current user to the request for next processing in guard.
             req['user'] = currentUser;

@@ -523,12 +523,12 @@ export class SubscriptionsService {
         },
       });
     } catch (error) {
-      this.logger.error(`Error while  getting subscription \n\n ${error}`);
+      this.logger.error(`Error  while  getting subscription \n\n ${error}`);
     }
   }
 }
 
-/**
+/** RC/YAO/2017/M/172
  * TODO: use a worker thread for this operation: 
  * 1. create a worker service file
  * 2. listen to message frm the main thread

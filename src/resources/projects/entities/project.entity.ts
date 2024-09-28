@@ -25,4 +25,5 @@ export class ProjectEntity implements Project {
   updated_at: Date;
   deployed_at: Date;
   another_logo: string | null;
+  code: string;
 }

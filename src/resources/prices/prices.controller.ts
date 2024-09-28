@@ -67,7 +67,7 @@ export class PricesController {
     type: CreatePriceDto,
     schema: Prisma.Price_planScalarFieldEnum,
     content: {},
-    description: 'successfully fetch a plan',
+    description: 'successfully fetch the current price plan',
   })
   async findCompanyCurrentPlan(@CurrentUser() user: Partial<User>) {
     return this.pricesService.findCurrentcompanyPlan(<string>user.company_id);
