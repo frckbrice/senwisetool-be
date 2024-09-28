@@ -204,7 +204,7 @@ campaign_id  String
   draft_at DateTime @updatedAt
   deployed_at DateTime 
   
-  @@index([id, company_id, start_date, end_date, sector_activity, type])
+  @@index([id, company_id, start_date, end_date, sector_activity, type, code])
 }
 
 model Campaign {
@@ -252,25 +252,64 @@ model Campaign_stock {
 model Collector_agent {
   id String @id @default(cuid())
   name String
-  code String
+  project_code String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  companyId String
+  company_id String
 }
 
 model Inspection_data {
   id String @id @default(cuid())
   project_id String
   collected_by String
-  project_data_url String
+  // project_data_url String
 
   project_data   Json ?  @default("{}")  @db.JsonB
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  collected_at DateTime @default(now())
+  // collected_at DateTime @default(now())
 
   @@index([project_id, collected_by])
 }
+
+
+model Farm {
+  id String @id @default(cuid())
+  location Json ?  @default("{}")  @db.JsonB
+  farmer_id String 
+
+  village String
+  creation_date DateTime
+  division String
+  council String
+  farm_image_url String
+  user User @relation(fields: [farmer_id], references: [id])
+  
+  mapping_coodinates Farm_coordinates[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([farmer_id, location])
+}
+
+//TODO: check the real data structure to store the geoPoints.
+model Farm_coordinates{
+  id String @id @default(cuid())
+  estimate_area Float
+
+  // mapping_date DateTime
+  farm_id String
+  located_at Json ?  @default("{}")  @db.JsonB
+
+  coordinates Json ?  @default("{}")  @db.JsonB
+  collected_by String
+  farm Farm @relation(fields: [farm_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([farm_id, located_at])
+}
+
 
 model training_session {
   id String @id @default(cuid())
@@ -328,43 +367,6 @@ model Project_audit {
   project Project @relation(fields: [project_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-}
-
-model Farm {
-  id String @id @default(cuid())
-  location Json ?  @default("{}")  @db.JsonB
-  farmer_id String 
-
-  village String
-  creation_date DateTime
-  division String
-  council String
-  farm_image_url String
-  user User @relation(fields: [farmer_id], references: [id])
-  
-  mapping_coodinates Farm_coordinates[]
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@index([farmer_id, location])
-}
-
-//TODO: check the real data structure to store the geoPoints.
-model Farm_coordinates{
-  id String @id @default(cuid())
-  estimate_area Float
-
-  mapping_date DateTime
-  farm_id String
-  located_at Json ?  @default("{}")  @db.JsonB
-
-  coordinates Json ?  @default("{}")  @db.JsonB
-  collected_by String
-  farm Farm @relation(fields: [farm_id], references: [id])
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@index([farm_id, located_at])
 }
 
 model Subscription {
@@ -486,7 +488,7 @@ model Receipt {
   village String
   farmer_id String @unique
 
- date DateTime 
+  date DateTime 
   net_weight_in_kg Float
   quantity_in_bags Int
   humidity_level_of_product String

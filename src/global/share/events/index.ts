@@ -6,6 +6,7 @@ export const localEvents = {
   companyCreated: 'company.created',
   userCreated: 'user.created',
   userUpdated: 'user.updated',
+  userDeleted: 'user.deleted',
 
   // subscription 
   subscriptionRenewalReminder: 'subscription.renewalReminder',

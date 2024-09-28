@@ -1,0 +1,81 @@
+import crypto from 'crypto';
+
+const uuidToCodeMap = Object.create({});
+
+// generate 4 digits code 
+function hashUUID(uuid: string) {
+    const hash = crypto.createHash('sha256').update(uuid).digest('hex');
+    return hash.substring(0, 4);
+}
+
+// genreate the mapping between tje uuid and the 4 digits 
+export function generateMapping() {
+    const uuid = crypto.randomUUID();
+
+    const code = hashUUID(uuid);
+    uuidToCodeMap[uuid] = code as string;
+    return { uuid, code };
+}
+
+
+export function getUUIDFromCode(code: string) {
+    for (const uuid in uuidToCodeMap) {
+        if (uuidToCodeMap[uuid] === code) {
+            return uuid;
+        }
+    }
+    return null; // Code not found
+}
+
+
+
+/**
+ * import * as crypto from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
+import { Random } from 'crypto-js';
+
+interface Mapping {
+  [key: string]: string;
+}
+
+function generateUuidCodeMapping(length: number = 4): Mapping {
+  // Generate a UUID
+  const uuidObj = uuidv4();
+  
+  // Convert UUID to string and extract last 4 characters
+  const uuidStr = uuidObj.toString();
+  const uuidSub = uuidStr.slice(-length);
+  
+  // Generate a code of specified length
+  const code = generateRandomAlphanumericCode(length);
+  
+  return {
+    [code]: uuidSub,
+    [uuidSub]: code
+  };
+}
+
+function generateRandomAlphanumericCode(length: number): string {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return Random.array(length).map(() => characters[Math.floor(Math.random() * characters.length)]).join('');
+}
+
+function lookupUuidByCode(mapping: Mapping, code: string): string | undefined {
+  return mapping[code];
+}
+
+function lookupCodeByUuid(mapping: Mapping, uuidSub: string): string | undefined {
+  return mapping[uuidSub];
+}
+
+// Example usage
+const mapping = generateUuidCodeMapping(6); // Now generates 6-digit codes
+
+console.log(`UUID for code '${mapping['code']}' is: ${lookupUuidByCode(mapping, mapping['code'])}`);
+
+// Lookup by UUID
+const uuidSub = "123456abcd";
+const foundCode = lookupCodeByUuid(mapping, uuidSub);
+console.log(`Code corresponding to UUID '${uuidSub}' is: ${foundCode}`);
+
+ */
