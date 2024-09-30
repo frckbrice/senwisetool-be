@@ -22,14 +22,15 @@ export class ComapnyService {
     private readonly userService: UsersService,
     private slugifyService: Slugify,
     private eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   async create(
     createCompanyDto: Prisma.CompanyCreateInput,
     user: Partial<User>,
   ) {
     // avoid creating company twice
-    console.log('company payload: ', createCompanyDto);
+    console.log('\n\ncompany payload: ', createCompanyDto);
+
     const company = await this.prismaService.company.findFirst({
       where: {
         email: createCompanyDto.email,
@@ -42,11 +43,13 @@ export class ComapnyService {
         message: `Company ${createCompanyDto.name} already exists`,
       };
     try {
+      const { email, head_office_email } = createCompanyDto;
       const result = await this.prismaService.$transaction(async (tx) => {
         const result = await this.prismaService.company.create({
           data: {
             ...createCompanyDto,
             slug: this.slugifyService.slugify(createCompanyDto.name),
+            head_office_email: head_office_email ?? email,
             status: CompanyStatus.INACTIVE, // has not yet subscribe to a price plan.
           },
         });

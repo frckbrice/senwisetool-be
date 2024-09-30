@@ -8,17 +8,15 @@ import { User, Role } from '@prisma/client';
 export class RequestService {
 
   constructor(
-
     private prismaService: PrismaService,
   ) { }
 
   private userId: string;
 
-  async getUserWithSub({ user_first_name, user_email, sub, org_role }: { user_first_name: string, user_email: string, sub: string, org_role: string }) {
+  async getUserWithSub(payload: { user_first_name: string, user_email: string, sub: string, org_role: string }) {
 
-    console.log("inside constructing user: \n\n", { user_first_name, user_email, sub, org_role })
     const existingUser = <User>await this.prismaService.user.findUnique({
-      where: { id: sub },
+      where: { id: payload?.sub },
       select: {
         role: true,
         id: true,
@@ -28,18 +26,18 @@ export class RequestService {
       },
     });
 
-    console.log("after checking for existing user constructing user: \n\n", existingUser)
     let userRole: Role = Role.ADG;
-    if (org_role) userRole = Role.PDG;
-    console.log("role: \n\n", userRole)
+    if (payload?.org_role) userRole = Role.PDG;
+
+
     const user: Partial<User> = {
-      id: existingUser?.id ?? sub,
-      email: existingUser?.email ?? user_email,
-      first_name: existingUser?.first_name ?? user_first_name,
+      id: existingUser?.id ?? payload?.sub,
+      email: existingUser?.email ?? payload?.user_email,
+      first_name: existingUser?.first_name ?? payload?.user_first_name,
       role: existingUser?.role ?? userRole,
       company_id: existingUser?.company_id ?? "",
     };
-    console.log("lastly this is the user: \n\n", user)
+
     return user;
   }
 

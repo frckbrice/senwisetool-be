@@ -10,7 +10,33 @@ export class CreateProjectDto implements Partial<ProjectEntity> {
    */
   @IsString()
   @IsNotEmpty()
-  name: string;
+  title: string;
+
+  /**
+ * example: INTERNAL_INSPECTION
+ */
+
+  @IsEnum([
+    TypeProject.INITIAL_INSPECTION,
+    TypeProject.INTERNAL_INSPECTION,
+    TypeProject.AUTO_EVALUATION,
+    TypeProject.MAPPING,
+  ])
+  @IsNotEmpty()
+  type: TypeProject;
+  /**
+   * @example "d8a2b2b8-67ea-4d74-b548-15909c04ccb2"
+   */
+  @IsString()
+  @IsNotEmpty()
+  campaign_id: string;
+
+  /**
+ * @example "d8a2b2b8-67ea-4d74-b548-15909c04ccb2"
+ */
+  @IsString()
+  @IsNotEmpty()
+  company_id: string;
 
   /**
    * example: dongamantung-project concern the collection of data on cocoa farms for farmer of dungamantung subdivision
@@ -19,42 +45,16 @@ export class CreateProjectDto implements Partial<ProjectEntity> {
   @IsNotEmpty()
   description: string;
 
-  /**
-   * example startDate: 28-06-2024
-   */
-  @IsDate()
-  @IsNotEmpty()
-  startDate: Date;
+
 
   /**
-   * example startDate: 28-06-2024
-   */
-  @IsDate()
-  @IsNotEmpty()
-  endDate: Date;
+    * @example  region: "bamenda"
+    */
+  country: string
 
   /**
-   * example: INTERNAL_INSPECTION
-   */
-
-  @IsEnum([
-    TypeProject.INITIAL_INSPECTION,
-    TypeProject.EXTERNAL_INSPECTION,
-    TypeProject.AUTO_EVALUATION,
-    TypeProject.MAPPING,
-  ])
-  @IsNotEmpty()
-  type: TypeProject;
-
-  /**
-   * example:COCOA
-   */
-  @IsString()
-  sector_activity: string;
-
-  /**
-   * example:ARCHIVED
-   */
+  * example:ARCHIVED
+  */
   @IsEnum([
     ProjectStatus.ACTIVE,
     ProjectStatus.ARCHIVED,
@@ -65,16 +65,50 @@ export class CreateProjectDto implements Partial<ProjectEntity> {
   status: ProjectStatus;
 
   /**
-   * @example "d8a2b2b8-67ea-4d74-b548-15909c04ccb2"
-   */
-  @IsString()
-  @IsNotEmpty()
-  CompanyId: string;
+  * @example  region: "bamenda"
+  */
+  region: string
 
   /**
-   * @example {farmer_name: "andrew", company_id: "123456789", location: [122,25666 03,0255444]}
+  * @example  city: "bamenda"
+  */
+  city: string;
+
+
+  /**
+   * example start_date: 28-06-12T12:12:000z
    */
-  @IsJSON()
+  @IsDate()
   @IsNotEmpty()
-  form_structure: JsonValue;
+  start_date: Date;
+
+  /**
+   * example end_date: 28-06-2024T12:12:000z
+   */
+  @IsDate()
+  @IsNotEmpty()
+  end_date: Date;
+
+
+  /**
+   * example project_structure: {}
+   */
+  project_structure: JsonValue;
+
+  /**
+     * example another_logo: https://github.com/logo.png or local logo 
+     */
+  another_logo: string;
+
+  /**
+   * example code: COCOA
+   */
+  code: string;
+
+  /**
+   * example:COCOA
+   */
+  @IsString()
+  sector_activity: string;
+
 }
