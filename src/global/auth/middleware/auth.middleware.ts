@@ -61,13 +61,10 @@ export class AuthMiddleware implements NestMiddleware {
             const payload = await this.jwtService.decode(token);
 
             // get the user obeject from the token
+            // console.log("payload : ", payload);
+            const currentUser = await this.requestService.getUserWithSub(payload)
 
-            const { user_first_name, user_email, sub, org_role } = payload;
-            const currentUser = await this.requestService.getUserWithSub(
-                { user_first_name, user_email, sub, org_role }
-            )
-
-            // set the current user to the request for next processing in guard.
+            // set  current user to the request for next processing in guard.
             req['user'] = currentUser;
 
             // allow company creation to be public access.
@@ -77,7 +74,7 @@ export class AuthMiddleware implements NestMiddleware {
                 this.allowPostRoutes.includes('/v1/companies')
             ) {
                 // allow some routes to be public
-                this.logger.log('Allowing public  access to route to create company ', AuthMiddleware.name);
+                this.logger.log('Allowing public  access to route  to create company ', AuthMiddleware.name);
                 return next();
             }
 

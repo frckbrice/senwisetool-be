@@ -44,7 +44,7 @@ enum ProjectStatus {
 
 enum TypeProject {
   INITIAL_INSPECTION
-  EXTERNAL_INSPECTION
+  INTERNAL_INSPECTION
   AUTO_EVALUATION
   MAPPING
 }
@@ -128,7 +128,6 @@ model User {
   famer_attached_contract_url   String ?
   company       Company @relation(fields: [company_id], references: [id])
   status        UserStatus
-  projectAudit  Project_audit[]
   farm          Farm[] 
   receipt       Receipt?
   market_audit  Market_audit[]
@@ -158,7 +157,7 @@ head_office_email String
   phone_number  String
   city  String
   description String
-
+  region String
   timezone String @default("UTC")
 
 // the case where the company account will be deactivate
@@ -176,8 +175,19 @@ head_office_email String
   
 }
 
-model Project {
+model Statistics {
   id  String @id @default(cuid())
+  company_id  String
+  campaign_id  String
+  project_id String
+  project_type String
+  total_drafts  Int
+  total_archiveds  Int
+  total_deployeds  Int
+}
+
+model Project {
+  id  String      @id @default(cuid())
   type TypeProject
   slug  String
 campaign_id  String
@@ -187,14 +197,13 @@ campaign_id  String
   sector_activity String
   country  String
   status ProjectStatus @default(DRAFT)
-  state String
+  region String
   city String
   start_date  DateTime
   end_date  DateTime
   project_structure Json    @default("{}")  @db.JsonB
   another_logo  String ?
   code String @unique
-  projectAudit Project_audit[]
   Company     Company @relation(fields: [company_id], references: [id])
   
   created_at DateTime @default(now())
@@ -207,20 +216,34 @@ campaign_id  String
   @@index([id, company_id, start_date, end_date, sector_activity, type, code])
 }
 
+model Project_audit {
+  id String @id @default(cuid())
+  project_id String
+  user_id String
+  type_of_project TypeProject
+  invited_by String ?
+  invitation_status  InvitationStatus ? @default(NOT_CONFIRMED)
+
+  action ProjectStatus ? @default(DRAFT)
+ 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
 model Campaign {
   id  String @id @default(cuid())
   name  String @unique
   description  String
   start_date  DateTime
   end_date  DateTime
-  status CampaignStatus @default(OPEN)
+  status CampaignStatus @default(CLOSED)
 
   companies Company_Campaign[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   stockCampaigns Campaign_stock[]
 
-  @@index([id])
+  @@index([id, start_date, end_date, status])
 }
 
 model Company_Campaign {
@@ -354,20 +377,7 @@ model Training {
   @@index([company_id, start_date, end_date, title, id])
 }
 
-model Project_audit {
-  id String @id @default(cuid())
-  project_id String
-  user_id String
-  type_of_project TypeProject
-  invited_by String ?
-  invitation_status  InvitationStatus ? @default(NOT_CONFIRMED)
 
-  action ProjectStatus ? @default(DRAFT)
-  user User @relation(fields: [user_id], references: [id])
-  project Project @relation(fields: [project_id], references: [id])
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
 
 model Subscription {
   id                      String @id @default(cuid())
