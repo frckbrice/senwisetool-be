@@ -74,7 +74,7 @@ export class ProjectsController {
     return this.projectsService.findOne(project_id);
   }
 
-  @Get(':code')
+  @Get(':code/phone')
   @ApiOperation({ summary: 'find one project with its Id' })
   @ApiResponse({
     status: 200,

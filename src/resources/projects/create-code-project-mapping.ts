@@ -1,6 +1,8 @@
 import crypto, { createHash } from 'node:crypto';
 
-const uuidToCodeMap = Object.create({});
+//TODO: ENCAPSULATE THIS LOGIC IN A FACTORY 
+
+export const uuidToCodeMap = Object.create({});
 
 // generate 4 digits code 
 function hashUUID(uuid: string) {
@@ -12,6 +14,7 @@ function hashUUID(uuid: string) {
 export function generateMapping(uuid: string) {
   const code = hashUUID(uuid);
   uuidToCodeMap[uuid] = code as string;
+  console.log({ uuid, code })
   return { uuid, code };
 }
 

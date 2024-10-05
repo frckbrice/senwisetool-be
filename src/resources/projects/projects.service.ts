@@ -54,7 +54,7 @@ export class ProjectsService {
 
 
     try {
-      const { uuid, code } = generateMapping(crypto.randomUUID());
+      const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
 
 
       const result = await this.prismaService.$transaction(async (tx) => {
@@ -86,7 +86,7 @@ export class ProjectsService {
       if (result) {
 
         return {
-          data: { ...result, code },
+          data: { ...result, code: projectCode },
           status: 201,
           message: `project created successfully`,
         };
