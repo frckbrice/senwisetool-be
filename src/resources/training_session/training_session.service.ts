@@ -9,14 +9,14 @@ import { Prisma, User } from '@prisma/client';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { UsersService } from '../users/users.service';
-import { Slugify } from 'src/global/utils/slugilfy';
+// import { Slugify } from 'src/global/utils/slugilfy';
 import { PaginationTrainingSessionQueryDto } from './dto/paginate-training_session.dto';
 
 @Injectable()
 export class TrainingSessionService {
   private readonly logger = new LoggerService(TrainingSessionService.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   async create(createTrainingSessionDto: Prisma.training_sessionCreateInput) {
     try {
@@ -46,7 +46,7 @@ export class TrainingSessionService {
         );
         throw new InternalServerErrorException(
           `Validation Error while creating training_session ` +
-            createTrainingSessionDto.id,
+          createTrainingSessionDto.id,
         );
       }
       this.logger.error(

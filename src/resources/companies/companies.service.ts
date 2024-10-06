@@ -10,7 +10,7 @@ import { CompanyStatus, Prisma, User } from '@prisma/client';
 import { PaginationCompanyQueryDto } from './dto/paginate-company.dto';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { UsersService } from '../users/users.service';
-import { Slugify } from 'src/global/utils/slugilfy';
+// import { Slugify } from 'src/global/utils/slugilfy';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
@@ -20,10 +20,18 @@ export class ComapnyService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly userService: UsersService,
-    private slugifyService: Slugify,
+    // private slugifyService: Slugify,
     private eventEmitter: EventEmitter2,
   ) { }
 
+  slugify(title: string) {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-_]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
   async create(
     createCompanyDto: Prisma.CompanyCreateInput,
     user: Partial<User>,
@@ -48,7 +56,7 @@ export class ComapnyService {
         const result = await this.prismaService.company.create({
           data: {
             ...createCompanyDto,
-            slug: this.slugifyService.slugify(createCompanyDto.name),
+            slug: this.slugify(createCompanyDto.name),
             head_office_email: head_office_email ?? email,
             status: CompanyStatus.INACTIVE, // has not yet subscribe to a price plan.
           },
