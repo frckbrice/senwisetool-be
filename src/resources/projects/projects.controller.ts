@@ -74,7 +74,7 @@ export class ProjectsController {
     return this.projectsService.findOne(project_id);
   }
 
-  @Get(':code')
+  @Get(':code/phone')
   @ApiOperation({ summary: 'find one project with its Id' })
   @ApiResponse({
     status: 200,
@@ -82,6 +82,7 @@ export class ProjectsController {
   })
   @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
   findOneProjectFromPhone(@Param('code') project_code: string) {
+    console.log("receiving request from phone with code: " + project_code);
     return this.projectsService.findOneProjectFromPhone(project_code);
   }
 
@@ -100,8 +101,8 @@ export class ProjectsController {
   ) {
     return this.projectsService.update({
       id: project_id,
-      updateProjectDto,
       user_id: <string>user.id,
+      updateProjectDto,
     });
   }
 
@@ -114,7 +115,9 @@ export class ProjectsController {
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @ApiOperation({ summary: 'delete one project with its Project_id' })
   remove(@Param('project_id') project_id: string, @CurrentUser() user: Partial<User>,) {
-    return this.projectsService.remove({ project_id, user_id: <string>user.id });
+
+    console.log("deleting project: " + project_id);
+    return this.projectsService.remove(project_id, <string>user.id);
   }
 
   // delete multiple projects

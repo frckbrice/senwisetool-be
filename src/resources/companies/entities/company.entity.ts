@@ -35,4 +35,5 @@ export class CompanyType implements Company {
   timezone: string;
   updated_at: Date;
   head_office_email: string
+  region: string;
 }

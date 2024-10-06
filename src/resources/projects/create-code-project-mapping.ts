@@ -1,30 +1,34 @@
-import crypto from 'crypto';
+import crypto, { createHash } from 'node:crypto';
 
-const uuidToCodeMap = Object.create({});
+//TODO: ENCAPSULATE THIS LOGIC IN A FACTORY 
+
+export const uuidToCodeMap = Object.create({
+  "308b": "ef799dbf-05ea-411f-94aa-e5a922eff9aa"
+});
 
 // generate 4 digits code 
 function hashUUID(uuid: string) {
-    const hash = crypto.createHash('sha256').update(uuid).digest('hex');
-    return hash.substring(0, 4);
+  const hash = createHash('sha256').update(uuid).digest('hex');
+  return hash.substring(0, 4);
 }
 
 // genreate the mapping between tje uuid and the 4 digits 
-export function generateMapping() {
-    const uuid = crypto.randomUUID();
+export function generateMapping(uuid: string) {
+  const code = hashUUID(uuid);
 
-    const code = hashUUID(uuid);
-    uuidToCodeMap[uuid] = code as string;
-    return { uuid, code };
+  uuidToCodeMap[code] = uuid as string;
+  return { uuid, code };
 }
 
 
 export function getUUIDFromCode(code: string) {
-    for (const uuid in uuidToCodeMap) {
-        if (uuidToCodeMap[uuid] === code) {
-            return uuid;
-        }
+
+  for (const key in uuidToCodeMap) {
+    if (key === code) {
+      return uuidToCodeMap[key];
     }
-    return null; // Code not found
+  }
+  return null; // Code not found
 }
 
 

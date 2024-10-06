@@ -94,7 +94,7 @@ export class CampaignService {
         this.prismaService.campaign.count(),
         this.prismaService.campaign.findMany(Query),
       ]);
-      console.log("campaigns: ",)
+
       if (campaigns.length)
         return {
           status: HttpStatus.OK,

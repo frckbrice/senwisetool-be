@@ -63,4 +63,10 @@ export class CreateCompanyDto {
    * state: "mbalmayo"
    */
   state: string;
+
+  /**
+ * head_office_email: "mbalmayo@example.com"
+ */
+  head_office_email: string
+
 }
