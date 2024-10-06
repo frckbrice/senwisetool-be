@@ -82,6 +82,7 @@ export class ProjectsController {
   })
   @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
   findOneProjectFromPhone(@Param('code') project_code: string) {
+    console.log("receiving request from phone with code: " + project_code);
     return this.projectsService.findOneProjectFromPhone(project_code);
   }
 

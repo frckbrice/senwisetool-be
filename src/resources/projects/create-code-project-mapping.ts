@@ -2,7 +2,9 @@ import crypto, { createHash } from 'node:crypto';
 
 //TODO: ENCAPSULATE THIS LOGIC IN A FACTORY 
 
-export const uuidToCodeMap = Object.create({});
+export const uuidToCodeMap = Object.create({
+  "308b": "ef799dbf-05ea-411f-94aa-e5a922eff9aa"
+});
 
 // generate 4 digits code 
 function hashUUID(uuid: string) {
@@ -13,16 +15,17 @@ function hashUUID(uuid: string) {
 // genreate the mapping between tje uuid and the 4 digits 
 export function generateMapping(uuid: string) {
   const code = hashUUID(uuid);
-  uuidToCodeMap[uuid] = code as string;
-  console.log({ uuid, code })
+
+  uuidToCodeMap[code] = uuid as string;
   return { uuid, code };
 }
 
 
 export function getUUIDFromCode(code: string) {
-  for (const uuid in uuidToCodeMap) {
-    if (uuidToCodeMap[uuid] === code) {
-      return uuid;
+
+  for (const key in uuidToCodeMap) {
+    if (key === code) {
+      return uuidToCodeMap[key];
     }
   }
   return null; // Code not found

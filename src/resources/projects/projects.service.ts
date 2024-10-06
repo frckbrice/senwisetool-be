@@ -211,6 +211,8 @@ export class ProjectsService {
 
     // match the code with the corresponding uuid saved for this project
     const retrievedUUID = getUUIDFromCode(project_code);
+    console.log("incoming code: ", project_code);
+    console.log("project code: ", retrievedUUID);
 
     if (typeof retrievedUUID == 'undefined')
       throw new HttpException(`No matching project code for this code`, HttpStatus.BAD_REQUEST)
