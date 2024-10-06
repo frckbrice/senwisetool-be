@@ -48,7 +48,7 @@ export class CompanyController {
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
   @Get('current')
-  @ApiOperation({ summary: 'find the current company of the connected user' })
+  @ApiOperation({ summary: 'find the currently company of the connected user' })
   findOne(@CurrentUser() user: Partial<User>) {
 
     const id = <string>user?.company_id;
