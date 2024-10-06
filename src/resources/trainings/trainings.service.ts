@@ -10,7 +10,7 @@ import { Prisma, User } from '@prisma/client';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { UsersService } from '../users/users.service';
-import { Slugify } from 'src/global/utils/slugilfy';
+// import { Slugify } from 'src/global/utils/slugilfy';
 import { PaginationTrainingQueryDto } from './dto/paginate-training.dto';
 
 @Injectable()
@@ -20,9 +20,16 @@ export class TrainingService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly userService: UsersService,
-    private slugifyService: Slugify,
+    // private slugifyService: Slugify,
   ) { }
-
+  slugify(title: string) {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-_]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
   async create(
     createTrainingDto: Prisma.TrainingCreateInput,
     user: Partial<User>,
@@ -34,7 +41,7 @@ export class TrainingService {
       const result = await this.prismaService.training.create({
         data: {
           ...createTrainingDto,
-          slug: this.slugifyService.slugify(createTrainingDto.title),
+          slug: this.slugify(createTrainingDto.title),
         },
       });
 
