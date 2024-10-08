@@ -26,6 +26,8 @@ export class RequestService {
       },
     });
 
+    console.log("existing user =>", existingUser)
+
     let userRole: Role = Role.ADG;
     if (payload?.org_role) userRole = Role.PDG;
 

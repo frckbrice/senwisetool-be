@@ -60,6 +60,7 @@ export class ProjectsController {
   })
   @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
   findAll(@Query() query: PaginationProjectQueryDto, @CurrentUser() user: Partial<User>) {
+    console.log('query from controler =>', query)
     return this.projectsService.findAll(query, <string>user.company_id);
   }
 

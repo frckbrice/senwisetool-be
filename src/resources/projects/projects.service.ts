@@ -54,7 +54,7 @@ export class ProjectsService {
 
 
     try {
-      const { uuid, code } = generateMapping(crypto.randomUUID());
+      const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
 
 
       const result = await this.prismaService.$transaction(async (tx) => {
@@ -86,7 +86,7 @@ export class ProjectsService {
       if (result) {
 
         return {
-          data: { ...result, code },
+          data: { ...result, code: projectCode },
           status: 201,
           message: `project created successfully`,
         };
@@ -109,6 +109,7 @@ export class ProjectsService {
 
   async findAll(query: Partial<PaginationProjectQueryDto>, company_id: string) {
     const { status, type, page, perPage, search, campaign_id } = query;
+    console.log('query from controler', query)
     const where = Object.create({});
     let Query = Object.create({ where });
     if (status) {
@@ -117,10 +118,15 @@ export class ProjectsService {
 
     if (type) {
       where['type'] = type;
+      console.log("query type", type)
     }
 
     if (campaign_id) {
       where['campaign_id'] = campaign_id;
+    }
+
+    if (company_id) {
+      where['company_id'] = company_id;
     }
 
     if (search)

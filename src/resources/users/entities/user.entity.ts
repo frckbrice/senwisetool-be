@@ -1,6 +1,9 @@
 import { Exclude } from 'class-transformer';
 import { $Enums, User } from '@prisma/client';
 export class UserType implements User {
+  companyId: string;
+  proof_of_skills: string;
+  phone: string;
   id: string;
   name: string;
   email: string;
@@ -16,5 +19,5 @@ export class UserType implements User {
   role: $Enums.Role;
   status: $Enums.UserStatus;
   updated_at: Date;
-  username: string | null;
+  username: string;
 }
