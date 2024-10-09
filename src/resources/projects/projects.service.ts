@@ -18,9 +18,16 @@ export class ProjectsService {
 
   constructor(
     private readonly prismaService: PrismaService,
-    private slugify: Slugify,
+    // private slugify: Slugify,
   ) { }
-
+  slugify(title: string) {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-_]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
 
   async create({
     createProjectDto,
@@ -32,7 +39,7 @@ export class ProjectsService {
     // avoid creating the same project twice
     const project = await this.prismaService.project.findFirst({
       where: {
-        slug: this.slugify.slugify(createProjectDto.title),
+        slug: this.slugify(createProjectDto.title),
       },
     });
 
@@ -61,7 +68,7 @@ export class ProjectsService {
         const result = await tx.project.create({
           data: {
             ...createProjectDto,
-            slug: this.slugify.slugify(createProjectDto.title),
+            slug: this.slugify(createProjectDto.title),
             code: uuid,
             deployed_at: "1970-01-01T00:00:00+01:00",
             archived_at: "1970-01-01T00:00:00+01:00",
@@ -217,6 +224,8 @@ export class ProjectsService {
 
     // match the code with the corresponding uuid saved for this project
     const retrievedUUID = getUUIDFromCode(project_code);
+    console.log("incoming code: ", project_code);
+    console.log("project code: ", retrievedUUID);
 
     if (typeof retrievedUUID == 'undefined')
       throw new HttpException(`No matching project code for this code`, HttpStatus.BAD_REQUEST)
