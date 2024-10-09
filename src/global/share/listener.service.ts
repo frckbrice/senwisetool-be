@@ -3,10 +3,10 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { localEvents } from './events';
 // import { MailService } from 'src/mail/mail.service'
 import { PrismaService } from 'src/adapters/config/prisma.service';
-// import { MailerService } from '@nestjs-modules/mailer';
+import { MailerService } from '@nestjs-modules/mailer';
 import { CompanyType } from 'src/resources/companies/entities/company.entity';
 import { LoggerService } from 'src/global/logger/logger.service';
-// import { MailServiceEvent } from './mail/mail.service';
+import { MailServiceEvent } from './mail/mail.service';
 import { Request } from 'express';
 import { Role, User, UserStatus } from '@prisma/client';
 
@@ -15,9 +15,9 @@ export class ListenerService {
   counter: number = 1;
   private logger = new LoggerService(ListenerService.name);
   constructor(
-    // private readonly mailerService: MailerService,
+    private readonly mailerService: MailerService,
     private prismaService: PrismaService,
-    // private sendMailService: MailServiceEvent,
+    private sendMailService: MailServiceEvent,
   ) { }
 
   /**

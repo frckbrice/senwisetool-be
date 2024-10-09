@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ListenerService } from './listener.service';
-// import { MailModule } from './mail/mail.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
-  // imports: [MailModule],
+  imports: [MailModule],
   controllers: [],
   providers: [
     // ShareService,

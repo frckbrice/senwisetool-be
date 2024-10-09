@@ -35,7 +35,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TrainingsModule } from './resources/trainings/trainings.module';
 import { HealthModule } from './resources/health/health.module';
 import { TrainingSessionModule } from './resources/training_session/training_session.module';
-// import { MailModule } from './global/share/mail/mail.module';
+import { MailModule } from './global/share/mail/mail.module';
 import { RequirementPricePlanModule } from './resources/requirement_price-plan/requirement_price-plan.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
@@ -81,7 +81,7 @@ import { CompanyCampaignModule } from './resources/company_campaign/company_camp
     TrainingsModule,
     HealthModule,
     TrainingSessionModule,
-    // MailModule,
+    MailModule,
     RequirementPricePlanModule,
     CompanyCampaignModule,
   ],

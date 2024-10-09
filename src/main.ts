@@ -45,6 +45,9 @@ async function bootstrap() {
 
   const environment = process.env.NODE_ENV || 'development';
   await app.listen(PORT, () => {
+    for (let [key, value] of Object.entries(process.memoryUsage())) {
+      console.log(`memory usage by ${key}, ${value/1000000}MB`)
+    }
     console.log(
       `Server running in ${environment} mode on  ${environment === 'production' ? production_server_url : dev_server_url}`,
     );
