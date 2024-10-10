@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY yarn.lock ./
 
-# Install dependencies
+# Install all dependencies
 RUN yarn install
 
 # Copy the rest of your application code to the container
@@ -23,4 +23,4 @@ RUN yarn build
 EXPOSE 3000
 
 # Define the command to run your app
-CMD ["node", "dist/main"]
+CMD ["node", "dist/main"]
