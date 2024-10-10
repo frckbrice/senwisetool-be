@@ -12,7 +12,7 @@ COPY yarn.lock ./
 # Install all dependencies
 RUN yarn install
 
-# Copy the rest of your application code to the container
+# Copy the Rest of your application code to the container
 COPY . .
 
 # Build the NestJS application
