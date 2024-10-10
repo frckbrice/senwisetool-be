@@ -7,7 +7,7 @@ on:
       - feature/amazone-ECR
 
 env:
-  # Setting an environment variable with the value of a configuration variables
+  # Setting an environment variable with the value of a configuration variable
   ECR_IMAGE: ${{ vars.ECR_IMAGE }}
   AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
 jobs:
