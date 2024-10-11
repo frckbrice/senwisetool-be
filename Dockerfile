@@ -10,7 +10,7 @@ COPY package*.json ./
 COPY yarn.lock ./
 
 # Install all dependencies
-RUN yarn install
+RUN yarn install --ignore-engines
 
 # Copy the Rest of your application code to the container
 COPY . .
