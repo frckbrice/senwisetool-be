@@ -40,7 +40,7 @@ jobs:
 
       - name: Login to Amazon ECR
         run: |
-          (Get-ECRLoginCommand).Password | docker login --username AWS --password-stdin 207567786713.dkr.ecr.us-east-2.amazonaws.com
+          (Get-ECRLoginCommand) .Password | docker login --username AWS --password-stdin 207567786713.dkr.ecr.us-east-2.amazonaws.com
 
       - name: Build and push Docker image
         run: |
