@@ -45,7 +45,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           docker buildx create --use
-          docker buildx inspect --bootstrap
+          docker build -t senwisetool-server .
           docker tag senwisetool-server:latest 207567786713.dkr.ecr.us-east-2.amazonaws.com/senwisetool-server:latest
 
       # - name: Deploy to ECS
