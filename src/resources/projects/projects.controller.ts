@@ -63,6 +63,17 @@ export class ProjectsController {
     return this.projectsService.findAll(query, <string>user.company_id);
   }
 
+  @Get('assigned_projects')
+  @ApiOperation({ summary: 'Find all projects ' })
+  @ApiResponse({
+    status: 200,
+    description: 'The projects has been successfully fetched.',
+  })
+  @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
+  findAllAssignedProjects(@Query() query: { agentCode: string }) {
+    return this.projectsService.getAllAssignedProjects(query.agentCode);
+  }
+
   @Get(':project_id')
   @ApiOperation({ summary: 'find one project with its Id' })
   @ApiResponse({

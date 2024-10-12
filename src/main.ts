@@ -9,11 +9,22 @@ import { AllExceptionsFilter } from './global/filter/http-exception.filter';
 // reflect-metadata is used to allow the usage of class transformers to be applied to remove password.
 import 'reflect-metadata';
 
+// certificate purpose
+import * as fs from 'fs';
+import * as https from 'https';
+
 const PORT = process.env.PORT ?? 5000;
 const dev_server_url = `${process.env.LOCAL_API_URL} `;
 const production_server_url = `${process.env.PROD_API_URL} `;
 
 async function bootstrap() {
+
+  // certificate options
+  const httpsOptions = {
+    key: fs.readFileSync('./key.pem'),
+    cert: fs.readFileSync('./cert.pem'),
+  };
+  // const app = await NestFactory.create(AppModule, { cors: true, httpsOptions });
   const app = await NestFactory.create(AppModule, { cors: true });
 
   // call the http adapter here
@@ -26,7 +37,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .addBearerAuth() // bearer auth enabled
     .setTitle('senwisetool api')
-    .setDescription('The senwisetool API documentation')
+    .setDescription('The senwisetool  API documentation')
     .setVersion('1.0')
     .addTag('senwisetool-api')
     .build();
@@ -44,9 +55,11 @@ async function bootstrap() {
   });
 
   const environment = process.env.NODE_ENV || 'development';
-  await app.listen(PORT, () => {
+  await app.listen(PORT, async () => {
     console.log(
-      `Server running in ${environment} mode on  ${environment === 'production' ? production_server_url : dev_server_url}`,
+      // `Server running  in ${environment} mode on  ${environment === 'production' ? production_server_url : await app.getUrl()}`,
+      `Server running  in ${environment} mode on  ${environment === 'production' ? production_server_url : dev_server_url}`,
+
     );
   });
 }

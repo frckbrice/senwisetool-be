@@ -41,6 +41,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { CompanyCampaignModule } from './resources/company_campaign/company_campaign.module';
+import { ProjectAssigneeModule } from './resources/project-assignee/project-assignee.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { CompanyCampaignModule } from './resources/company_campaign/company_camp
     MailModule,
     RequirementPricePlanModule,
     CompanyCampaignModule,
+    ProjectAssigneeModule,
   ],
   controllers: [AppController],
   providers: [
