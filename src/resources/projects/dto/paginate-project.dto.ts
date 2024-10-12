@@ -18,4 +18,5 @@ export class PaginationProjectQueryDto {
   search?: string;
 
   campaign_id?: string;
+
 }

@@ -186,6 +186,16 @@ model Statistics {
   total_deployeds  Int
 }
 
+model Assignee {
+  id  String @id @default(cuid())
+  agentCode  String @unique
+  projectCodes  String[]
+  fullName String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted_at DateTime @updatedAt
+}
+
 model Project {
   id  String      @id @default(cuid())
   type TypeProject
@@ -285,15 +295,15 @@ model Collector_agent {
 model Inspection_data {
   id String @id @default(cuid())
   project_id String
-  collected_by String
+  // collected_by String
   // project_data_url String
 
   project_data   Json ?  @default("{}")  @db.JsonB
-  created_at DateTime @default(now())
+  // created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  // collected_at DateTime @default(now())
+  collected_at DateTime @default(now())
 
-  @@index([project_id, collected_by])
+  @@index([project_id])
 }
 
 

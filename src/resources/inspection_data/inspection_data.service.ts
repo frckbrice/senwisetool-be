@@ -53,7 +53,7 @@ export class InspectionDataService {
             take: query?.page ?? 20,
             skip: (query?.page ?? 0) * (query?.perPage ?? 20 - 1),
             orderBy: {
-              created_at: 'desc',
+              collected_at: 'desc',
             },
           }),
         ]);
