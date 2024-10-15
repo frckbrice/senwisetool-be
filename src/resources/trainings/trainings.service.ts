@@ -1,4 +1,5 @@
 import {
+  HttpException,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
@@ -6,12 +7,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PrismaService } from 'src/adapters/config/prisma.service';
-import { Prisma, User } from '@prisma/client';
+import { Prisma, ProjectStatus, User } from '@prisma/client';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { UsersService } from '../users/users.service';
-// import { Slugify } from 'src/global/utils/slugilfy';
+import { Slugify } from 'src/global/utils/slugilfy';
 import { PaginationTrainingQueryDto } from './dto/paginate-training.dto';
+import { generateMapping, getUUIDFromCode } from '../projects/create-code-project-mapping';
 
 @Injectable()
 export class TrainingService {
@@ -20,34 +22,37 @@ export class TrainingService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly userService: UsersService,
-    // private slugifyService: Slugify,
+    private slugifyService: Slugify,
   ) { }
-  slugify(title: string) {
-    return title
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-_]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-  }
+
   async create(
     createTrainingDto: Prisma.TrainingCreateInput,
     user: Partial<User>,
   ) {
     //TDOO: look if possible to avoid creating training twice
 
+    // create a mapping code
+    const { uuid, code: training_code } = generateMapping(crypto.randomUUID());
+
+
+
     console.log('from training service: ', createTrainingDto);
     try {
       const result = await this.prismaService.training.create({
         data: {
           ...createTrainingDto,
-          slug: this.slugify(createTrainingDto.title),
+          slug: this.slugifyService.slugify(createTrainingDto.title),
+          code: uuid,
+          deployed_at: "1970-01-01T00:00:00+01:00",
+          archived_at: "1970-01-01T00:00:00+01:00",
+          deleted_at: "1970-01-01T00:00:00+01:00",
+          updated_at: "1970-01-01T00:00:00+01:00",
         },
       });
 
       if (result)
         return {
-          data: result,
+          data: { ...result, code: training_code },
           status: 201,
           message: `training created successfully`,
         };
@@ -160,6 +165,54 @@ export class TrainingService {
     }
   }
 
+  // get a training project by its code
+  async findTrainingProjectByItsCode(training_code: string) {
+    // match the code with the corresponding uuid saved for this training
+    const retrievedUUID = getUUIDFromCode(training_code);
+
+    if (typeof retrievedUUID == 'undefined') // check for null or undefined
+      throw new HttpException(`No matching training code for this code`, HttpStatus.BAD_REQUEST)
+
+    try {
+      const result = await this.prismaService.training.findUnique({
+        where: {
+          code: <string>retrievedUUID,
+          status: ProjectStatus.DEPLOYED,
+
+        },
+        include: {
+          company: {
+            select: {
+              name: true,
+            },
+          },
+
+        },
+      });
+
+      if (result)
+        return {
+          data: result,
+          status: 200,
+          message: `training fetched successfully`,
+        };
+      else
+        return {
+          data: null,
+          status: 400,
+          message: `Failed to fetch training`,
+        };
+    } catch (err) {
+      this.logger.error(
+        `Can't find a training with training_code ${training_code} \n\n ${err}`,
+        TrainingService.name,
+      );
+      throw new NotFoundException(
+        "Can't find a training with training_code " + training_code,
+      );
+    }
+  }
+
   async update(id: string, updateTrainingDto: Prisma.TrainingUpdateInput) {
     try {
       const result = await this.prismaService.training.update({
@@ -192,7 +245,97 @@ export class TrainingService {
     }
   }
 
+  async updateTraining({
+    id,
+    user_id,
+    updateTrainingDto,
+  }: {
+    id: string;
+    user_id: string;
+    updateTrainingDto: Prisma.TrainingUpdateInput;
+  }) {
+
+    // check if the training exists first
+    const existingTraining = await this.findOne(id);
+    if (typeof existingTraining == 'undefined')
+      return {
+        data: null,
+        status: HttpStatus.BAD_REQUEST,
+        message: `No training with this ID`,
+      };
+
+    console.log("the existing training dto: ", existingTraining)
+    console.log("the updated  training dto\n\n: ", updateTrainingDto)
+    // check the type of action and set the corresponding date
+    if (updateTrainingDto.hasOwnProperty('status')) {
+      if (updateTrainingDto.status === ProjectStatus.ARCHIVED) {
+        updateTrainingDto.archived_at = new Date().toISOString();
+        updateTrainingDto.deployed_at = existingTraining.data?.deployed_at;
+        updateTrainingDto.draft_at = existingTraining.data?.draft_at;
+        updateTrainingDto.deleted_at = existingTraining.data?.deleted_at;
+
+      }
+      //  deployed
+      if (updateTrainingDto.status === ProjectStatus.DEPLOYED) {
+        updateTrainingDto.deployed_at = new Date().toISOString();
+        updateTrainingDto.archived_at = existingTraining.data?.archived_at;
+        updateTrainingDto.draft_at = existingTraining.data?.draft_at;
+        updateTrainingDto.deleted_at = existingTraining.data?.deleted_at;
+      }
+
+      // deleted
+      if (updateTrainingDto.status === ProjectStatus.DELETED) {
+        updateTrainingDto.deployed_at = existingTraining.data?.deployed_at;
+        updateTrainingDto.archived_at = existingTraining.data?.archived_at;
+        updateTrainingDto.draft_at = existingTraining.data?.draft_at;
+        updateTrainingDto.deleted_at = new Date().toISOString();
+      }
+    }
+
+    console.log("updated dto:\n\n ", updateTrainingDto)
+    try {
+      const result = await this.prismaService.training.update({
+        data: updateTrainingDto,
+        where: {
+          id,
+        },
+      });
+
+      if (result)
+        return {
+          data: result,
+          status: HttpStatus.OK, // the resource is return to be used by the client
+          message: `training updated successfully`,
+        };
+      else
+        return {
+          data: null,
+          status: HttpStatus.BAD_REQUEST,
+          message: `Failed to update training`,
+        };
+    } catch (err) {
+      this.logger.error(
+        `Can't update a training with id  ${id} \n\n ${err}`,
+        TrainingService.name,
+      );
+      throw new InternalServerErrorException(
+        "Can't update a training with id " + id,
+      );
+    }
+  }
+
   async remove(training_id: string) {
+
+    // check if the project exists first
+    const existingTraining = await this.findOne(training_id);
+    if (typeof existingTraining == 'undefined')
+      return {
+        data: null,
+        status: HttpStatus.BAD_REQUEST,
+        message: `No training with this ID`,
+      };
+
+
     try {
       const result = await this.prismaService.training.delete({
         where: {

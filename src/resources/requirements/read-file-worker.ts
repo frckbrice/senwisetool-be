@@ -2,7 +2,7 @@ import { parentPort } from 'worker_threads';
 import { PlanFactory } from "./read-company-files";
 import { readFile } from "fs/promises";
 import { join } from 'path';
-import { existsSync, mkdirSync } from 'node:fs';
+
 
 const planFactory = new PlanFactory();
 const targetDirectory = join(__dirname, '..', 'data', 'data.json');
@@ -25,7 +25,7 @@ parentPort?.on('message', async ({ plan_name, directory, id }) => {
 
         /* this loop is a workaround for the fact that the above function is asynchronous.
             so, the reading directly is creating error on first attempt and succeed in second.
-            to avoid that, fleeping in read we create this second reading.
+            to avoid that fleeping in read we create this second reading.
          */
         for (let i = 0; i < 2; i++) {
             const fileContent = await readFile(targetDirectory, { encoding: 'utf8' });

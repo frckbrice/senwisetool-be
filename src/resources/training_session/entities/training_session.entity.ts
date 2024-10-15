@@ -1,18 +1,18 @@
-import { training_session } from '@prisma/client';
+import { Attendance_sheet } from '@prisma/client';
 
-export class TrainingSession implements training_session {
+export class TrainingSession implements Attendance_sheet {
   created_at: Date;
-  email: string;
-  first_name: string;
+  date: string;
   id: string;
-  last_name: string;
-  phone: string;
-  role: string;
-  signature: string;
-  training_id: string;
-  updated_at: Date;
+  location: string;
+  modules: string[];
+  photos: string[];
   report_url: string;
+  title: string;
   trainer_proof_of_competency: string[];
-  training_attendance_sheet_urls: string[];
-  training_picture_url: string[];
+  trainer_ignature: string;
+
+  training_id: string;
+  trainers: string[];
+  updated_at: Date;
 }

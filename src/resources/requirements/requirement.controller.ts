@@ -67,8 +67,8 @@ export class RequirementController {
     // return this.requirementService.getAllFile({
     //   company_id
     // });
-     const data = await  this.requirementService.getAllFile();
-     console.log("the requirements data from controller: ", data)
-     return data;
+    const data = await this.requirementService.getAllFile();
+    console.log("the requirements data from controller: ", data)
+    return data;
   }
 }

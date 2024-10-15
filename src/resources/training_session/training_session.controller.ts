@@ -31,14 +31,14 @@ import { PaginationTrainingSessionQueryDto } from './dto/paginate-training_sessi
 export class TrainingSessionController {
   constructor(
     private readonly training_sessionservice: TrainingSessionService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiOperation({ summary: 'create training session model object' })
   @ApiResponse({ status: 201, description: 'Success' })
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
-  create(@Body() createSessionDatumDto: Prisma.training_sessionCreateInput) {
+  create(@Body() createSessionDatumDto: Prisma.Attendance_sheetCreateInput) {
     return this.training_sessionservice.create(createSessionDatumDto);
   }
 
@@ -72,7 +72,7 @@ export class TrainingSessionController {
   @ApiOperation({ summary: 'update one training with its session_id' })
   update(
     @Param('session_id') session_id: string,
-    @Body() updateSessionDatumDto: Prisma.training_sessionUpdateInput,
+    @Body() updateSessionDatumDto: Prisma.Attendance_sheetUpdateInput,
   ) {
     return this.training_sessionservice.update(
       session_id,
