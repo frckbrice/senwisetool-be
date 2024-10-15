@@ -18,9 +18,9 @@ export class TrainingSessionService {
 
   constructor(private readonly prismaService: PrismaService) { }
 
-  async create(createTrainingSessionDto: Prisma.training_sessionCreateInput) {
+  async create(createTrainingSessionDto: Prisma.Attendance_sheetCreateInput) {
     try {
-      const result = await this.prismaService.training_session.create({
+      const result = await this.prismaService.attendance_sheet.create({
         data: {
           ...createTrainingSessionDto,
         },
@@ -30,31 +30,31 @@ export class TrainingSessionService {
         return {
           data: result,
           status: 201,
-          message: `training_session created successfully`,
+          message: `attendance_sheet created successfully`,
         };
       else
         return {
           data: null,
           status: 500,
-          message: `Failed to create training_session`,
+          message: `Failed to create attendance_sheet`,
         };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientValidationError) {
         this.logger.error(
-          `Error while creating training_session ${error.name}: Validation error \n\n ${error}`,
+          `Error while creating attendance_sheet ${error.name}: Validation error \n\n ${error}`,
           TrainingSessionService.name,
         );
         throw new InternalServerErrorException(
-          `Validation Error while creating training_session ` +
+          `Validation Error while creating attendance_sheet ` +
           createTrainingSessionDto.id,
         );
       }
       this.logger.error(
-        `Error while creating training_session ${createTrainingSessionDto.id} \n\n ${error}`,
+        `Error while creating attendance_sheet ${createTrainingSessionDto.id} \n\n ${error}`,
         TrainingSessionService.name,
       );
       throw new InternalServerErrorException(
-        `Error while creating training_session ` + TrainingSessionService.name,
+        `Error while creating attendance_sheet ` + TrainingSessionService.name,
       );
     }
   }
@@ -74,15 +74,15 @@ export class TrainingSessionService {
     };
     // find all the companies
     try {
-      const [total, training_sessions] = await this.prismaService.$transaction([
-        this.prismaService.training_session.count(),
-        this.prismaService.training_session.findMany(Query),
+      const [total, attendance_sheets] = await this.prismaService.$transaction([
+        this.prismaService.attendance_sheet.count(),
+        this.prismaService.attendance_sheet.findMany(Query),
       ]);
-      if (training_sessions.length)
+      if (attendance_sheets.length)
         return {
           status: 200,
-          message: 'training_sessions fetched successfully',
-          data: training_sessions,
+          message: 'attendance_sheets fetched successfully',
+          data: attendance_sheets,
           total,
           page: query.page ?? 0,
           perPage: query.perPage ?? 20,
@@ -91,7 +91,7 @@ export class TrainingSessionService {
       else
         return {
           status: 400,
-          message: 'No training_sessions found',
+          message: 'No attendance_sheets found',
           data: [],
           total,
           page: query.page ?? 0,
@@ -100,16 +100,16 @@ export class TrainingSessionService {
         };
     } catch (error) {
       this.logger.error(
-        `Error fetching training_sessions \n\n ${error}`,
+        `Error fetching attendance_sheets \n\n ${error}`,
         TrainingSessionService.name,
       );
-      throw new NotFoundException('Error fetching training_sessions');
+      throw new NotFoundException('Error fetching attendance_sheets');
     }
   }
 
   async findOne(session_id: string) {
     try {
-      const result = await this.prismaService.training_session.findUnique({
+      const result = await this.prismaService.attendance_sheet.findUnique({
         where: {
           id: session_id,
         },
@@ -140,10 +140,10 @@ export class TrainingSessionService {
 
   async update(
     session_id: string,
-    updateTrainingDto: Prisma.training_sessionUpdateInput,
+    updateTrainingDto: Prisma.Attendance_sheetUpdateInput,
   ) {
     try {
-      const result = await this.prismaService.training_session.update({
+      const result = await this.prismaService.attendance_sheet.update({
         data: updateTrainingDto,
         where: {
           id: session_id,
@@ -154,28 +154,28 @@ export class TrainingSessionService {
         return {
           data: result,
           status: 204,
-          message: `training_session updated successfully`,
+          message: `attendance_sheet updated successfully`,
         };
       else
         return {
           data: null,
           status: 400,
-          message: `Failed to update training_session`,
+          message: `Failed to update attendance_sheet`,
         };
     } catch (err) {
       this.logger.error(
-        `Can't update a training_session  with id ${session_id} \n\n ${err} `,
+        `Can't update a attendance_sheet  with id ${session_id} \n\n ${err} `,
         TrainingSessionService.name,
       );
       throw new InternalServerErrorException(
-        "Can't update a training_session with session_id " + session_id,
+        "Can't update a attendance_sheet with session_id " + session_id,
       );
     }
   }
 
   async remove(session_id: string) {
     try {
-      const result = await this.prismaService.training_session.delete({
+      const result = await this.prismaService.attendance_sheet.delete({
         where: {
           id: session_id,
         },
@@ -185,21 +185,21 @@ export class TrainingSessionService {
         return {
           data: result,
           status: 200,
-          message: `training_session deleted successfully`,
+          message: `attendance_sheet deleted successfully`,
         };
       else
         return {
           data: null,
           status: 400,
-          message: `Failed to delete training_session`,
+          message: `Failed to delete attendance_sheet`,
         };
     } catch (err) {
       this.logger.error(
-        `Can't delete a training_session with session_id ${session_id} \n\n ${err}`,
+        `Can't delete a attendance_sheet with session_id ${session_id} \n\n ${err}`,
         TrainingSessionService.name,
       );
       throw new InternalServerErrorException(
-        "Can't delete a training_session with session_id " + session_id,
+        "Can't delete a attendance_sheet with session_id " + session_id,
       );
     }
   }

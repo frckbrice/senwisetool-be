@@ -10,13 +10,14 @@ export class ProjectEntity implements Project {
   sector_activity: string;
   country: string;
   status: $Enums.ProjectStatus;
+  region: string;
+  city: string;
   start_date: Date;
   end_date: Date;
   project_structure: Prisma.JsonValue;
-  archived: boolean;
-  draft: boolean;
-  region: string;
-  city: string;
+  another_logo: string | null;
+  code: string;
+
   archived_at: Date;
   draft_at: Date;
   created_at: Date;
@@ -24,6 +25,6 @@ export class ProjectEntity implements Project {
   slug: string;
   updated_at: Date;
   deployed_at: Date;
-  another_logo: string | null;
-  code: string;
+
+
 }

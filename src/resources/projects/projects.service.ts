@@ -181,7 +181,7 @@ export class ProjectsService {
       id: string | undefined;
       slug: string | undefined;
     };
-    if (project_id.includes('-')) {
+    if (project_id.toString().includes('-')) {
       where['slug'] = project_id;
     } else {
       where['id'] = project_id;
@@ -442,11 +442,23 @@ export class ProjectsService {
     }
   }
 
+  // delete a single project
   async remove(project_id: string, user_id: string) {
+
+    // check if the project exists first
+    const existingProject = await this.findOne(project_id);
+    if (typeof existingProject == 'undefined')
+      return {
+        data: null,
+        status: HttpStatus.BAD_REQUEST,
+        message: `No project with this ID`,
+      };
+
     try {
       const result = await this.prismaService.project.delete({
         where: {
-          id: project_id
+          id: project_id,
+          deleted_at: new Date().toISOString()
         }
       });
       // const result = await this.prismaService.$transaction(async (tx) => {
@@ -507,8 +519,7 @@ export class ProjectsService {
         });
         if (typeof projects != 'undefined' && projects.length)
           return {
-            data: projects
-            ,
+            data: projects,
             status: HttpStatus.OK,
             message: "sucessfully fetched projects assigned to this agent",
           }

@@ -47,6 +47,7 @@ enum TypeProject {
   INTERNAL_INSPECTION
   AUTO_EVALUATION
   MAPPING
+  TRAINING
 }
 
 enum UserStatus {
@@ -131,10 +132,12 @@ model User {
   farm          Farm[] 
   receipt       Receipt?
   market_audit  Market_audit[]
-  training_audits Company_training_audit[]
+  // training_audits Company_training_audit[]
 
   @@index([id, email, phone_number])
 }
+
+
 
 model Company {
   id  String @id @default(cuid())
@@ -216,11 +219,11 @@ model Project {
   code String @unique
   Company     Company @relation(fields: [company_id], references: [id])
   
-  created_at DateTime @default(now())
+  // created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   deleted_at DateTime @updatedAt
   archived_at DateTime @updatedAt
-  draft_at DateTime @updatedAt
+  draft_at DateTime @default(now())
   deployed_at DateTime 
   
   @@index([id, company_id, start_date, end_date, sector_activity, type, code])
@@ -306,19 +309,41 @@ model Inspection_data {
   @@index([project_id])
 }
 
+model Farmer {
+  id           String    @id @default(cuid())
+  company_id String 
+  farmer_name String
+  farmer_contact String
+  farmer_code String
+  farmer_ID_card_number String @unique
+  inspection_date String
+  village String
+  certification_year String
+  inspector_name String
+  inspector_contact String
+  weed_application String
+  weed_application_quantity Int
+  pesticide_used String
+  pesticide_quantity Int
+  farmer_photos String[]
+
+  @@index([id, farmer_ID_card_number])
+}
+
+
+
 
 model Farm {
   id String @id @default(cuid())
   location Json ?  @default("{}")  @db.JsonB
-  farmer_id String 
+  farmer_id String
 
   village String
-  creation_date DateTime
-  division String
-  council String
+  plantation_creation_date DateTime
   farm_image_url String
+  estimate_area Float
   user User @relation(fields: [farmer_id], references: [id])
-  
+  plantation_photos String[]
   mapping_coodinates Farm_coordinates[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -330,66 +355,75 @@ model Farm {
 //TODO: check the real data structure to store the geoPoints.
 model Farm_coordinates{
   id String @id @default(cuid())
-  estimate_area Float
 
   // mapping_date DateTime
   farm_id String
-  located_at Json ?  @default("{}")  @db.JsonB
+  location Json ?  @default("{}")  @db.JsonB
 
   coordinates Json ?  @default("{}")  @db.JsonB
-  collected_by String
+  collector_name String
   farm Farm @relation(fields: [farm_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@index([farm_id, located_at])
+  @@index([farm_id, location])
 }
 
 
-model training_session {
+model Attendance_sheet {
   id String @id @default(cuid())
-  first_name String
-  last_name String
-  email String
-  phone String
-  role String
-
-  signature String
+  date String
+  title String
+  modules String[]
+  trainers String[]
+  trainer_signature String
+  location String
   report_url String
   trainer_proof_of_competency String[]
-  training_picture_url String[]
-  training_attendance_sheet_urls String[]
+  photos String[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   training_id String
   training Training @relation(fields: [training_id], references: [id])
-
-  @@index([email, id, training_id, first_name, last_name])
+  participants Participants[]
 }
+
+model Participants {
+    id String @id @default(cuid())
+    attendence_sheet_id String
+    attendence_sheet Attendance_sheet @relation(fields: [attendence_sheet_id], references: [id])
+    name String
+    organization String ?
+    telephone String
+    email String
+    signature String
+    village String
+  }
 
 model Training {
   id String @id @default(cuid())
   location String
- 
   title String
-  slug String
+  slug String ?
   modules String[]
   start_date DateTime
-
+  code String  @unique
   end_date DateTime
+  status ProjectStatus @default(DRAFT)
   company_id  String
- 
   company Company @relation(fields: [company_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  training_session Attendance_sheet[]
+  // training_audits Company_training_audit[]
 
-  training_session training_session[]
-  training_audits Company_training_audit[]
+  deleted_at DateTime @updatedAt
+  archived_at DateTime @updatedAt
+  draft_at DateTime @default(now())
+  deployed_at DateTime 
 
   @@index([company_id, start_date, end_date, title, id])
 }
-
-
 
 model Subscription {
   id                      String @id @default(cuid())
@@ -488,7 +522,7 @@ model Market {
   bordereau_vente_url String
   bon_entree_magazin_url String
 
-  status CampaignStatus @default(CLOSED) 
+  status CampaignStatus @default(CLOSED) // to specify if the market is closed or open. we are just re-using the Status already created for campain
   // when the market is closed we generate a code that represent the stock for that market.
   code String ?
   // this represnt the total number of bags bought during this market.
@@ -563,10 +597,10 @@ model Transaction {
   updated_at DateTime @updatedAt
 }
 
-model Company_training_audit {
-  id String @id @default(cuid())
-  user_id String
-  user User @relation(fields: [user_id], references: [id])
-  training_id String
-  training Training @relation(fields: [training_id], references: [id])
-}
+// model Company_training_audit {
+//   id String @id @default(cuid())
+//   user_id String
+//   user User @relation(fields: [user_id], references: [id])
+//   training_id String
+//   training Training @relation(fields: [training_id], references: [id])
+// }

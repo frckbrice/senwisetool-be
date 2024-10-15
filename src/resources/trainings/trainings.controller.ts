@@ -69,6 +69,18 @@ export class TrainingController {
     return this.trainingService.findOne(training_id);
   }
 
+  @Roles(Role.ADG, Role.AUDITOR)
+  @UseGuards(RolesGuard)
+  @Get(':training_code/phone')
+  @ApiOperation({ summary: 'find one training with its code from mobile' })
+  @ApiResponse({
+    status: 200,
+    description: 'The training has been successfully fetched.',
+  })
+  getOneTrainingByItsCode(@Param('training_code') training_code: string) {
+    return this.trainingService.findTrainingProjectByItsCode(training_code);
+  }
+
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
   @Patch(':training_id')
@@ -79,6 +91,7 @@ export class TrainingController {
   ) {
     return this.trainingService.update(training_id, updateTrainingDatumDto);
   }
+
 
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)

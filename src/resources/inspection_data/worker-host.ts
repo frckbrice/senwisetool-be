@@ -12,22 +12,22 @@ import { Worker } from 'worker_threads'; // Importing Worker class to create and
 import { cwd } from 'node:process';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { existsSync, mkdirSync } from 'node:fs';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
-export class ReadFileWorkerHost implements OnApplicationBootstrap, OnApplicationShutdown {
+export class FarmerWorkerHost implements OnApplicationBootstrap, OnApplicationShutdown {
+    private logger = new LoggerService(FarmerWorkerHost.name);
 
-    private worker: Worker; // Worker instance for managing the worker thread
+    private Farmworker: Worker; // Worker instance for managing the worker thread
     private messages$: Observable<{ id: string; result: string }>; // Observable to handle messages from the worker thread
 
-    private readonly logger = new LoggerService(ReadFileWorkerHost.name);
-    private readonly currentDirectory = cwd() + '/src/global/utils/requirement-files/';
 
     // Lifecycle hook executed when the application starts
     onApplicationBootstrap() {
         // Initializing the worker thread with the specified script
-        this.worker = new Worker(join(__dirname, 'read-file-worker'));
+        this.Farmworker = new Worker(join(__dirname, 'create-farmer-worker'));
         // Creating an observable from the worker's message events
-        this.messages$ = fromEvent(this.worker, 'message') as Observable<{
+        this.messages$ = fromEvent(this.Farmworker, 'message') as Observable<{
             id: string;
             result: string;
         }>;
@@ -36,20 +36,19 @@ export class ReadFileWorkerHost implements OnApplicationBootstrap, OnApplication
     // Lifecycle hook executed when the application shuts down
     async onApplicationShutdown() {
         // Terminating the worker thread
-        this.worker.terminate();
+        this.Farmworker.terminate();
     }
 
 
     // Method to send a task to the worker thread and get the result
-    async getRequirementsFromPlan(plan_name: string, directory: string) {
+    async storeFarmerData(farmerData: Prisma.FarmerCreateInput) {
 
         const uniqueId = randomUUID(); // Generating a unique ID for the task
 
         try {
             // Sending a message to the worker thread with the input number and unique ID
-            const workerPostmessage = this.worker.postMessage({
-                plan_name: plan_name,
-                directory,
+            const workerPostmessage = this.Farmworker.postMessage({
+                data: farmerData,
                 id: uniqueId
             });
 
@@ -63,17 +62,14 @@ export class ReadFileWorkerHost implements OnApplicationBootstrap, OnApplication
                     map(({ result }) => result),
                 ),
             );
-            // create the dir data if not exists
-            if (!existsSync(join(__dirname, '..', 'data'))) {
-                mkdirSync(join(__dirname, '..', 'data'));
-            }
+
             return returnValue;
         } catch (error) {
             this.logger.error(
-                `Error fetching requirements for this plan  \n\n ${error}`,
-                ReadFileWorkerHost.name,
+                `Error creating farmer data  \n\n ${error}`,
+                FarmerWorkerHost.name,
             );
-            throw new HttpException('Error fetching comapnies', HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException('Error creating farmer data', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
