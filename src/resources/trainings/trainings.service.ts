@@ -174,7 +174,7 @@ export class TrainingService {
       throw new HttpException(`No matching training code for this code`, HttpStatus.BAD_REQUEST)
 
     try {
-      const result = await this.prismaService.training.findUnique({
+      const result = await this.prismaService.training.findMany({
         where: {
           code: <string>retrievedUUID,
           status: ProjectStatus.DEPLOYED,
