@@ -24,8 +24,11 @@ export class InspectionDataController {
 
   @Post()
   @ApiOperation({ summary: 'create project data' })
-  create(@Body() createInspectionDatumDto: Prisma.Inspection_dataCreateInput) {
-    return this.inspectionDataService.create(createInspectionDatumDto);
+  create(@Body() createInspectionDatumDto: Prisma.Inspection_dataCreateInput,
+    @Query() query: { type: string }
+  ) {
+
+    return this.inspectionDataService.create(createInspectionDatumDto, query.type);
   }
 
   @Roles(Role.ADG)

@@ -23,6 +23,9 @@ export function generateMapping(uuid: string) {
 
 export function getUUIDFromCode(code: string) {
 
+  console.log("incoming code: ", code)
+  console.log("outgoing code: ", uuidToCodeMap)
+
   for (const key in uuidToCodeMap) {
     if (key === code) {
       return uuidToCodeMap[key];

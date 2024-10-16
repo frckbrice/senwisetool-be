@@ -69,17 +69,7 @@ export class TrainingController {
     return this.trainingService.findOne(training_id);
   }
 
-  @Roles(Role.ADG, Role.AUDITOR)
-  @UseGuards(RolesGuard)
-  @Get(':training_code/phone')
-  @ApiOperation({ summary: 'find one training with its code from mobile' })
-  @ApiResponse({
-    status: 200,
-    description: 'The training has been successfully fetched.',
-  })
-  getOneTrainingByItsCode(@Param('training_code') training_code: string) {
-    return this.trainingService.findTrainingProjectByItsCode(training_code);
-  }
+
 
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
@@ -100,4 +90,26 @@ export class TrainingController {
   remove(@Param('training_id') training_id: string) {
     return this.trainingService.remove(training_id);
   }
+
+
+  // PHONE REQUESTS: This needs to be customised. there is redundency and not follow best practice for design patterns
+
+  // get training project by its code added by agent
+  @Roles(Role.ADG, Role.AUDITOR)
+  @UseGuards(RolesGuard)
+  @Get(':training_code/phone')
+  @ApiOperation({ summary: 'find one training with its code from mobile' })
+  @ApiResponse({
+    status: 200,
+    description: 'The training has been successfully fetched.',
+  })
+  getOneTrainingByItsCodeFromPhone(@Param('training_code') training_code: string) {
+
+
+    console.log("from training controller: ", training_code)
+    return this.trainingService.findTrainingProjectByItsCode(training_code);
+  }
+
+  // get all trainings
+
 }

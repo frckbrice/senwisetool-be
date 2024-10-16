@@ -217,7 +217,7 @@ export class ProjectsService {
     }
   }
 
-  async findOneProjectFromPhone(project_code: string) {
+  async findOneProjectFromPhone(project_code: string, type: string) {
 
     // match the code with the corresponding uuid saved for this project
     const retrievedUUID = getUUIDFromCode(project_code);
@@ -229,7 +229,7 @@ export class ProjectsService {
       const result = await this.prismaService.project.findUnique({
         where: {
           code: <string>retrievedUUID,
-          status: ProjectStatus.DEPLOYED
+          status: ProjectStatus.DEPLOYED,
         },
         select: {
           id: true,

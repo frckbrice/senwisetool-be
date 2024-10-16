@@ -92,9 +92,9 @@ export class ProjectsController {
     description: 'The project has been successfully fetched.',
   })
   @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
-  findOneProjectFromPhone(@Param('code') project_code: string) {
+  findOneProjectFromPhone(@Param('code') project_code: string, @Query('type') type: string) {
     console.log("receiving request from phone with code: " + project_code);
-    return this.projectsService.findOneProjectFromPhone(project_code);
+    return this.projectsService.findOneProjectFromPhone(project_code, type);
   }
 
   @Patch(':project_id')
