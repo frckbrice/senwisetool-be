@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/adapters/config/prisma.service';
-import { Prisma, User } from '@prisma/client';
+import { Campaign, CampaignStatus, Prisma, User } from '@prisma/client';
 import { PaginationCampaignQueryDto } from './dto/paginate-campaign.dto';
 import { LoggerService } from 'src/global/logger/logger.service';
 
@@ -214,4 +214,29 @@ export class CampaignService {
       );
     }
   }
+
+  // get the current campaign
+  async getCurrentCampaign(): Promise<Partial<Campaign> | null> {
+    const currentDate = new Date();
+
+    const currentAcademicYearStart = new Date(currentDate.getFullYear(), 0, 1); // get the first day of the current year
+    const currentAcademicYearEnd = new Date(currentDate.getFullYear() + 1, 0, 0); // get the last day of December of the current year,
+
+    return await this.prismaService.campaign.findFirst({
+      where: {
+        AND: [
+          { start_date: { gte: currentAcademicYearStart } },
+          { end_date: { lte: currentAcademicYearEnd } },
+          { status: CampaignStatus.OPEN }, // Assuming ACTIVE is the status for current campaigns
+        ],
+      },
+      select: {
+        name: true,
+        id: true
+      },
+      orderBy: [{ start_date: 'asc' }],
+    });
+  }
+
+
 }

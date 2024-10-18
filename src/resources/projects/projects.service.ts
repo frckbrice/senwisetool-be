@@ -22,14 +22,7 @@ export class ProjectsService {
     private slugify: Slugify,
     private projectAssigneeService: ProjectAssigneeService
   ) { }
-  // slugify(title: string) {
-  //   return title
-  //     .toLowerCase()
-  //     .trim()
-  //     .replace(/[^\w\s-_]/g, '')
-  //     .replace(/[\s_-]+/g, '-')
-  //     .replace(/^-+|-+$/g, '');
-  // }
+
 
   async create({
     createProjectDto,
@@ -62,8 +55,17 @@ export class ProjectsService {
 
 
 
+
     try {
+      /**
+   * 1. create mapping with created uuid
+   * 2. persist this mapping in the DB for later retrieval 
+   */
       const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
+      await this.projectAssigneeService.create({
+        agentCode: projectCode,
+        projectCodes: [uuid]
+      })
 
 
       const result = await this.prismaService.$transaction(async (tx) => {
@@ -116,10 +118,12 @@ export class ProjectsService {
     }
   }
 
-  async findAll(query: Partial<PaginationProjectQueryDto>, company_id: string) {
+  async findAll(query: Partial<PaginationProjectQueryDto> | any, company_id: string) {
+
     const { status, type, page, perPage, search, campaign_id, } = query;
-    const where = Object.create({});
+    const where = Object.create({ company_id });
     let Query = Object.create({ where });
+
     if (status) {
       where['status'] = status;
     }
@@ -134,6 +138,14 @@ export class ProjectsService {
 
     if (search)
       where["search"] = search
+
+    if (search)
+      where["search"] = search
+
+
+    // if we have assigned a query to the uri, we just return the corresponding function.
+    if (query.agentCode)
+      return this.getAllAssignedProjects(query.agentCode, company_id);
 
 
     Query = {
@@ -229,7 +241,8 @@ export class ProjectsService {
       const result = await this.prismaService.project.findUnique({
         where: {
           code: <string>retrievedUUID,
-          status: ProjectStatus.DEPLOYED
+          status: ProjectStatus.DEPLOYED,
+          // type: <TypeProject>(type === 'training' ? type : "") // this isn't possible
         },
         select: {
           id: true,
@@ -263,6 +276,8 @@ export class ProjectsService {
       );
     }
   }
+
+  // find all the ass
 
   async update({
     id,
@@ -503,19 +518,28 @@ export class ProjectsService {
   }
 
   // get all the projects assigned to an agent
-  async getAllAssignedProjects(agentCode: string) {
+  async getAllAssignedProjects(agentCode: string, company_id?: string) {
     try {
       // get list of projects codes assigned to this agent
       const listOfCodes = (await this.projectAssigneeService.findOne(agentCode))?.data;
       if (listOfCodes?.length) {
 
+        const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
 
         const projects = await this.prismaService.project.findMany({
           where: {
             code: {
-              in: listOfCodes
-            }
-          }
+              in: [...listOfUuids!]
+            },
+            status: ProjectStatus.DEPLOYED,
+            company_id
+          },
+          select: {
+            status: true,
+            type: true,
+            id: true,
+            title: true
+          },
         });
         if (typeof projects != 'undefined' && projects.length)
           return {
@@ -524,11 +548,15 @@ export class ProjectsService {
             message: "sucessfully fetched projects assigned to this agent",
           }
         return {
-          data: null,
+          data: [],
           status: HttpStatus.BAD_REQUEST,
           message: "Failed to fetch projects assigned to this agent",
         }
 
+      } else return {
+        data: [],
+        status: HttpStatus.BAD_REQUEST,
+        message: "This code has No projects assigned to.",
       }
 
     } catch (err) {

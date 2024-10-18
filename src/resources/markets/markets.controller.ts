@@ -59,7 +59,8 @@ export class MarketsController {
     description: 'The markets has been successfully fetched.',
   })
   @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
-  findAll(@Query() query: PaginationMarketQueryDto, @CurrentUser() user: Partial<User>) {
+  findAll(
+    @Query() query: PaginationMarketQueryDto, @CurrentUser() user: Partial<User>) {
     return this.marketsService.findAll(query, <string>user.company_id);
   }
 

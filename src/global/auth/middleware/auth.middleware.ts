@@ -35,6 +35,8 @@ export class AuthMiddleware implements NestMiddleware {
         next: NextFunction,
     ): Promise<void> {
 
+        console.log("income url: ", req.originalUrl)
+
         // allow health check 
         if (req.method == 'GET' && this.allowGetRoutes.includes(req.originalUrl)) {
             this.logger.log('Allowing public  access to route ', AuthMiddleware.name);
@@ -99,7 +101,7 @@ export class AuthMiddleware implements NestMiddleware {
      * @return {string | undefined} the xtracted token  or undefined
      */
     private extractTokenFromHeader(request: Request): string | undefined {
-        console.log(" the request   headers  auth: ", request.headers.authorization);
+        // console.log(" the request   headers  auth: ", request.headers.authorization);
         // console.log("the request body: ", request.body);
         const [type, token] = request.headers.authorization?.split(' ') ?? [];
 

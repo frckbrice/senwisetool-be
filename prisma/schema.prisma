@@ -23,7 +23,7 @@ datasource db {
 
 
 enum Role {
-  FARMER
+ 
   PDG 
   EMPLOYEE
   AGENT
@@ -131,11 +131,14 @@ model User {
   status        UserStatus
   farm          Farm[] 
   receipt       Receipt?
-  market_audit  Market_audit[]
+  // market_audit  Market_audit[]
   // training_audits Company_training_audit[]
 
   @@index([id, email, phone_number])
 }
+
+
+
 
 
 
@@ -254,7 +257,7 @@ model Campaign {
   companies Company_Campaign[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  stockCampaigns Campaign_stock[]
+  // stockCampaigns Campaign_stock[]
 
   @@index([id, start_date, end_date, status])
 }
@@ -270,20 +273,20 @@ model Company_Campaign {
 
 }
 
-model Campaign_stock {
-  id  String @id @default(cuid())
-  quantity  Int
-  weight  Int
-  unit_of_mesure String
-  campaign_id  String
-  company_id   String
+// model Campaign_stock {
+//   id  String @id @default(cuid())
+//   quantity  Int
+//   weight  Int
+//   unit_of_mesure String
+//   campaign_id  String
+//   company_id   String
 
-  projectId   Campaign @relation(fields: [campaign_id], references: [id])
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+//   projectId   Campaign @relation(fields: [campaign_id], references: [id])
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
 
-  @@index([campaign_id])
-}
+//   @@index([campaign_id])
+// }
 
 model Collector_agent {
   id String @id @default(cuid())
@@ -314,7 +317,7 @@ model Farmer {
   company_id String 
   farmer_name String
   farmer_contact String
-  farmer_code String
+
   farmer_ID_card_number String @unique
   inspection_date String
   village String
@@ -327,7 +330,7 @@ model Farmer {
   pesticide_quantity Int
   farmer_photos String[]
 
-  @@index([id, farmer_ID_card_number])
+  @@index([id, farmer_ID_card_number, farmer_contact])
 }
 
 
@@ -376,7 +379,7 @@ model Attendance_sheet {
   title String
   modules String[]
   trainers String[]
-  trainer_signature String
+  trainer_signature String[]
   location String
   report_url String
   trainer_proof_of_competency String[]
@@ -399,6 +402,8 @@ model Participants {
     signature String
     village String
   }
+
+
 
 model Training {
   id String @id @default(cuid())
@@ -464,7 +469,7 @@ model Price_plan {
   cancellation_policy String[]
   subscription Subscription[]
 
-  price_plan_requirement Price_plan_requirement[]
+  // price_plan_requirement Price_plan_requirement[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -473,41 +478,41 @@ model Price_plan {
 }
 
 
-model Requirement {
-  id String @id @default(cuid())
-  name String
-  content Json ?  @default("{}")  @db.JsonB
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  price_plan_requirement Price_plan_requirement[]
-  // required_norm String
-  // number_of_requirements Int
-  // number_of_applicable_requirements Int
-  // number_of_non_appplicable_requirements Int 
-  // percentage_applicable Int
-}
+// model Requirement {
+//   id String @id @default(cuid())
+//   name String
+//   content Json ?  @default("{}")  @db.JsonB
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
+//   price_plan_requirement Price_plan_requirement[]
+//   // required_norm String
+//   // number_of_requirements Int
+//   // number_of_applicable_requirements Int
+//   // number_of_non_appplicable_requirements Int 
+//   // percentage_applicable Int
+// }
 
-model Price_plan_requirement {
-  id String @id @default(cuid())
-  req_id String
-   price_plan_id String
-  requirement Requirement @relation(fields: [req_id], references: [id])
-  price_plan Price_plan @relation(fields: [ price_plan_id], references: [id])
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+// model Price_plan_requirement {
+//   id String @id @default(cuid())
+//   req_id String
+//    price_plan_id String
+//   requirement Requirement @relation(fields: [req_id], references: [id])
+//   price_plan Price_plan @relation(fields: [ price_plan_id], references: [id])
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
 
-  @@index([req_id,  price_plan_id])
-}
+//   @@index([req_id,  price_plan_id])
+// }
 
-model Market_audit {
-  id String @id @default(cuid())
-  user_id String
-  market_id String
-  user User @relation(fields: [user_id], references: [id])
-  market Market @relation(fields: [market_id], references: [id])
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
+// model Market_audit {
+//   id String @id @default(cuid())
+//   user_id String
+//   market_id String
+//   user User @relation(fields: [user_id], references: [id])
+//   market Market @relation(fields: [market_id], references: [id])
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
+// }
 
 model Market {
   id String @id @default(cuid())
@@ -515,6 +520,7 @@ model Market {
   start_date DateTime
   end_date DateTime
   market_number Int
+  price_of_theday Int
 
   description String
   location String
@@ -524,18 +530,18 @@ model Market {
 
   status CampaignStatus @default(CLOSED) // to specify if the market is closed or open. we are just re-using the Status already created for campain
   // when the market is closed we generate a code that represent the stock for that market.
-  code String ?
+  code String ? @unique
   // this represnt the total number of bags bought during this market.
   product_quantity Int
   company Company @relation(fields: [company_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  market_audit Market_audit[]
+  // market_audit Market_audit[]
   transaction Transaction[]
   receipts Receipt[]
   campaign_id String
 
-  @@index([company_id, start_date, end_date])
+  @@index([company_id, start_date, end_date, code])
 }
 
 model Receipt {
@@ -543,24 +549,24 @@ model Receipt {
   market_id String
   village String
   farmer_id String @unique
-
+market_number Int
   date DateTime 
-  net_weight_in_kg Float
-  quantity_in_bags Int
-  humidity_level_of_product String
-  net_weight_for_sale Int
-  refraction_humidity_or_quality String
-  unit_amount_per_kg Float
-  total_amount Float
+  weight Float
+  humidity String
+  netWeight Int
+  agentName String
+  refraction String
+  pricePerKg Float
+  totalPrice Float
   currency String
+  totalWeight Float
 
-  farmer_picture_urls String[]
-  statutory_prerequisite Int 
+  salePhotoUrl String[]
   net_paid Int 
-  farmer_signature String
-  company_signature String
+  farmerSignature String
+  agentSignature String
+  gpsLocation Json
 
-  receipt_number String
   product_name String
 
 
@@ -574,7 +580,6 @@ model Transaction {
   id String @id @default(cuid())
   market_id String
   date DateTime @default(now())
-
 
   level_of_traceability String
   driver_name String

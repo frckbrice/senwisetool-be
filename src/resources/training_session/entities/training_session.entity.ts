@@ -15,4 +15,5 @@ export class TrainingSession implements Attendance_sheet {
   training_id: string;
   trainers: string[];
   updated_at: Date;
+  trainer_signature: string[];
 }

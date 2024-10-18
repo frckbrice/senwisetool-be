@@ -18,4 +18,6 @@ export class PaginationMarketQueryDto {
   search?: string;
 
   campaign_id?: string;
+
+  agentCode?: string
 }

@@ -7,24 +7,48 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { LoggerService } from 'src/global/logger/logger.service';
+import { FieldWorkerHost } from './worker-host';
 
 @Injectable()
 export class InspectionDataService {
   private readonly logger = new LoggerService(InspectionDataService.name);
 
-  constructor(private readonly prismaService: PrismaService) { }
-  async create(createInspectionDatumDto: Prisma.Inspection_dataCreateInput) {
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly fieldWorker: FieldWorkerHost
+  ) { }
+  async create(createInspectionDatumDto: Prisma.Inspection_dataCreateInput, type: string) {
+    let status: boolean = false;
+
     try {
       const data = await this.prismaService.inspection_data.create({
         data: createInspectionDatumDto,
       });
 
-      if (typeof data != 'undefined')
+      if (typeof data != 'undefined') {
+
+        // store the data for farmer in the worker thread
+        if (type.toString().toLocaleLowerCase().includes('initial_inspection')) {
+          const result = await this.fieldWorker.storeFarmerData(JSON.stringify(data));
+          if (typeof result != 'undefined')
+            status = true
+        }
+
+        // store data for  farm 
+        // if(type.toString().toLocaleLowerCase().includes('mapping')){
+        //   const result = await this.fieldWorker.storeFarmData(JSON.stringify(data));
+        //   if (typeof result!= 'undefined')
+        //     status = true
+        // }
         return {
           data,
           status: HttpStatus.CREATED,
-          message: `Project collected data was stored successfully in DB`
+          message: `Project collected data was stored successfully in DB
+            ${status ? 'farmer also created' : ''}
+          `
         }
+      }
+
       else
         return {
           data: null,

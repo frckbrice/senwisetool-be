@@ -14,6 +14,8 @@ import { UsersService } from '../users/users.service';
 import { Slugify } from 'src/global/utils/slugilfy';
 import { PaginationTrainingQueryDto } from './dto/paginate-training.dto';
 import { generateMapping, getUUIDFromCode } from '../projects/create-code-project-mapping';
+import { title } from 'node:process';
+import { ProjectAssigneeService } from '../project-assignee/project-assignee.service';
 
 @Injectable()
 export class TrainingService {
@@ -23,6 +25,7 @@ export class TrainingService {
     private readonly prismaService: PrismaService,
     private readonly userService: UsersService,
     private slugifyService: Slugify,
+    private projectAssigneeService: ProjectAssigneeService
   ) { }
 
   async create(
@@ -34,9 +37,8 @@ export class TrainingService {
     // create a mapping code
     const { uuid, code: training_code } = generateMapping(crypto.randomUUID());
 
+    console.log("after creation: ", "training_code: ", training_code, "uuid: ", uuid)
 
-
-    console.log('from training service: ', createTrainingDto);
     try {
       const result = await this.prismaService.training.create({
         data: {
@@ -82,30 +84,61 @@ export class TrainingService {
     }
   }
 
-  async findAll(query: Partial<PaginationTrainingQueryDto>, company_id: string) {
+  async findAll(query: Partial<PaginationTrainingQueryDto> | any, company_id: string) {
     // find all the training with the latest start date with its status and type
-    const { page, perPage, locality } = query;
-    let Query = Object.create({});
+    const { page, perPage, location, phone, agentCode } = query;
+    console.log({ page, perPage, location })
+
+    if (agentCode) {
+      const listOfCodes = (await this.projectAssigneeService.findOne(agentCode))?.data;
+      if (!listOfCodes?.length)
+        return {
+          data: [],
+          status: 200,
+          message: 'No training assigned to this agent',
+        };
+      const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
+
+      return await this.prismaService.project.findMany({
+        where: {
+          code: {
+            in: listOfUuids ? listOfUuids : [],
+          },
+          status: ProjectStatus.DEPLOYED,
+          company_id,
+        },
+      });
+    }
+
+
+    let where = Object.create({});
+    let Query = Object.create(where)
+    if (location)
+      where["location"] = location // TODO: check this work deeply later
+
     Query = {
       ...Query,
-      where: {
-        company_id,
-        ...(locality && { locality }),
-      },
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
-        created_at: 'desc',
+        start_date: 'desc',
       },
     };
-    // find all the companies
+
+    // find all the company
     try {
       const [total, trainings] = await this.prismaService.$transaction([
         this.prismaService.training.count(),
-        this.prismaService.training.findMany(Query),
+        this.prismaService.training.findMany({
+          where: {
+            ...where,
+            status: phone ? "DEPLOYED" : undefined,
+            company_id
+          }
+        }),
       ]);
       console.log("trainings:", trainings)
-      if (trainings.length)
+      if (trainings.length && !phone) {
         return {
           status: 200,
           message: 'trainings fetched successfully',
@@ -115,7 +148,18 @@ export class TrainingService {
           perPage: query.perPage ?? 20,
           totalPages: Math.ceil(total / (query.perPage ?? 20)),
         };
-      else
+      } else if (phone) {
+        return {
+          status: 200,
+          message: 'trainings fetched successfully',
+          data: trainings?.map(t => ({
+            id: t.id,
+            title: t.title,
+            modules: t.modules,
+            status: t.status
+          }))
+        };
+      } else
         return {
           status: 404,
           message: 'No trainings found',
@@ -135,6 +179,8 @@ export class TrainingService {
   }
 
   async findOne(training_id: string) {
+
+    console.log("from findOne training with id: ", training_id)
     try {
       const result = await this.prismaService.training.findUnique({
         where: {
@@ -169,6 +215,8 @@ export class TrainingService {
   async findTrainingProjectByItsCode(training_code: string) {
     // match the code with the corresponding uuid saved for this training
     const retrievedUUID = getUUIDFromCode(training_code);
+
+    console.log("from training controller, retrievedUUID: ", retrievedUUID);
 
     if (typeof retrievedUUID == 'undefined') // check for null or undefined
       throw new HttpException(`No matching training code for this code`, HttpStatus.BAD_REQUEST)
@@ -363,6 +411,69 @@ export class TrainingService {
       throw new InternalServerErrorException(
         "Can't delete a training with training_id " + training_id,
       );
+    }
+  }
+
+
+
+  // PHONE SERVICEs REQUEST
+  async findAllFromPhone(query: Partial<PaginationTrainingQueryDto>, company_id: string) {
+    // find all the training with the latest start date with its status and type
+    const { page, perPage, location } = query;
+    console.log({ page, perPage, location })
+
+    let where = Object.create({});
+    let Query = Object.create(where)
+    if (location)
+      where.location = location
+
+    Query = {
+      ...Query,
+      select: {
+        id: true,
+        title: true,
+        modules: true,
+        status: true
+      },
+      take: perPage ?? 20,
+      skip: (page ?? 0) * (perPage ?? 20 - 1),
+      orderBy: {
+        start_date: 'desc',
+      },
+    };
+    // find all the companies
+    try {
+      const [total, trainings] = await this.prismaService.$transaction([
+        this.prismaService.training.count(),
+        this.prismaService.training.findMany(Query),
+      ]);
+      console.log("trainings:", trainings)
+      if (trainings.length)
+        return {
+          status: 200,
+          message: 'trainings fetched successfully',
+          data: trainings,
+          total,
+          page: query.page ?? 0,
+          perPage: query.perPage ?? 20,
+          totalPages: Math.ceil(total / (query.perPage ?? 20)),
+        };
+      else
+        return {
+          status: 404,
+          message: 'No trainings found',
+          data: [],
+          total,
+          page: query.page ?? 0,
+          perPage: query.perPage ?? 20,
+          totalPages: Math.ceil(total / (query.perPage ?? 20)),
+        };
+    } catch (error) {
+      this.logger.error(
+        `Error fetching trainings \n\n ${error}`,
+        TrainingService.name,
+      );
+      throw new NotFoundException('Error fetching trainings');
     }
   }
 }

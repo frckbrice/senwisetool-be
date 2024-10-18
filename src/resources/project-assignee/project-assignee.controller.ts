@@ -15,21 +15,18 @@ export class ProjectAssigneeController {
   @Post()
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
-  @Get(':id')
   create(@Body() createProjectAssigneeDto: Prisma.AssigneeCreateInput) {
     return this.projectAssigneeService.create(createProjectAssigneeDto);
   }
 
   @Get()
-  @Post()
   @Roles(Role.ADG, Role.AUDITOR)
   @UseGuards(RolesGuard)
-  findAll(@Query() query: { agent_code: string }) {
-    return this.projectAssigneeService.findAll(query.agent_code);
+  findAll(@Query() query: { agentCode: string }) {
+    return this.projectAssigneeService.findAll(query.agentCode);
   }
 
   @Get(':id')
-  @Post()
   @Roles(Role.ADG, Role.AUDITOR)
   @UseGuards(RolesGuard)
   findOne(@Param('id') id: string) {
@@ -37,7 +34,6 @@ export class ProjectAssigneeController {
   }
 
   @Patch(':id')
-  @Post()
   @Roles(Role.ADG,)
   @UseGuards(RolesGuard)
   update(@Param('id') id: string, @Body() updateProjectAssigneeDto: UpdateProjectAssigneeDto) {
@@ -45,7 +41,6 @@ export class ProjectAssigneeController {
   }
 
   @Delete(':id')
-  @Post()
   @Roles(Role.ADG,)
   @UseGuards(RolesGuard)
   remove(@Param('id') id: string) {
