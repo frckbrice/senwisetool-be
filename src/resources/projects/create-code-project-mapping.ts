@@ -20,7 +20,7 @@ export function generateMapping(uuid: string) {
   return { uuid, code };
 }
 
-
+// get the UUID from a code
 export function getUUIDFromCode(code: string) {
 
   console.log("incoming code: ", code)
@@ -33,6 +33,10 @@ export function getUUIDFromCode(code: string) {
   }
   return null; // Code not found
 }
+
+
+//get the 
+
 
 
 // OTHER METHOD

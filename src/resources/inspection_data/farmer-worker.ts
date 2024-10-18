@@ -4,7 +4,7 @@ import { readFile } from "fs/promises";
 import { join } from 'path';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 
-const prisma = new PrismaService;
+const prisma = new PrismaService();
 
 parentPort?.on('message', async ({ data, id }) => {
 

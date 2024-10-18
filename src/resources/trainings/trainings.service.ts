@@ -15,6 +15,7 @@ import { Slugify } from 'src/global/utils/slugilfy';
 import { PaginationTrainingQueryDto } from './dto/paginate-training.dto';
 import { generateMapping, getUUIDFromCode } from '../projects/create-code-project-mapping';
 import { title } from 'node:process';
+import { ProjectAssigneeService } from '../project-assignee/project-assignee.service';
 
 @Injectable()
 export class TrainingService {
@@ -24,6 +25,7 @@ export class TrainingService {
     private readonly prismaService: PrismaService,
     private readonly userService: UsersService,
     private slugifyService: Slugify,
+    private projectAssigneeService: ProjectAssigneeService
   ) { }
 
   async create(
@@ -37,7 +39,6 @@ export class TrainingService {
 
     console.log("after creation: ", "training_code: ", training_code, "uuid: ", uuid)
 
-    console.log('from training service: ', createTrainingDto);
     try {
       const result = await this.prismaService.training.create({
         data: {
@@ -83,10 +84,32 @@ export class TrainingService {
     }
   }
 
-  async findAll(query: Partial<PaginationTrainingQueryDto>, company_id: string) {
+  async findAll(query: Partial<PaginationTrainingQueryDto> | any, company_id: string) {
     // find all the training with the latest start date with its status and type
-    const { page, perPage, location, phone } = query;
+    const { page, perPage, location, phone, agentCode } = query;
     console.log({ page, perPage, location })
+
+    if (agentCode) {
+      const listOfCodes = (await this.projectAssigneeService.findOne(agentCode))?.data;
+      if (!listOfCodes?.length)
+        return {
+          data: [],
+          status: 200,
+          message: 'No training assigned to this agent',
+        };
+      const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
+
+      return await this.prismaService.project.findMany({
+        where: {
+          code: {
+            in: listOfUuids ? listOfUuids : [],
+          },
+          status: ProjectStatus.DEPLOYED,
+          company_id,
+        },
+      });
+    }
+
 
     let where = Object.create({});
     let Query = Object.create(where)
@@ -101,13 +124,16 @@ export class TrainingService {
         start_date: 'desc',
       },
     };
+
     // find all the company
     try {
       const [total, trainings] = await this.prismaService.$transaction([
         this.prismaService.training.count(),
         this.prismaService.training.findMany({
           where: {
+            ...where,
             status: phone ? "DEPLOYED" : undefined,
+            company_id
           }
         }),
       ]);

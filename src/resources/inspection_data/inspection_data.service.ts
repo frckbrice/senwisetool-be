@@ -27,13 +27,19 @@ export class InspectionDataService {
 
       if (typeof data != 'undefined') {
 
-        // store the data in the worker thread
-        if (type.toLocaleLowerCase().toString().includes('internal_inspection')) {
+        // store the data for farmer in the worker thread
+        if (type.toString().toLocaleLowerCase().includes('initial_inspection')) {
           const result = await this.fieldWorker.storeFarmerData(JSON.stringify(data));
           if (typeof result != 'undefined')
             status = true
         }
 
+        // store data for  farm 
+        // if(type.toString().toLocaleLowerCase().includes('mapping')){
+        //   const result = await this.fieldWorker.storeFarmData(JSON.stringify(data));
+        //   if (typeof result!= 'undefined')
+        //     status = true
+        // }
         return {
           data,
           status: HttpStatus.CREATED,

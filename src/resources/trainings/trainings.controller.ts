@@ -52,7 +52,9 @@ export class TrainingController {
     status: 200,
     description: 'The trainings has been successfully fetched.',
   })
-  findAll(@Query() query: PaginationTrainingQueryDto, @CurrentUser() user: Partial<User>) {
+  findAll(
+    @Query() query: PaginationTrainingQueryDto | { agentCode: string },
+    @CurrentUser() user: Partial<User>) {
     console.log("hit tranings controler: ", query)
     return this.trainingService.findAll(query, <string>user.company_id);
   }
@@ -104,7 +106,6 @@ export class TrainingController {
     description: 'The training has been successfully fetched.',
   })
   getOneTrainingByItsCodeFromPhone(@Param('training_code') training_code: string) {
-
 
     console.log("from training controller: ", training_code)
     return this.trainingService.findTrainingProjectByItsCode(training_code);

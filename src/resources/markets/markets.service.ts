@@ -6,9 +6,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/adapters/config/prisma.service';
-import { Prisma, } from '@prisma/client';
+import { CampaignStatus, Prisma, } from '@prisma/client';
 import { PaginationMarketQueryDto } from './dto/paginate-markets.dto';
 import { LoggerService } from 'src/global/logger/logger.service';
+import { generateMapping } from '../projects/create-code-project-mapping';
+import { ProjectAssigneeService } from '../project-assignee/project-assignee.service';
 
 @Injectable()
 export class MarketsService {
@@ -16,6 +18,7 @@ export class MarketsService {
 
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly projectAssigneeService: ProjectAssigneeService
   ) { }
 
 
@@ -35,11 +38,14 @@ export class MarketsService {
         message: `End date should be greater than or equal to start date`,
       };
 
+    const { uuid: UID, code: projectCode } = generateMapping(crypto.randomUUID());
+
     try {
       const result = await this.prismaService.$transaction(async (tx) => {
         const result = await tx.market.create({
           data: {
             ...createMarketDto,
+            code: UID
           },
         });
 
@@ -56,7 +62,7 @@ export class MarketsService {
 
       if (result)
         return {
-          data: result,
+          data: { ...result, code: projectCode },
           status: 201,
           message: `market created successfully`,
         };
@@ -76,7 +82,7 @@ export class MarketsService {
   }
 
   async findAll(query: Partial<PaginationMarketQueryDto>, company_id: string) {
-    const { status, type, page, perPage, search, campaign_id } = query;
+    const { status, type, page, perPage, search, campaign_id, agentCode } = query;
     const where = Object.create({});
     let Query = Object.create({ where });
 
@@ -90,6 +96,14 @@ export class MarketsService {
 
     if (campaign_id) {
       where['campaign_id'] = campaign_id;
+    }
+
+    if (company_id) {
+      where['company_id'] = company_id;
+    }
+    if (agentCode) {
+      return await this.getTheAssignedMarket(agentCode, company_id)
+
     }
 
     if (search)
@@ -112,7 +126,7 @@ export class MarketsService {
         return {
           status: 200,
           message: 'markets fetched successfully',
-          data: markets,
+          data: agentCode ? markets.map((m) => ({})) : [],
           total,
           page: query.page ?? 0,
           perPage: query.perPage ?? 20,
@@ -243,6 +257,38 @@ export class MarketsService {
       throw new InternalServerErrorException(
         "Can't delete a market with market_id " + market_id,
       );
+    }
+  }
+
+  // get the assigned market 
+  async getTheAssignedMarket(agentCode: string, company_id: string) {
+    try {
+      const currentData = new Date(Date.now()).toISOString();
+      console.log("request market by agent code: " + agentCode);
+      const listOfMarkets = await this.projectAssigneeService.findOne(agentCode);
+      const marketUUID = listOfMarkets?.data?.[0];
+      console.log("corresponding agent code UUID: " + marketUUID);
+      return await this.prismaService.market.findFirst({
+        where: {
+          AND: [
+            { code: marketUUID },
+            { company_id },
+            { status: CampaignStatus.OPEN }, // selct open market.
+            { start_date: { gte: currentData } }
+          ]
+        },
+        select: {
+          id: true,
+          market_number: true,
+          start_date: true,
+          end_date: true,
+          status: true,
+          company_id: true,
+        }
+      })
+    } catch (error) {
+      this.logger.error(` errror getting the market assigned to this agent code: ${agentCode}. error: ${error}`)
+      throw new HttpException(`errror getting the market assigned to this agent code:`, HttpStatus.NOT_FOUND)
     }
   }
 

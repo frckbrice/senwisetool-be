@@ -25,6 +25,7 @@ import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 // to handle rate limiting
 import { SkipThrottle } from '@nestjs/throttler';
 import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
+import { query } from 'express';
 
 @ApiTags('projects')
 @UseGuards(RolesGuard)
@@ -58,8 +59,7 @@ export class ProjectsController {
     status: 200,
     description: 'The projects has been successfully fetched.',
   })
-  @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
-  findAll(@Query() query: PaginationProjectQueryDto, @CurrentUser() user: Partial<User>) {
+  @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR) findAll(@Query() query: PaginationProjectQueryDto | { agentCode: string }, @CurrentUser() user: Partial<User>) {
     return this.projectsService.findAll(query, <string>user.company_id);
   }
 
@@ -71,6 +71,8 @@ export class ProjectsController {
   })
   @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
   findAllAssignedProjects(@Query() query: { agentCode: string }) {
+
+    console.log("get all assigned projects by this code: ", query.agentCode)
     return this.projectsService.getAllAssignedProjects(query.agentCode);
   }
 
@@ -85,17 +87,18 @@ export class ProjectsController {
     return this.projectsService.findOne(project_id);
   }
 
-  @Get(':code/phone')
-  @ApiOperation({ summary: 'find one project with its Id' })
-  @ApiResponse({
-    status: 200,
-    description: 'The project has been successfully fetched.',
-  })
-  @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
-  findOneProjectFromPhone(@Param('code') project_code: string, @Query('type') type: string) {
-    console.log("receiving request from phone with code: " + project_code);
-    return this.projectsService.findOneProjectFromPhone(project_code, type);
-  }
+  // @Get(':code')
+  // @ApiOperation({ summary: 'find one project with its Id' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'The project has been successfully fetched.',
+  // })
+  // @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
+  // findOneProjectFromPhone(
+  //   @Param('code') project_code: string,
+  //   @Query() query: { type: string }) {
+  //   return this.projectsService.findOneProjectFromPhone(project_code);
+  // }
 
   @Patch(':project_id')
   @ApiOperation({ summary: 'update one project with its Project_id' })

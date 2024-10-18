@@ -18,34 +18,40 @@ import { Prisma } from '@prisma/client';
 export class FieldWorkerHost implements OnApplicationBootstrap, OnApplicationShutdown {
     private logger = new LoggerService(FieldWorkerHost.name);
 
-    private Farmworker: Worker; // Worker instance for managing the worker thread
-    private messages$: Observable<{ id: string; result: string }>; // Observable to handle messages from the worker thread
+    private Farmerworker: Worker; // Worker instance for managing the worker thread
+    // private Farmworker: Worker; // Worker instance for managing the worker thread
+    // private Participantworker: Worker; // Worker instance for managing the worker thread
+    // private AttendanceSheetworker: Worker; // Worker instance for managing the worker thread
 
+    // private messages$: Observable<{ id: string; result: string }>; // Observable to handle messages from the worker thread
+    // private messages1$: Observable<{ id: string; result: string }>;
+    // private messages2$: Observable<{ id: string; result: string }>;
+    private messages3$: Observable<{ id: string; result: string }>;
 
     // Lifecycle hook executed when the application starts
     onApplicationBootstrap() {
         // Initializing the worker thread with the specified script
-        this.Farmworker = new Worker(join(__dirname, 'participant_worker'));
+        // this.Participantworker = new Worker(join(__dirname, 'participant_worker'));
+        // // Creating an observable from the worker's message events
+        // this.messages$ = fromEvent(this.Farmworker, 'message') as Observable<{
+        //     id: string;
+        //     result: string;
+        // }>;
+        // this.AttendanceSheetworker = new Worker(join(__dirname, 'attendance_sheet_worker'));
+        // // Creating an observable from the worker's message events
+        // this.messages1$ = fromEvent(this.Farmworker, 'message') as Observable<{
+        //     id: string;
+        //     result: string;
+        // }>;
+        // this.Farmworker = new Worker(join(__dirname, 'farm-worker'));
+        // // Creating an observable from the worker's message events
+        // this.messages2$ = fromEvent(this.Farmworker, 'message') as Observable<{
+        //     id: string;
+        //     result: string;
+        // }>;
+        this.Farmerworker = new Worker(join(__dirname, 'farmer-worker'));
         // Creating an observable from the worker's message events
-        this.messages$ = fromEvent(this.Farmworker, 'message') as Observable<{
-            id: string;
-            result: string;
-        }>;
-        this.Farmworker = new Worker(join(__dirname, 'attendance_sheet_worker'));
-        // Creating an observable from the worker's message events
-        this.messages$ = fromEvent(this.Farmworker, 'message') as Observable<{
-            id: string;
-            result: string;
-        }>;
-        this.Farmworker = new Worker(join(__dirname, 'farm-worker'));
-        // Creating an observable from the worker's message events
-        this.messages$ = fromEvent(this.Farmworker, 'message') as Observable<{
-            id: string;
-            result: string;
-        }>;
-        this.Farmworker = new Worker(join(__dirname, 'farmer-worker'));
-        // Creating an observable from the worker's message events
-        this.messages$ = fromEvent(this.Farmworker, 'message') as Observable<{
+        this.messages3$ = fromEvent(this.Farmerworker, 'message') as Observable<{
             id: string;
             result: string;
         }>;
@@ -54,7 +60,10 @@ export class FieldWorkerHost implements OnApplicationBootstrap, OnApplicationShu
     // Lifecycle hook executed when the application shuts down
     async onApplicationShutdown() {
         // Terminating the worker thread
-        this.Farmworker.terminate();
+        this.Farmerworker.terminate();
+        // this.AttendanceSheetworker.terminate()
+        // this.Farmworker.terminate();
+        // this.Participantworker.terminate()
     }
 
 
@@ -65,7 +74,7 @@ export class FieldWorkerHost implements OnApplicationBootstrap, OnApplicationShu
 
         try {
             // Sending a message to the worker thread with the input number and unique ID
-            const workerPostmessage = this.Farmworker.postMessage({
+            const workerPostmessage = this.Farmerworker.postMessage({
                 data: JSON.parse(data),
                 id: uniqueId
             });
@@ -73,7 +82,7 @@ export class FieldWorkerHost implements OnApplicationBootstrap, OnApplicationShu
             // Returning a promise that resolves with the result of the files 
             const returnValue = firstValueFrom(
                 // Convert the observable to a promise
-                this.messages$.pipe(
+                this.messages3$.pipe(
                     // Filter messages to only include those with the matching unique ID
                     filter(({ id }) => id === uniqueId),
                     // Extract the result from the message
@@ -91,99 +100,99 @@ export class FieldWorkerHost implements OnApplicationBootstrap, OnApplicationShu
         }
     }
 
-    async storeFarmData(data: any) {
+    // async storeFarmData(data: any) {
 
-        const uniqueId = randomUUID(); // Generating a unique ID for the task
+    //     const uniqueId = randomUUID(); // Generating a unique ID for the task
 
-        try {
-            // Sending a message to the worker thread with the input number and unique ID
-            const workerPostmessage = this.Farmworker.postMessage({
-                data: data,
-                id: uniqueId
-            });
+    //     try {
+    //         // Sending a message to the worker thread with the input number and unique ID
+    //         const workerPostmessage = this.Farmworker.postMessage({
+    //             data: JSON.parse(data),
+    //             id: uniqueId
+    //         });
 
-            // Returning a promise that resolves with the result of the files 
-            const returnValue = firstValueFrom(
-                // Convert the observable to a promise
-                this.messages$.pipe(
-                    // Filter messages to only include those with the matching unique ID
-                    filter(({ id }) => id === uniqueId),
-                    // Extract the result from the message
-                    map(({ result }) => result),
-                ),
-            );
+    //         // Returning a promise that resolves with the result of the files 
+    //         const returnValue = firstValueFrom(
+    //             // Convert the observable to a promise
+    //             this.messages2$.pipe(
+    //                 // Filter messages to only include those with the matching unique ID
+    //                 filter(({ id }) => id === uniqueId),
+    //                 // Extract the result from the message
+    //                 map(({ result }) => result),
+    //             ),
+    //         );
 
-            return returnValue;
-        } catch (error) {
-            this.logger.error(
-                `Error creating farmer data  \n\n ${error}`,
-                FieldWorkerHost.name,
-            );
-            throw new HttpException('Error creating farmer data', HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+    //         return returnValue;
+    //     } catch (error) {
+    //         this.logger.error(
+    //             `Error creating farmer data  \n\n ${error}`,
+    //             FieldWorkerHost.name,
+    //         );
+    //         throw new HttpException('Error creating farmer data', HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
 
-    async storeTraingSessionData(data: any) {
+    // async storeTraingSessionData(data: any) {
 
-        const uniqueId = randomUUID(); // Generating a unique ID for the task
+    //     const uniqueId = randomUUID(); // Generating a unique ID for the task
 
-        try {
-            // Sending a message to the worker thread with the input number and unique ID
-            const workerPostmessage = this.Farmworker.postMessage({
-                data: data,
-                id: uniqueId
-            });
+    //     try {
+    //         // Sending a message to the worker thread with the input number and unique ID
+    //         const workerPostmessage = this.Farmworker.postMessage({
+    //             data: data,
+    //             id: uniqueId
+    //         });
 
-            // Returning a promise that resolves with the result of the files 
-            const returnValue = firstValueFrom(
-                // Convert the observable to a promise
-                this.messages$.pipe(
-                    // Filter messages to only include those with the matching unique ID
-                    filter(({ id }) => id === uniqueId),
-                    // Extract the result from the message
-                    map(({ result }) => result),
-                ),
-            );
+    //         // Returning a promise that resolves with the result of the files 
+    //         const returnValue = firstValueFrom(
+    //             // Convert the observable to a promise
+    //             this.messages1$.pipe(
+    //                 // Filter messages to only include those with the matching unique ID
+    //                 filter(({ id }) => id === uniqueId),
+    //                 // Extract the result from the message
+    //                 map(({ result }) => result),
+    //             ),
+    //         );
 
-            return returnValue;
-        } catch (error) {
-            this.logger.error(
-                `Error creating farmer data  \n\n ${error}`,
-                FieldWorkerHost.name,
-            );
-            throw new HttpException('Error creating farmer data', HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+    //         return returnValue;
+    //     } catch (error) {
+    //         this.logger.error(
+    //             `Error creating farmer data  \n\n ${error}`,
+    //             FieldWorkerHost.name,
+    //         );
+    //         throw new HttpException('Error creating farmer data', HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
 
-    async storeParticipantToTrainingSession(data: any) {
+    // async storeParticipantToTrainingSession(data: any) {
 
-        const uniqueId = randomUUID(); // Generating a unique ID for the task
+    //     const uniqueId = randomUUID(); // Generating a unique ID for the task
 
-        try {
-            // Sending a message to the worker thread with the input number and unique ID
-            const workerPostmessage = this.Farmworker.postMessage({
-                data: data,
-                id: uniqueId
-            });
+    //     try {
+    //         // Sending a message to the worker thread with the input number and unique ID
+    //         const workerPostmessage = this.Farmworker.postMessage({
+    //             data: data,
+    //             id: uniqueId
+    //         });
 
-            // Returning a promise that resolves with the result of the files 
-            const returnValue = firstValueFrom(
-                // Convert the observable to a promise
-                this.messages$.pipe(
-                    // Filter messages to only include those with the matching unique ID
-                    filter(({ id }) => id === uniqueId),
-                    // Extract the result from the message
-                    map(({ result }) => result),
-                ),
-            );
+    //         // Returning a promise that resolves with the result of the files 
+    //         const returnValue = firstValueFrom(
+    //             // Convert the observable to a promise
+    //             this.messages$.pipe(
+    //                 // Filter messages to only include those with the matching unique ID
+    //                 filter(({ id }) => id === uniqueId),
+    //                 // Extract the result from the message
+    //                 map(({ result }) => result),
+    //             ),
+    //         );
 
-            return returnValue;
-        } catch (error) {
-            this.logger.error(
-                `Error creating farmer data  \n\n ${error}`,
-                FieldWorkerHost.name,
-            );
-            throw new HttpException('Error creating farmer data', HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+    //         return returnValue;
+    //     } catch (error) {
+    //         this.logger.error(
+    //             `Error creating farmer data  \n\n ${error}`,
+    //             FieldWorkerHost.name,
+    //         );
+    //         throw new HttpException('Error creating farmer data', HttpStatus.INTERNAL_SERVER_ERROR);
+    //     }
+    // }
 }

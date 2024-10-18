@@ -32,13 +32,15 @@ export class ProjectAssigneeService {
     }
   }
 
-  async findAll(project_id?: string) {
+  async getAllAssigneeFromThisProject(code?: string) {
     let options = {}
-    // we need all the assignees for this project
-    if (project_id)
+    // we need all the assignees involved in this project code.
+
+
+    if (code)
       options = {
         projectCodes: {
-          has: project_id
+          has: code
         }
       }
 
@@ -48,9 +50,7 @@ export class ProjectAssigneeService {
       });
       if (typeof data != 'undefined' && data.length)
         return {
-          data: data.map((a) => {
-            return { agentCode: a.agentCode, projectCodes: a.projectCodes, fullName: a.fullName };
-          }),
+          data: data?.map((a) => a.agentCode),
           message: "sucessfully fetched project codes assigned to this user",
           status: 200
         }
@@ -64,6 +64,75 @@ export class ProjectAssigneeService {
       throw new HttpException('Failed to fetch assigned  project codes to this user', HttpStatus.NOT_FOUND);
     }
   }
+
+  /**
+   * some assignees have as agentCode the project code. so we need to recover 
+   * all the their uuid which are strings in their corresponding projectCode.
+   * see this   const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
+      await this.projectAssigneeService.create({
+        agentCode: projectCode,
+        projectCodes: [uuid]
+      })
+   */
+  async getAllTheUuidsFromTheCodesList(projectCodes: string[]) {
+    try {
+
+      // need all assignees that has agentCode as projectCode. then retrieve its uuid since their projectCodes is of length 1.
+      const assignees = await this.prismaService.assignee.findMany({
+        where: {
+          agentCode: {
+            in: [...projectCodes]
+          }
+        },
+        select: {
+          projectCodes: true
+        }
+      })
+
+      if (assignees?.flat(1).length) { // if they exist
+        return assignees?.map(a => a?.projectCodes[0])
+      }
+      else return [];
+    } catch (error) {
+      this.logger.error(`Failed to fetch assigned project codes UUIDs \n\n ${error}`, ProjectAssigneeService.name);
+      throw new HttpException('Failed to fetch assigned  project codes UUIDs', HttpStatus.NOT_FOUND);
+    }
+  }
+
+
+  async findAll(agentCode?: string) {
+    let options = {}
+    // we need all the projects code assigned to this agent code
+
+    try {
+      // retrieve first the uuid corresponding to this code
+      const data = await this.prismaService.assignee.findUnique({
+        where: {
+          agentCode: agentCode ?? ""
+        },
+        select: {
+          projectCodes: true,
+        }
+      })
+
+
+      if (typeof data != 'undefined' && data?.projectCodes.length)
+        return {
+          data: data?.projectCodes,
+          message: "sucessfully fetched project codes assigned to this user",
+          status: 200
+        }
+      return {
+        data: null,
+        message: "Failed to fetch assigned project codes for this user code",
+        status: 400
+      }
+    } catch (error) {
+      this.logger.error(`Failed to fetch assigned project codes for this user \n\n ${error}`, ProjectAssigneeService.name);
+      throw new HttpException('Failed to fetch assigned  project codes to this user', HttpStatus.NOT_FOUND);
+    }
+  }
+
 
   // get all project codes for this agent
   async findOne(id: string) {

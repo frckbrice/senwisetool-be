@@ -10,7 +10,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { CampaignService } from './campaigns.service';
-import { UpdateCampaignDto } from './dto/update-campaign.dto';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Prisma, Role } from '@prisma/client';
@@ -44,6 +43,11 @@ export class CampaignsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.campaignsService.findOne(id);
+  }
+
+  @Get('current')
+  findCurrentCampaign() {
+    return this.campaignsService.getCurrentCampaign();
   }
 
   @Patch(':id')

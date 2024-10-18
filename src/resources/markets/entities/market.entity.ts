@@ -18,4 +18,5 @@ export class MarketEntity implements Market {
     product_quantity: number;
     campaign_id: string;
     type_of_market: $Enums.MarketType;
+    price_of_theday: number;
 }
