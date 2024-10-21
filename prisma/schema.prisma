@@ -1,4 +1,4 @@
-// This is your Prisma schema file,
+  // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
@@ -151,7 +151,7 @@ model Company {
 
   logo  String ? 
   // to constraint companies to add an email for reclamations directed to the head office support
-head_office_email String 
+  head_office_email String 
 
   payment_mode String ?
   company_paypal_email String ?
@@ -166,10 +166,11 @@ head_office_email String
   region String
   timezone String @default("UTC")
 
-// the case where the company account will be deactivate
+  // the case where the company account will be deactivate
   status CompanyStatus ? 
   users  User[]
   projects Project[]
+  assignee Assignee[]
   campaigns Company_Campaign[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -197,6 +198,8 @@ model Assignee {
   agentCode  String @unique
   projectCodes  String[]
   fullName String?
+  company_id String
+  Company  Company @relation(fields: [company_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   deleted_at DateTime @updatedAt
@@ -525,10 +528,10 @@ model Market {
   description String
   location String
   type_of_market MarketType @default(COCOA)
-  bordereau_vente_url String
-  bon_entree_magazin_url String
+  bordereau_vente_url String ?
+  bon_entree_magazin_url String ?
 
-  status CampaignStatus @default(CLOSED) // to specify if the market is closed or open. we are just re-using the Status already created for campain
+  status CampaignStatus @default(OPEN) // to specify if the market is closed or open. we are just re-using the Status already created for campain
   // when the market is closed we generate a code that represent the stock for that market.
   code String ? @unique
   // this represnt the total number of bags bought during this market.
@@ -549,7 +552,7 @@ model Receipt {
   market_id String
   village String
   farmer_id String @unique
-market_number Int
+  market_code String
   date DateTime 
   weight Float
   humidity String

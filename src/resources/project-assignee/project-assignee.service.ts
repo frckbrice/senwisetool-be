@@ -12,6 +12,7 @@ export class ProjectAssigneeService {
   async create(createProjectAssigneeDto: Prisma.AssigneeCreateInput) {
 
     try {
+      console.log("project assignee from servce => ", createProjectAssigneeDto)
       const data = await this.prismaService.assignee.create({
         data: createProjectAssigneeDto
       });

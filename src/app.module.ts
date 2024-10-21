@@ -23,7 +23,6 @@ import { ReceiptsModule } from './resources/receipts/receipts.module';
 import { TransactionsModule } from './resources/transactions/transactions.module';
 import { SubscriptionsModule } from './resources/subscriptions/subscriptions.module';
 import { PricesModule } from './resources/prices/prices.module';
-import { RequirementModule } from './resources/requirements/requirement.module';
 import { ShareModule } from './global/share/share.module';
 import { FarmersModule } from './resources/farmers/farmers.module';
 import { FarmsModule } from './resources/farms/farms.module';
@@ -36,7 +35,6 @@ import { TrainingsModule } from './resources/trainings/trainings.module';
 import { HealthModule } from './resources/health/health.module';
 import { TrainingSessionModule } from './resources/training_session/training_session.module';
 import { MailModule } from './global/share/mail/mail.module';
-import { RequirementPricePlanModule } from './resources/requirement_price-plan/requirement_price-plan.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
 import { APP_INTERCEPTOR } from '@nestjs/core';
@@ -73,7 +71,6 @@ import { ProjectAssigneeModule } from './resources/project-assignee/project-assi
     SubscriptionsModule,
     PricesModule,
     PrismaModule,
-    RequirementModule,
     FarmersModule,
     FarmsModule,
     MyLoggerModule,
@@ -83,7 +80,6 @@ import { ProjectAssigneeModule } from './resources/project-assignee/project-assi
     HealthModule,
     TrainingSessionModule,
     MailModule,
-    RequirementPricePlanModule,
     CompanyCampaignModule,
     ProjectAssigneeModule,
   ],

@@ -1,4 +1,4 @@
-import {
+/* import {
   Controller,
   Post,
   Body,
@@ -45,3 +45,4 @@ export class RequirementPricePlanController {
     return this.requirementPricePlanService.update(id, updateChapterDto);
   }
 }
+*/

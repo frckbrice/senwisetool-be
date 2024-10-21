@@ -50,12 +50,12 @@ export class MarketsService {
         });
 
         // set the market audit to know who is in charge of the market
-        await tx.market_audit.create({
-          data: {
-            market_id: result.id,
-            user_id: user_id,
-          },
-        });
+        // await tx.market_audit.create({
+        //   data: {
+        //     market_id: result.id,
+        //     user_id: user_id,
+        //   },
+        // });
 
         return result;
       });

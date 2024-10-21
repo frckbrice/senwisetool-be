@@ -21,7 +21,6 @@ import {
   SubscriptionStatus,
 } from '@prisma/client';
 import moment, { now } from 'moment-timezone';
-import { RequirementPricePlanService } from '../requirement_price-plan/requirement_price-plan.service';
 import { SubscriptionEntity } from './entities/subscription.entity';
 import { ApplyNixins } from 'src/global/utils/create-object-type';
 

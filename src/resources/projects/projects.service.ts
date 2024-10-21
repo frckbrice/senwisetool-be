@@ -32,6 +32,7 @@ export class ProjectsService {
     user_id: string;
   }) {
     // avoid creating the same project twice
+
     const project = await this.prismaService.project.findFirst({
       where: {
         slug: this.slugify.slugify(createProjectDto.title),
@@ -46,6 +47,7 @@ export class ProjectsService {
       };
 
     // validate date so that end date should be greater than start date
+    console.log(createProjectDto.Company)
     if (createProjectDto.start_date > createProjectDto.end_date)
       return {
         data: null,
@@ -64,7 +66,12 @@ export class ProjectsService {
       const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
       await this.projectAssigneeService.create({
         agentCode: projectCode,
-        projectCodes: [uuid]
+        projectCodes: [uuid],
+        Company: {
+          create: undefined,
+          connectOrCreate: undefined,
+          connect: undefined
+        }
       })
 
 
