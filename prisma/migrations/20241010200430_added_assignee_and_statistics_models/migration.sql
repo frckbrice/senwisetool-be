@@ -1,4 +1,0 @@
--- AlterTable
-ALTER TABLE "Assignee" ADD COLUMN     "projects" TEXT[],
-ALTER COLUMN "code" SET NOT NULL,
-ALTER COLUMN "code" SET DATA TYPE TEXT;
