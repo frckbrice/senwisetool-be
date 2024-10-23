@@ -26,6 +26,15 @@ export class ProjectAssigneeController {
     return this.projectAssigneeService.findAll(query.agentCode);
   }
 
+  // GET ALL SUBACCOUNTS OF A COMPANY
+  @Get('perCompany')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADG, Role.AUDITOR, Role.IT_SUPPORT)
+  findAllSubAccounts(@Query() query: { company_id: string }) {
+    return this.projectAssigneeService.findAllSubAccounts(query.company_id)
+  }
+
+
   @Get(':id')
   @Roles(Role.ADG, Role.AUDITOR)
   @UseGuards(RolesGuard)

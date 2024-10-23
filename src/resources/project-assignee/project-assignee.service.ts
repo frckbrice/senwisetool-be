@@ -134,6 +134,35 @@ export class ProjectAssigneeService {
     }
   }
 
+  // find all sub accounts per company
+  async findAllSubAccounts(company_id: string) {
+
+    try {
+
+      const data = await this.prismaService.assignee.findMany({
+        // where: {
+        //   company_id
+        // }
+      })
+      if (data) 
+        return {
+          data: data,
+          message: "Successfully fetch all su accounts",
+          status: 200
+      }
+      return {
+        data: null,
+        message: "Failed fetching subaccounts",
+        status: 400
+      }
+    } catch (error) {
+      console.log(error)
+      this.logger.error(`Failed to fetch all sub accounts for this company\n\n ${error}`, ProjectAssigneeService.name)
+      throw new HttpException('failed to fetch all sub accounts for this company', HttpStatus.NOT_FOUND)
+
+    }
+  }
+
 
   // get all project codes for this agent
   async findOne(id: string) {

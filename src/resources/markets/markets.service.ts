@@ -118,15 +118,23 @@ export class MarketsService {
     };
     // find all the market with the latest start date with its status and type
     try {
+      console.log('fetching markets')
       const [total, markets] = await this.prismaService.$transaction([
         this.prismaService.market.count(),
-        this.prismaService.market.findMany(Query),
+        this.prismaService.market.findMany({
+          ...Query,
+          include: {
+            transaction: true,
+            receipts: true
+          }
+        }),
       ]);
       if (markets.length)
         return {
           status: 200,
           message: 'markets fetched successfully',
-          data: agentCode ? markets.map((m) => ({})) : [],
+          // data: agentCode ? markets.map((m) => ({})) : [],
+          data: markets,
           total,
           page: query.page ?? 0,
           perPage: query.perPage ?? 20,
@@ -279,7 +287,6 @@ export class MarketsService {
         },
         select: {
           id: true,
-          market_number: true,
           start_date: true,
           end_date: true,
           status: true,

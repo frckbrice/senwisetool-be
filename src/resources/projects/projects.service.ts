@@ -47,7 +47,7 @@ export class ProjectsService {
       };
 
     // validate date so that end date should be greater than start date
-    console.log(createProjectDto.Company)
+    console.log(createProjectDto)
     if (createProjectDto.start_date > createProjectDto.end_date)
       return {
         data: null,
@@ -67,11 +67,6 @@ export class ProjectsService {
       await this.projectAssigneeService.create({
         agentCode: projectCode,
         projectCodes: [uuid],
-        Company: {
-          create: undefined,
-          connectOrCreate: undefined,
-          connect: undefined
-        }
       })
 
 
