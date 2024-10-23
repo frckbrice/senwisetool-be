@@ -4,7 +4,6 @@ export class FarmerType implements Farmer {
     certification_year: string;
     company_id: string;
     farmer_ID_card_number: string;
-    farmer_code: string;
     farmer_contact: string;
     farmer_name: string;
     farmer_photos: string[];

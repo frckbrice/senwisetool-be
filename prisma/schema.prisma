@@ -1,4 +1,4 @@
-  // This is your Prisma schema file,
+// This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
@@ -151,7 +151,7 @@ model Company {
 
   logo  String ? 
   // to constraint companies to add an email for reclamations directed to the head office support
-  head_office_email String 
+head_office_email String 
 
   payment_mode String ?
   company_paypal_email String ?
@@ -166,11 +166,10 @@ model Company {
   region String
   timezone String @default("UTC")
 
-  // the case where the company account will be deactivate
+// the case where the company account will be deactivate
   status CompanyStatus ? 
   users  User[]
   projects Project[]
-  // assignee Assignee[]
   campaigns Company_Campaign[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -198,8 +197,6 @@ model Assignee {
   agentCode  String @unique
   projectCodes  String[]
   fullName String?
-  // company_id String
-  // Company  Company @relation(fields: [company_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   deleted_at DateTime @updatedAt
@@ -347,7 +344,7 @@ model Farm {
   village String
   plantation_creation_date DateTime
   farm_image_url String
-  surface_area Float
+  estimate_area Float
   user User @relation(fields: [farmer_id], references: [id])
   plantation_photos String[]
   mapping_coodinates Farm_coordinates[]
@@ -522,19 +519,20 @@ model Market {
   company_id String
   start_date DateTime
   end_date DateTime
+  // market_number Int
   price_of_theday Int
 
-  description String ?
+  description String
   location String
   type_of_market MarketType @default(COCOA)
-  bordereau_vente_url String ?
-  bon_entree_magazin_url String ?
+  bordereau_vente_url String
+  bon_entree_magazin_url String
 
-  status CampaignStatus @default(OPEN) // to specify if the market is closed or open. we are just re-using the Status already created for campain
+  status CampaignStatus @default(CLOSED) // to specify if the market is closed or open. we are just re-using the Status already created for campain
   // when the market is closed we generate a code that represent the stock for that market.
   code String ? @unique
   // this represnt the total number of bags bought during this market.
-  product_quantity Int ?
+  product_quantity Int
   company Company @relation(fields: [company_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -551,7 +549,7 @@ model Receipt {
   market_id String
   village String
   farmer_id String @unique
-  market_code String
+market_number Int
   date DateTime 
   weight Float
   humidity String

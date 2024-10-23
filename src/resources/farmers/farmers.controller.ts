@@ -28,7 +28,8 @@ export class FarmersController {
   @Get()
   findAll(
     @Query() query: any,
-    @CurrentUser() user: Partial<User>
+    @CurrentUser() user: Partial<User>,
+
   ) {
     return this.farmerService.findAll(query, <string>user?.company_id);
   }
