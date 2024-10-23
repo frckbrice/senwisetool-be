@@ -49,12 +49,12 @@ export class ProjectsController {
   ) {
     return this.projectsService.create({
       createProjectDto,
-      user_id: <string>user.id,
+      company_id: <string>user.company_id,
     });
   }
 
   @Get()
-  @ApiOperation({ summary: 'Find all projects ' })
+  @ApiOperation({ summary: 'Find all projects' })
   @ApiResponse({
     status: 200,
     description: 'The projects has been successfully fetched.',

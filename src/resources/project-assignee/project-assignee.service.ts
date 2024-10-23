@@ -35,8 +35,12 @@ export class ProjectAssigneeService {
 
   async getAllAssigneeFromThisProject(code?: string) {
     let options = {}
-    // we need all the assignees involved in this project code.
-
+    // 
+    /**
+     * we need all the assignees involved in this project code. 
+     * ie all the project assigned to this code
+     * since sometimes assignee agencode is a project code
+     */
 
     if (code)
       options = {
@@ -78,7 +82,8 @@ export class ProjectAssigneeService {
   async getAllTheUuidsFromTheCodesList(projectCodes: string[]) {
     try {
 
-      // need all assignees that has agentCode as projectCode. then retrieve its uuid since their projectCodes is of length 1.
+      // need all assignees that has agentCode as projectCode. 
+      // then retrieve its uuid since their projectCodes is of length 1.
       const assignees = await this.prismaService.assignee.findMany({
         where: {
           agentCode: {
@@ -100,10 +105,16 @@ export class ProjectAssigneeService {
     }
   }
 
-
+  // find all the project of one assigne having this agent code.
   async findAll(agentCode?: string) {
     let options = {}
     // we need all the projects code assigned to this agent code
+
+    if (!agentCode) return {
+      data: [],
+      message: "Please provide an agent code",
+      status: 400
+    }
 
     try {
       // retrieve first the uuid corresponding to this code
@@ -134,7 +145,7 @@ export class ProjectAssigneeService {
     }
   }
 
-  // find all sub accounts per company
+  // find 
   async findAllSubAccounts(company_id: string) {
 
     try {
@@ -144,12 +155,12 @@ export class ProjectAssigneeService {
         //   company_id
         // }
       })
-      if (data) 
+      if (data)
         return {
           data: data,
           message: "Successfully fetch all su accounts",
           status: 200
-      }
+        }
       return {
         data: null,
         message: "Failed fetching subaccounts",
@@ -162,6 +173,48 @@ export class ProjectAssigneeService {
 
     }
   }
+
+  async getAllTheAssigneesCodesFromAListOfProjectUuidsOfACompany(projectUuids: string[], company_id: string) {
+
+    try {
+
+      /**
+        the objective here is to get all the assignees based of their uuids
+        this is to be return on each project, market, GET request.
+       * 
+       */
+
+      const assignees = await this.prismaService.assignee.findMany({
+        where: {
+          projectCodes: {
+            hasSome: projectUuids,
+          },
+          company_id,
+        },
+        select: {
+          agentCode: true,
+          projectCodes: true
+        }
+      });
+      if (assignees)
+        return {
+          data: assignees,
+          message: "Successfully fetch all su accounts",
+          status: 200
+        }
+      return {
+        data: null,
+        message: "Failed fetching subaccounts",
+        status: 400
+      }
+    } catch (error) {
+      console.log(error)
+      this.logger.error(`Failed to fetch all sub accounts for this company\n\n ${error}`, ProjectAssigneeService.name)
+      throw new HttpException('failed to fetch all sub accounts for this company', HttpStatus.NOT_FOUND)
+
+    }
+  }
+
 
 
   // get all project codes for this agent
@@ -185,7 +238,7 @@ export class ProjectAssigneeService {
           status: 201
         }
       return {
-        data: null,
+        data: [],
         message: "Failed to fetch assigned project codes for this user code",
         status: 400
       }

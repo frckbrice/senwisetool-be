@@ -26,13 +26,15 @@ export class ProjectsService {
 
   async create({
     createProjectDto,
-    user_id,
+    company_id,
   }: {
     createProjectDto: Prisma.ProjectCreateInput;
-    user_id: string;
+    company_id: string;
   }) {
-    // avoid creating the same project twice
 
+
+
+    // avoid creating the same project twice with the same title
     const project = await this.prismaService.project.findFirst({
       where: {
         slug: this.slugify.slugify(createProjectDto.title),
@@ -55,9 +57,6 @@ export class ProjectsService {
         message: `End date should be greater than or equal to start date`,
       };
 
-
-
-
     try {
       /**
    * 1. create mapping with created uuid
@@ -67,8 +66,18 @@ export class ProjectsService {
       await this.projectAssigneeService.create({
         agentCode: projectCode,
         projectCodes: [uuid],
+        company_id
       })
 
+      // check if there is an existing project/assignee with the same code 4 digits
+      const existingAssignee = await this.projectAssigneeService.findOne(projectCode);
+      if (existingAssignee?.data?.length) {
+        return {
+          data: null,
+          message: 'this code is already in use, Please try again',
+          status: 400
+        }
+      }
 
       const result = await this.prismaService.$transaction(async (tx) => {
         const result = await tx.project.create({
@@ -158,22 +167,51 @@ export class ProjectsService {
         start_date: 'desc',
       },
     };
+
+    // for each project, assign its 4 dgits code
     // find all the project with the latest start date with its status and type
     try {
       const [total, projects] = await this.prismaService.$transaction([
         this.prismaService.project.count(),
         this.prismaService.project.findMany(Query),
       ]);
-      if (projects.length)
+      if (typeof projects != 'undefined' && projects.length) {
+        // get the list of project uuid code
+        const listOfUuidCodes = projects?.map((p) => p.code);
+        // get all the corresponding 4 digits codes for each project
+        const assignees =
+          await this.projectAssigneeService
+            .getAllTheAssigneesCodesFromAListOfProjectUuidsOfACompany(listOfUuidCodes, <string>company_id);
+
+        // Create mapping for matching uuids
+        const mappedList = assignees?.data?.flatMap(assignee =>
+          assignee.projectCodes
+            .filter(uuid => listOfUuidCodes.includes(uuid))
+            .map(uuid => ({
+              agentCode: assignee.agentCode,
+              uuid: uuid
+            }))
+        );
+        // assign coresponding code to each project.
+        const projectResponse = mappedList?.reduce((acc, curr, index) => {
+          if (acc.find(p => p.code === curr.uuid)) {
+            const val = acc[index]
+            acc = [...acc, { ...val, code: curr.agentCode }]
+          }
+          return acc
+        }, projects);
+
         return {
           status: 200,
           message: 'projects fetched successfully',
-          data: projects,
+          data: projectResponse,
           total,
           page: query.page ?? 0,
           perPage: query.perPage ?? 20,
           totalPages: Math.ceil(total / (query.perPage ?? 20)),
         };
+      }
+
       else
         return {
           status: 404,
@@ -528,6 +566,7 @@ export class ProjectsService {
 
         const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
 
+        // get all oject having the the uuid
         const projects = await this.prismaService.project.findMany({
           where: {
             code: {
@@ -540,15 +579,19 @@ export class ProjectsService {
             status: true,
             type: true,
             id: true,
-            title: true
+            title: true,
+
           },
         });
-        if (typeof projects != 'undefined' && projects.length)
+        if (typeof projects != 'undefined' && projects.length) {
+
           return {
             data: projects,
             status: HttpStatus.OK,
             message: "sucessfully fetched projects assigned to this agent",
           }
+        }
+
         return {
           data: [],
           status: HttpStatus.BAD_REQUEST,

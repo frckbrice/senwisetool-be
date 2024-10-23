@@ -138,10 +138,6 @@ model User {
 }
 
 
-
-
-
-
 model Company {
   id  String @id @default(cuid())
   name  String
@@ -196,10 +192,13 @@ model Assignee {
   id  String @id @default(cuid())
   agentCode  String @unique
   projectCodes  String[]
+  company_id  String @unique
   fullName String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   deleted_at DateTime @updatedAt
+
+  @@index([id, agentCode, company_id])
 }
 
 model Project {
@@ -332,9 +331,6 @@ model Farmer {
 
   @@index([id, farmer_ID_card_number, farmer_contact])
 }
-
-
-
 
 model Farm {
   id String @id @default(cuid())
@@ -527,6 +523,8 @@ model Market {
   type_of_market MarketType @default(COCOA)
   bordereau_vente_url String
   bon_entree_magazin_url String
+  accompanying_url String
+  transmission_url String
 
   status CampaignStatus @default(CLOSED) // to specify if the market is closed or open. we are just re-using the Status already created for campain
   // when the market is closed we generate a code that represent the stock for that market.
