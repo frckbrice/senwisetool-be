@@ -1,3 +1,4 @@
+/*
 import {
   HttpException,
   HttpStatus,
@@ -122,3 +123,4 @@ export class RequirementPricePlanService {
     return `This action removes a #${id} requirementPricePlan`;
   }
 }
+*/

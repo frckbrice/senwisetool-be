@@ -20,10 +20,10 @@ const production_server_url = `${process.env.PROD_API_URL} `;
 async function bootstrap() {
 
   // certificate options
-  const httpsOptions = {
-    key: fs.readFileSync('./key.pem'),
-    cert: fs.readFileSync('./cert.pem'),
-  };
+  // const httpsOptions = {
+  //   key: fs.readFileSync('./key.pem'),
+  //   cert: fs.readFileSync('./cert.pem'),
+  // };
   // const app = await NestFactory.create(AppModule, { cors: true, httpsOptions });
   const app = await NestFactory.create(AppModule, { cors: true });
 

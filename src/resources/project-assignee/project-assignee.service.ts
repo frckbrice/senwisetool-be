@@ -12,6 +12,7 @@ export class ProjectAssigneeService {
   async create(createProjectAssigneeDto: Prisma.AssigneeCreateInput) {
 
     try {
+      console.log("project assignee from servce => ", createProjectAssigneeDto)
       const data = await this.prismaService.assignee.create({
         data: createProjectAssigneeDto
       });
@@ -130,6 +131,35 @@ export class ProjectAssigneeService {
     } catch (error) {
       this.logger.error(`Failed to fetch assigned project codes for this user \n\n ${error}`, ProjectAssigneeService.name);
       throw new HttpException('Failed to fetch assigned  project codes to this user', HttpStatus.NOT_FOUND);
+    }
+  }
+
+  // find all sub accounts per company
+  async findAllSubAccounts(company_id: string) {
+
+    try {
+
+      const data = await this.prismaService.assignee.findMany({
+        // where: {
+        //   company_id
+        // }
+      })
+      if (data) 
+        return {
+          data: data,
+          message: "Successfully fetch all su accounts",
+          status: 200
+      }
+      return {
+        data: null,
+        message: "Failed fetching subaccounts",
+        status: 400
+      }
+    } catch (error) {
+      console.log(error)
+      this.logger.error(`Failed to fetch all sub accounts for this company\n\n ${error}`, ProjectAssigneeService.name)
+      throw new HttpException('failed to fetch all sub accounts for this company', HttpStatus.NOT_FOUND)
+
     }
   }
 

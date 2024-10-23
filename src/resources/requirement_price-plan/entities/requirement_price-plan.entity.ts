@@ -1,4 +1,4 @@
-import { Prisma, Price_plan_requirement } from '@prisma/client';
+/* import { Prisma, Price_plan_requirement } from '@prisma/client';
 
 export class RequirementPricePlan implements Price_plan_requirement {
   created_at: Date;
@@ -7,3 +7,4 @@ export class RequirementPricePlan implements Price_plan_requirement {
   req_id: string;
   updated_at: Date;
 }
+*/
