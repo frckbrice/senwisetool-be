@@ -216,7 +216,10 @@ export class CampaignService {
   }
 
   // get the current campaign
-  async getCurrentCampaign(): Promise<Partial<Campaign> | null> {
+  async getCurrentCampaign(): Promise<{
+    name: string,
+    id: string
+  } | null> {
     const currentDate = new Date();
 
     const currentAcademicYearStart = new Date(currentDate.getFullYear(), 0, 1); // get the first day of the current year

@@ -19,4 +19,6 @@ export class MarketEntity implements Market {
     campaign_id: string;
     type_of_market: $Enums.MarketType;
     price_of_theday: number;
+    accompanying_url: string;
+    transmission_url: string;
 }

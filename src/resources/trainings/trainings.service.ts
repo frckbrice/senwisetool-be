@@ -86,28 +86,11 @@ export class TrainingService {
 
   async findAll(query: Partial<PaginationTrainingQueryDto> | any, company_id: string) {
     // find all the training with the latest start date with its status and type
-    const { page, perPage, location, phone, agentCode } = query;
+    const { page, perPage, location, agentCode } = query;
     console.log({ page, perPage, location })
 
     if (agentCode) {
-      const listOfCodes = (await this.projectAssigneeService.findOne(agentCode))?.data;
-      if (!listOfCodes?.length)
-        return {
-          data: [],
-          status: 200,
-          message: 'No training assigned to this agent',
-        };
-      const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
-
-      return await this.prismaService.project.findMany({
-        where: {
-          code: {
-            in: listOfUuids ? listOfUuids : [],
-          },
-          status: ProjectStatus.DEPLOYED,
-          company_id,
-        },
-      });
+      return this.getAllAssignedProjects(agentCode, company_id)
     }
 
 
@@ -132,32 +115,46 @@ export class TrainingService {
         this.prismaService.training.findMany({
           where: {
             ...where,
-            status: phone ? "DEPLOYED" : undefined,
             company_id
           }
         }),
       ]);
       console.log("trainings:", trainings)
-      if (trainings.length && !phone) {
+      if (trainings.length) {
+
+        // get the list of project uuid code
+        const listOfUuidCodes = trainings?.map((p) => p.code);
+        // get all the corresponding 4 digits codes for each project
+        const assignees =
+          await this.projectAssigneeService
+            .getAllTheAssigneesCodesFromAListOfProjectUuidsOfACompany(listOfUuidCodes, <string>company_id);
+
+        // Create mapping for matching uuids
+        const mappedList = assignees?.data?.flatMap(assignee =>
+          assignee.projectCodes
+            .filter(uuid => listOfUuidCodes.includes(uuid))
+            .map(uuid => ({
+              agentCode: assignee.agentCode,
+              uuid: uuid
+            }))
+        );
+        // assign coresponding code to each project.
+        const projectResponse = mappedList?.reduce((acc, curr, index) => {
+          if (acc.find(p => p.code === curr.uuid)) {
+            const val = acc[index]
+            acc = [...acc, { ...val, code: curr.agentCode }]
+          }
+          return acc
+        }, trainings);
+
         return {
           status: 200,
           message: 'trainings fetched successfully',
-          data: trainings,
+          data: projectResponse,
           total,
           page: query.page ?? 0,
           perPage: query.perPage ?? 20,
           totalPages: Math.ceil(total / (query.perPage ?? 20)),
-        };
-      } else if (phone) {
-        return {
-          status: 200,
-          message: 'trainings fetched successfully',
-          data: trainings?.map(t => ({
-            id: t.id,
-            title: t.title,
-            modules: t.modules,
-            status: t.status
-          }))
         };
       } else
         return {
@@ -175,6 +172,58 @@ export class TrainingService {
         TrainingService.name,
       );
       throw new NotFoundException('Error fetching trainings');
+    }
+  }
+
+  //  // get all the projects assigned to an agent
+  async getAllAssignedProjects(agentCode: string, company_id?: string) {
+    try {
+      // get list of projects codes assigned to this agent
+      const listOfCodes = (await this.projectAssigneeService.findOne(agentCode))?.data;
+      if (listOfCodes?.length) {
+
+        const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
+
+        // get all oject having the the uuid
+        const projects = await this.prismaService.training.findMany({
+          where: {
+            code: {
+              in: [...listOfUuids!]
+            },
+            status: ProjectStatus.DEPLOYED,
+            company_id
+          },
+          select: {
+            status: true,
+            id: true,
+            title: true,
+
+          },
+        });
+        if (typeof projects != 'undefined' && projects.length) {
+
+          return {
+            data: projects,
+            status: HttpStatus.OK,
+            message: "sucessfully fetched projects assigned to this agent",
+          }
+        }
+
+        return {
+          data: [],
+          status: HttpStatus.BAD_REQUEST,
+          message: "Failed to fetch projects assigned to this agent",
+        }
+
+      } else return {
+        data: [],
+        status: HttpStatus.BAD_REQUEST,
+        message: "This code has No projects assigned to.",
+      }
+
+    } catch (err) {
+      this.logger.error(`Failed to fetch projects assigned to this agent \n\n ${err}`, TrainingService.name);
+      throw new HttpException('Failed to fetch projects assigned to this agent', HttpStatus.NOT_FOUND);
     }
   }
 

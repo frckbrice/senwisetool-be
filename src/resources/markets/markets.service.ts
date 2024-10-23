@@ -11,6 +11,7 @@ import { PaginationMarketQueryDto } from './dto/paginate-markets.dto';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { generateMapping } from '../projects/create-code-project-mapping';
 import { ProjectAssigneeService } from '../project-assignee/project-assignee.service';
+import { CampaignService } from '../campaigns/campaigns.service';
 
 @Injectable()
 export class MarketsService {
@@ -18,7 +19,8 @@ export class MarketsService {
 
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly projectAssigneeService: ProjectAssigneeService
+    private readonly projectAssigneeService: ProjectAssigneeService,
+    private campaignService: CampaignService
   ) { }
 
 
@@ -45,7 +47,8 @@ export class MarketsService {
         const result = await tx.market.create({
           data: {
             ...createMarketDto,
-            code: UID
+            code: UID,
+            end_date: "1970-01-01T00:00:00+01:00",
           },
         });
 
@@ -82,7 +85,8 @@ export class MarketsService {
   }
 
   async findAll(query: Partial<PaginationMarketQueryDto>, company_id: string) {
-    const { status, type, page, perPage, search, campaign_id, agentCode } = query;
+    const { status, type, page, perPage,
+      search, campaign_id, agentCode } = query;
     const where = Object.create({});
     let Query = Object.create({ where });
 
@@ -107,7 +111,8 @@ export class MarketsService {
     }
 
     if (search)
-      where["search"] = search
+      where["search"] = search;
+
     Query = {
       ...Query,
       take: perPage ?? 20,
@@ -115,6 +120,7 @@ export class MarketsService {
       orderBy: {
         start_date: 'desc',
       },
+
     };
     // find all the market with the latest start date with its status and type
     try {
@@ -158,11 +164,27 @@ export class MarketsService {
 
   async findOne(market_id: string) {
 
+    // get current campain
+    const currentCampaign = await this.campaignService.getCurrentCampaign();
+    //  market_id.length <= 5 means the market_id is the code.
+
+
     try {
-      const result = await this.prismaService.market.findUnique({
+      const result = await this.prismaService.market.findFirst({
         where: {
-          id: market_id
+          id: market_id,
+          campaign_id: currentCampaign?.id as string
         },
+        // select: {
+        //   market_number: true,
+        //   start_date: true,
+        //   end_date: true,
+        //   status: true,
+        //   company_id: true,
+        // },
+        orderBy: {
+          created_at: 'desc'
+        }
       });
 
       if (result)
@@ -271,7 +293,7 @@ export class MarketsService {
   // get the assigned market 
   async getTheAssignedMarket(agentCode: string, company_id: string) {
     try {
-      const currentData = new Date(Date.now()).toISOString();
+      const currentDate = new Date(Date.now()).toISOString();
       console.log("request market by agent code: " + agentCode);
       const listOfMarkets = await this.projectAssigneeService.findOne(agentCode);
       const marketUUID = listOfMarkets?.data?.[0];
@@ -282,15 +304,25 @@ export class MarketsService {
             { code: marketUUID },
             { company_id },
             { status: CampaignStatus.OPEN }, // selct open market.
-            { start_date: { gte: currentData } }
+            { start_date: { gte: currentDate } }
           ]
         },
-        select: {
-          id: true,
-          start_date: true,
-          end_date: true,
-          status: true,
-          company_id: true,
+        // select: {
+        //   id: true,
+        //   market_number: true,
+        //   start_date: true,
+        //   end_date: true,
+        //   status: true,
+        //   company_id: true,
+        // },
+        include: {
+          company: {
+            select: {
+              id: true,
+              name: true,
+              logo: true
+            }
+          }
         }
       })
     } catch (error) {
