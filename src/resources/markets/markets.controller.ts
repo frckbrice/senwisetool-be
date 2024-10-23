@@ -52,7 +52,7 @@ export class MarketsController {
     });
   }
 
-  @Get()
+  @Get() // find market either by agentcode or all 
   @ApiOperation({ summary: 'Find all markets ' })
   @ApiResponse({
     status: 200,

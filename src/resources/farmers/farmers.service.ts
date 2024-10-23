@@ -76,7 +76,7 @@ export class FarmersService {
 
   async findAll(query: any, company_id: string) {
     // find all the farmer with the latest start date with its status and type
-    const { page, perPage } = query;
+    const { page, perPage, location, phone } = query;
     let Query = Object.create({});
     Query = {
       ...Query,
@@ -92,7 +92,8 @@ export class FarmersService {
         this.prismaService.farmer.count(),
         this.prismaService.farmer.findMany({
           where: {
-            company_id
+            company_id,
+            location: { contains: location },
           },
           ...Query,
         }),
@@ -101,7 +102,12 @@ export class FarmersService {
         return {
           status: 200,
           message: 'farmers fetched successfully',
-          data: farmers,
+          data: phone ? farmers?.map((f) => ({
+            farmer_name: f.farmer_name,
+            farmer_id: f.id,
+            farmer_ID_card_number: f.farmer_ID_card_number,
+            village: f.village
+          })) : farmers,
           total,
           page: query.page ?? 0,
           perPage: query.perPage ?? 20,

@@ -519,7 +519,7 @@ model Market {
   company_id String
   start_date DateTime
   end_date DateTime
-  market_number Int
+  // market_number Int
   price_of_theday Int
 
   description String
