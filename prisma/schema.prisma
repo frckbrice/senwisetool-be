@@ -147,7 +147,7 @@ model Company {
 
   logo  String ? 
   // to constraint companies to add an email for reclamations directed to the head office support
-head_office_email String 
+  head_office_email String 
 
   payment_mode String ?
   company_paypal_email String ?
@@ -162,7 +162,8 @@ head_office_email String
   region String
   timezone String @default("UTC")
 
-// the case where the company account will be deactivate
+  
+  // the case where the company account will be deactivate
   status CompanyStatus ? 
   users  User[]
   projects Project[]

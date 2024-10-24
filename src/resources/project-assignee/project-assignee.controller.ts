@@ -34,7 +34,6 @@ export class ProjectAssigneeController {
     return this.projectAssigneeService.findAllSubAccounts(query.company_id)
   }
 
-
   @Get(':id')
   @Roles(Role.ADG, Role.AUDITOR)
   @UseGuards(RolesGuard)
