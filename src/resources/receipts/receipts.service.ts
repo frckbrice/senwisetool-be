@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   HttpException,
   HttpStatus,
@@ -58,6 +59,32 @@ export class ReceiptService {
       }
 
     }
+=======
+import { Injectable } from '@nestjs/common';
+import { CreateReceiptDto } from './dto/create-receipt.dto';
+import { UpdateReceiptDto } from './dto/update-receipt.dto';
+import { LoggerService } from 'src/global/logger/logger.service';
+import { PrismaService } from 'src/adapters/config/prisma.service';
+
+@Injectable()
+export class ReceiptsService {
+  private logger = new LoggerService(ReceiptsService.name)
+  constructor(private prismaService: PrismaService) { }
+  
+  async create(createReceiptDto: CreateReceiptDto) {
+
+    try {
+      // const data = await this.prismaService.receipt.create({
+      //   data: createReceiptDto
+      // })
+
+
+    } catch (error) {
+
+    }
+
+    return 'This action adds a new receipt';
+>>>>>>> 959ac7a (receipts endpoints in creattion)
   }
 
   async findAll(query: any, company_id: string) {
