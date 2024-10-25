@@ -193,7 +193,7 @@ model Assignee {
   id  String @id @default(cuid())
   agentCode  String @unique
   projectCodes  String[]
-  company_id  String @unique
+  company_id  String
   fullName String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

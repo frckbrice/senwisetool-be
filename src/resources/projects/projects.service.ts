@@ -70,14 +70,14 @@ export class ProjectsService {
       })
 
       // check if there is an existing project/assignee with the same code 4 digits
-      const existingAssignee = await this.projectAssigneeService.findOne(projectCode);
-      if (existingAssignee?.data?.length) {
-        return {
-          data: null,
-          message: 'this code is already in use, Please try again',
-          status: 400
-        }
-      }
+      // const existingAssignee = await this.projectAssigneeService.findOne(projectCode);
+      // if (existingAssignee?.data?.length) {
+      //   return {
+      //     data: null,
+      //     message: 'this code is already in use, Please try again',
+      //     status: 400
+      //   }
+      // }
 
       const result = await this.prismaService.$transaction(async (tx) => {
         const result = await tx.project.create({

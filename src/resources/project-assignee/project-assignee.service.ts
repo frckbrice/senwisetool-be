@@ -151,9 +151,9 @@ export class ProjectAssigneeService {
     try {
 
       const data = await this.prismaService.assignee.findMany({
-        // where: {
-        //   company_id
-        // }
+        where: {
+          company_id
+        }
       })
       if (data)
         return {
