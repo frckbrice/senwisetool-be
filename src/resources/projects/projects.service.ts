@@ -57,7 +57,11 @@ export class ProjectsService {
     }
 
     // validate date so that end date should be greater than start date
+<<<<<<< HEAD
 
+=======
+    console.log("incomning project dto: ", createProjectDto)
+>>>>>>> 50af9ba (changes made before pull)
 
     if (createProjectDto.start_date > createProjectDto.end_date)
       return {
