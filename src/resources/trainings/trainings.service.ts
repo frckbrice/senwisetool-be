@@ -152,6 +152,8 @@ export class TrainingService {
           return acc
         }, trainings);
 
+        console.log('training response \n', projectResponse)
+
         return {
           status: 200,
           message: 'trainings fetched successfully',
