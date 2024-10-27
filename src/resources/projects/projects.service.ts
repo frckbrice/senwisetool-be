@@ -71,19 +71,7 @@ export class ProjectsService {
         company_id
       })
 
-<<<<<<< HEAD
       console.log("from project service assignee created : ", assignee);
-=======
-      // check if there is an existing project/assignee with the same code 4 digits
-      // const existingAssignee = await this.projectAssigneeService.findOne(projectCode);
-      // if (existingAssignee?.data?.length) {
-      //   return {
-      //     data: null,
-      //     message: 'this code is already in use, Please try again',
-      //     status: 400
-      //   }
-      // }
->>>>>>> 959ac7a (receipts endpoints in creattion)
 
       const result = await this.prismaService.project.create({
         data: {
