@@ -518,6 +518,7 @@ model Market {
   end_date DateTime
   // market_number Int
   price_of_theday Int
+  nom_fournisseur String
 
   description String
   location String

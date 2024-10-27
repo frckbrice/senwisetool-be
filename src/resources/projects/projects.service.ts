@@ -49,7 +49,6 @@ export class ProjectsService {
       };
 
     // validate date so that end date should be greater than start date
-    console.log(createProjectDto)
     if (createProjectDto.start_date > createProjectDto.end_date)
       return {
         data: null,
@@ -175,6 +174,7 @@ export class ProjectsService {
         this.prismaService.project.count(),
         this.prismaService.project.findMany(Query),
       ]);
+
       if (typeof projects != 'undefined' && projects.length) {
         // get the list of project uuid code
         const listOfUuidCodes = projects?.map((p) => p.code);
@@ -192,6 +192,7 @@ export class ProjectsService {
               uuid: uuid
             }))
         );
+
         // assign coresponding code to each project.
         const projectResponse = mappedList?.reduce((acc, curr, index) => {
           if (acc.find(p => p.code === curr.uuid)) {
