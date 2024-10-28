@@ -48,7 +48,8 @@ export class MarketsController {
   ) {
     return this.marketsService.create({
       createMarketDto,
-      user_id: <string>user.id,
+      user_id: <string>user?.id,
+      company_id: <string>user?.company_id
     });
   }
 

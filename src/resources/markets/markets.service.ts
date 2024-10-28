@@ -27,9 +27,11 @@ export class MarketsService {
   async create({
     createMarketDto,
     user_id,
+    company_id
   }: {
     createMarketDto: Prisma.MarketCreateInput;
     user_id: string;
+    company_id: string
   }) {
 
     // validate date so that end date should be greater than start date
@@ -40,8 +42,12 @@ export class MarketsService {
         message: `End date should be greater than or equal to start date`,
       };
 
-    const { uuid: UID, code: projectCode } = generateMapping(crypto.randomUUID());
-
+    const { uuid: UID, code: market_code } = generateMapping(crypto.randomUUID());
+    await this.projectAssigneeService.create({
+      agentCode: market_code,
+      projectCodes: [UID],
+      company_id
+    })
     try {
       const result = await this.prismaService.$transaction(async (tx) => {
         const result = await tx.market.create({
@@ -65,7 +71,7 @@ export class MarketsService {
 
       if (result)
         return {
-          data: { ...result, code: projectCode },
+          data: { ...result, code: market_code },
           status: 201,
           message: `market created successfully`,
         };
@@ -258,7 +264,7 @@ export class MarketsService {
   }
 
 
-  // update a single market
+  // update a single market 
   async remove({ market_id, user_id }: { market_id: string, user_id: string }) {
     try {
       const result = await this.prismaService.market.delete({

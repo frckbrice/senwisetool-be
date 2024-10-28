@@ -32,7 +32,7 @@ export class ProjectsService {
     company_id: string;
   }) {
 
-
+    console.log("before checking duplicate : ")
 
     // avoid creating the same project twice with the same title
     const project = await this.prismaService.project.findFirst({
@@ -41,15 +41,20 @@ export class ProjectsService {
       },
     });
 
-    if (project)
+
+
+    if (typeof project != 'undefined') {
+      console.log("after checking duplicate :existing, ", project);
       return {
         data: project,
-        status: HttpStatus.CONFLICT,
+        status: 409,
         message: `Project  ${createProjectDto.title} already exists`,
       };
 
+    }
+
     // validate date so that end date should be greater than start date
-    console.log(createProjectDto)
+    console.log("incomning project dto: ", createProjectDto)
     if (createProjectDto.start_date > createProjectDto.end_date)
       return {
         data: null,
@@ -58,53 +63,42 @@ export class ProjectsService {
       };
 
     try {
+      console.log("after checking data : ", createProjectDto)
+      // // check if there is an existing project/assignee with the same code 4 digits
+      // const existingAssignee = await this.projectAssigneeService.findOne(projectCode);
+      // if (existingAssignee?.data?.length) {
+      //   return {
+      //     data: null,
+      //     message: 'this code is already in use, Please try again',
+      //     status: 400
+      //   }
+      // }
+
       /**
    * 1. create mapping with created uuid
    * 2. persist this mapping in the DB for later retrieval 
    */
       const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
-      await this.projectAssigneeService.create({
+      const assignee = await this.projectAssigneeService.create({
         agentCode: projectCode,
         projectCodes: [uuid],
         company_id
       })
 
-      // check if there is an existing project/assignee with the same code 4 digits
-      const existingAssignee = await this.projectAssigneeService.findOne(projectCode);
-      if (existingAssignee?.data?.length) {
-        return {
-          data: null,
-          message: 'this code is already in use, Please try again',
-          status: 400
-        }
-      }
+      console.log("Assignee created: ", assignee)
 
-      const result = await this.prismaService.$transaction(async (tx) => {
-        const result = await tx.project.create({
-          data: {
-            ...createProjectDto,
-            slug: this.slugify.slugify(createProjectDto.title),
-            code: uuid,
-            deployed_at: "1970-01-01T00:00:00+01:00",
-            archived_at: "1970-01-01T00:00:00+01:00",
-            deleted_at: "1970-01-01T00:00:00+01:00",
-            updated_at: "1970-01-01T00:00:00+01:00",
-          },
-        });
-
-        // set the project audit to know who is in charge of the project
-        // await tx.project_audit.create({
-        //   data: {
-        //     project_id: result.id,
-        //     user_id: user_id,
-        //     type_of_project: result.type,
-        //     action: createProjectDto.status
-        //   },
-        // });
-
-        return result;
+      const result = await this.prismaService.project.create({
+        data: {
+          ...createProjectDto,
+          slug: this.slugify.slugify(createProjectDto.title),
+          code: uuid,
+          deployed_at: "1970-01-01T00:00:00+01:00",
+          archived_at: "1970-01-01T00:00:00+01:00",
+          deleted_at: "1970-01-01T00:00:00+01:00",
+          updated_at: "1970-01-01T00:00:00+01:00",
+        },
       });
-
+      console.log("project created: ", result)
       if (result) {
 
         return {
@@ -129,11 +123,13 @@ export class ProjectsService {
     }
   }
 
-  async findAll(query: Partial<PaginationProjectQueryDto> | any, company_id: string) {
+  async findAll(
+    query: Partial<PaginationProjectQueryDto> | any,
+    company_id: string) {
 
     const { status, type, page, perPage, search, campaign_id, } = query;
     const where = Object.create({ company_id });
-    let Query = Object.create({ where });
+    let q = Object.create({ where });
 
     if (status) {
       where['status'] = status;
@@ -150,17 +146,17 @@ export class ProjectsService {
     if (search)
       where["search"] = search
 
-    if (search)
-      where["search"] = search
-
+    // if (search)
+    //   where["search"] = search
+    console.log("incoming request before query.agentCode: ", query)
 
     // if we have assigned a query to the uri, we just return the corresponding function.
     if (query.agentCode)
       return this.getAllAssignedProjects(query.agentCode, company_id);
 
-
-    Query = {
-      ...Query,
+    console.log("incoming request after query.agentCode: ", query)
+    const options = {
+      ...q,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
@@ -173,7 +169,7 @@ export class ProjectsService {
     try {
       const [total, projects] = await this.prismaService.$transaction([
         this.prismaService.project.count(),
-        this.prismaService.project.findMany(Query),
+        this.prismaService.project.findMany(options),
       ]);
       if (typeof projects != 'undefined' && projects.length) {
         // get the list of project uuid code
@@ -454,7 +450,7 @@ export class ProjectsService {
         ProjectsService.name,
       );
       throw new InternalServerErrorException(
-        "Can't update a project list ",
+        "Can't update a project list",
       );
     }
   }
@@ -560,29 +556,64 @@ export class ProjectsService {
   // get all the projects assigned to an agent
   async getAllAssignedProjects(agentCode: string, company_id?: string) {
     try {
+      console.log("inside get all assigned projects ");
       // get list of projects codes assigned to this agent
       const listOfCodes = (await this.projectAssigneeService.findOne(agentCode))?.data;
       if (listOfCodes?.length) {
 
-        const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
+        console.log("list of  codes: ", listOfCodes)
+        let listOfUuids, projects;
+        if (listOfCodes.length === 1) {
 
-        // get all oject having the the uuid
-        const projects = await this.prismaService.project.findMany({
-          where: {
-            code: {
-              in: [...listOfUuids!]
+          // get all oject having the the uuid
+          const [codeVal] = listOfCodes;
+          console.log("value: ", codeVal);
+          projects = await this.prismaService.project.findMany({
+            where: {
+              code: codeVal,
+              status: ProjectStatus.DEPLOYED,
+              company_id: "cm2qjm4mg000dshwofqj1uplx",
             },
-            status: ProjectStatus.DEPLOYED,
-            company_id
-          },
-          select: {
-            status: true,
-            type: true,
-            id: true,
-            title: true,
+            select: {
+              status: true,
+              type: true,
+              id: true,
+              title: true,
+              project_structure: true,
+              campaign_id: true,
+              company_id: true,
+              city: true
+            },
+          });
+          console.log("current project : ", projects)
+        } else {
+          console.log("listOfCodes get  multiple code : ", listOfCodes);
+          listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes);
+          projects = await this.prismaService.project.findMany({
+            where: {
+              code: {
+                in: listOfUuids
+              },
+              status: ProjectStatus.DEPLOYED,
+              company_id
+            },
+            select: {
+              status: true,
+              type: true,
+              id: true,
+              title: true,
+              project_structure: true,
+              campaign_id: true,
+              company_id: true,
+              city: true
+            },
+          });
+        }
 
-          },
-        });
+
+        console.log("projects: ", projects);
+
+
         if (typeof projects != 'undefined' && projects.length) {
 
           return {

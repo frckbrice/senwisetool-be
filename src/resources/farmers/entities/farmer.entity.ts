@@ -16,4 +16,7 @@ export class FarmerType implements Farmer {
     village: string;
     weed_application: string;
     weed_application_quantity: number;
+    council: string;
+    created_at: Date;
+    updated_at: Date;
 }

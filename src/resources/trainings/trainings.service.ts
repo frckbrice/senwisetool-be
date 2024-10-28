@@ -36,7 +36,11 @@ export class TrainingService {
 
     // create a mapping code
     const { uuid, code: training_code } = generateMapping(crypto.randomUUID());
-
+    await this.projectAssigneeService.create({
+      agentCode: training_code,
+      projectCodes: [uuid],
+      company_id: <string>user?.company_id
+    })
     console.log("after creation: ", "training_code: ", training_code, "uuid: ", uuid)
 
     try {
@@ -181,25 +185,63 @@ export class TrainingService {
       // get list of projects codes assigned to this agent
       const listOfCodes = (await this.projectAssigneeService.findOne(agentCode))?.data;
       if (listOfCodes?.length) {
+        let listOfUuids, projects;
+        if (listOfCodes.length === 1) {
+          console.log("listOfCodes get one uuid: ", listOfCodes);
+          // get all oject having the the uuid
+          const [codeVal] = listOfCodes;
+          projects = await this.prismaService.training.findMany({
+            where: {
+              code: codeVal,
+              status: ProjectStatus.DEPLOYED,
+              company_id: "cm2o8s2d1000aiwig7n53l3e2",
+            },
+            select: {
+              status: true,
+              id: true,
+              title: true,
+              company_id: true
 
-        const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
+            },
+          });
+          console.log("current project : ", projects)
+        } else {
+          console.log("listOfCodes get multiple code: ", listOfCodes);
+          listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes);
+          projects = await this.prismaService.training.findMany({
+            where: {
+              code: {
+                in: listOfUuids
+              },
+              status: ProjectStatus.DEPLOYED,
+              company_id
+            },
+            select: {
+              status: true,
+              id: true,
+              title: true,
+              company_id: true
+            },
+          });
+        }
+        // const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
 
         // get all oject having the the uuid
-        const projects = await this.prismaService.training.findMany({
-          where: {
-            code: {
-              in: [...listOfUuids!]
-            },
-            status: ProjectStatus.DEPLOYED,
-            company_id
-          },
-          select: {
-            status: true,
-            id: true,
-            title: true,
+        // const projects = await this.prismaService.training.findMany({
+        //   where: {
+        //     code: {
+        //       in: [...listOfUuids!]
+        //     },
+        //     status: ProjectStatus.DEPLOYED,
+        //     company_id
+        //   },
+        //   select: {
+        //     status: true,
+        //     id: true,
+        //     title: true,
 
-          },
-        });
+        //   },
+        // });
         if (typeof projects != 'undefined' && projects.length) {
 
           return {

@@ -23,8 +23,10 @@ export class InspectionDataController {
   constructor(private readonly inspectionDataService: InspectionDataService) { }
 
   @Post()
+  @Roles(Role.ADG)
+  @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'create project data' })
-  create(@Body() createInspectionDatumDto: Prisma.Inspection_dataCreateInput,
+  create(@Body() createInspectionDatumDto: Prisma.Inspection_dataCreateInput & { council: string },
     @Query() query: { type: string }
   ) {
 

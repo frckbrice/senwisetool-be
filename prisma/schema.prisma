@@ -129,7 +129,7 @@ model User {
   famer_attached_contract_url   String ?
   company       Company @relation(fields: [company_id], references: [id])
   status        UserStatus
-  farm          Farm[] 
+  // farm          Farm[] 
   receipt       Receipt?
   // market_audit  Market_audit[]
   // training_audits Company_training_audit[]
@@ -163,7 +163,7 @@ head_office_email String
   timezone String @default("UTC")
 
 // the case where the company account will be deactivate
-  status CompanyStatus ? 
+  status CompanyStatus ? @default(INACTIVE)
   users  User[]
   projects Project[]
   campaigns Company_Campaign[]
@@ -192,7 +192,7 @@ model Assignee {
   id  String @id @default(cuid())
   agentCode  String @unique
   projectCodes  String[]
-  company_id  String @unique
+  company_id  String 
   fullName String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -316,7 +316,7 @@ model Farmer {
   company_id String 
   farmer_name String
   farmer_contact String
-
+council String
   farmer_ID_card_number String @unique
   inspection_date String
   village String
@@ -328,7 +328,9 @@ model Farmer {
   pesticide_used String
   pesticide_quantity Int
   farmer_photos String[]
-
+  farm Farm[]
+created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   @@index([id, farmer_ID_card_number, farmer_contact])
 }
 
@@ -339,9 +341,9 @@ model Farm {
 
   village String
   plantation_creation_date DateTime
-  farm_image_url String
+  farm_image_url String  ?
   estimate_area Float
-  user User @relation(fields: [farmer_id], references: [id])
+  Farmer Farmer @relation(fields: [farmer_id], references: [id])
   plantation_photos String[]
   mapping_coodinates Farm_coordinates[]
   created_at DateTime @default(now())
@@ -357,7 +359,7 @@ model Farm_coordinates{
 
   // mapping_date DateTime
   farm_id String
-  location Json ?  @default("{}")  @db.JsonB
+  // location Json ?  @default("{}")  @db.JsonB
 
   coordinates Json ?  @default("{}")  @db.JsonB
   collector_name String
@@ -365,7 +367,7 @@ model Farm_coordinates{
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@index([farm_id, location])
+  @@index([farm_id])
 }
 
 
@@ -517,7 +519,7 @@ model Market {
   end_date DateTime
   // market_number Int
   price_of_theday Int
-
+  provider String
   description String
   location String
   type_of_market MarketType @default(COCOA)

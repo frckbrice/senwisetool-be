@@ -26,7 +26,7 @@ export class FarmersService {
     createFarmerDto: Prisma.FarmerCreateInput,
   ) {
     // avoid creating farmer twice
-    console.log('\n\nfarmer payload: ', createFarmerDto);
+    console.log('\n\nfarmer  payload: ', createFarmerDto);
 
     const farmer = await this.prismaService.farmer.findFirst({
       where: {
@@ -77,26 +77,26 @@ export class FarmersService {
   async findAll(query: any, company_id: string) {
     // find all the farmer with the latest start date with its status and type
     const { page, perPage, location, phone } = query;
-    let Query = Object.create({});
-    Query = {
-      ...Query,
+    const where = Object.create({});
+
+    if (location)
+      where['location'] = { contains: location ?? undefined };
+    where['company_id'] = company_id;
+    let q = Object.create({ where });
+    const Query = {
+      ...q,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
         created_at: 'desc',
       },
     };
+
     // find all the companies
     try {
       const [total, farmers] = await this.prismaService.$transaction([
         this.prismaService.farmer.count(),
-        this.prismaService.farmer.findMany({
-          where: {
-            company_id,
-            location: { contains: location },
-          },
-          ...Query,
-        }),
+        this.prismaService.farmer.findMany(Query),
       ]);
       if (farmers.length)
         return {

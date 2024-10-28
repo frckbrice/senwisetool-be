@@ -21,4 +21,5 @@ export class MarketEntity implements Market {
     price_of_theday: number;
     accompanying_url: string;
     transmission_url: string;
+    provider: string;
 }

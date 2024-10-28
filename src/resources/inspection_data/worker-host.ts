@@ -49,7 +49,7 @@ export class FieldWorkerHost implements OnApplicationBootstrap, OnApplicationShu
         //     id: string;
         //     result: string;
         // }>;
-        this.Farmerworker = new Worker(join(__dirname, 'farmer-worker'));
+        this.Farmerworker = new Worker(join(__dirname, '..', 'farmers', 'farmer-worker'));
         // Creating an observable from the worker's message events
         this.messages3$ = fromEvent(this.Farmerworker, 'message') as Observable<{
             id: string;
