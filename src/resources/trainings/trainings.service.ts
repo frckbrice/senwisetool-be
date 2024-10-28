@@ -34,25 +34,17 @@ export class TrainingService {
   ) {
     //TDOO: look if possible to avoid creating training twice
 
-    // create a mapping code
-    const { uuid, code: training_code } = generateMapping(crypto.randomUUID());
-
-    await this.projectAssigneeService.create({
-      agentCode: training_code,
-      projectCodes: [uuid],
-      company_id: <string>user?.company_id
-    })
-    console.log("after training creation: ", "training_code: ", training_code, "uuid: ", uuid)
 
     try {
+      // create a mapping code
+      const { uuid, code: training_code } = generateMapping(crypto.randomUUID());
+      await this.projectAssigneeService.create({
+        agentCode: training_code,
+        projectCodes: [uuid],
+        company_id: <string>user?.company_id
+      })
+      console.log("after training creation: ", "training_code: ", training_code, "uuid: ", uuid)
 
-      // const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
-      // await this.projectAssigneeService.create({
-      //   agentCode: projectCode,
-      //   projectCodes: [uuid],
-      //   company_id: createTrainingDto.company
-      //   project_type: createProjectDto.type
-      // })
 
       const result = await this.prismaService.training.create({
         data: {
@@ -143,7 +135,7 @@ export class TrainingService {
           await this.projectAssigneeService
             .getAllTheAssigneesCodesFromAListOfProjectUuidsOfACompany(listOfUuidCodes, <string>company_id);
 
-            console.log('assignees =>', assignees)
+        console.log('assignees =>', assignees)
         // Create mapping for matching uuids
         const mappedList = assignees?.data?.flatMap(assignee =>
           assignee.projectCodes
@@ -208,7 +200,7 @@ export class TrainingService {
             where: {
               code: codeVal,
               status: ProjectStatus.DEPLOYED,
-              company_id: company_id,
+              company_id,
             },
             select: {
               status: true,

@@ -63,7 +63,7 @@ export class ProjectsController {
   })
   @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
   findAll(
-    @Query() query: PaginationProjectQueryDto | { agentCode: string },
+    @Query() query: PaginationProjectQueryDto & { agentCode: string },
     @CurrentUser() user: Partial<User>) {
 
     console.log("current user: ", user)
