@@ -42,11 +42,6 @@ export class ProjectsService {
       },
     });
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 5466791 (updated the attendance sheet model. added trainer object to gheter all trainer artifacts)
     if (project !== null) {
       console.log("after checking duplicate :existing, ", project);
       return {
@@ -57,11 +52,6 @@ export class ProjectsService {
     }
 
     // validate date so that end date should be greater than start date
-<<<<<<< HEAD
-
-=======
-    console.log("incomning project dto: ", createProjectDto)
->>>>>>> 50af9ba (changes made before pull)
 
     if (createProjectDto.start_date > createProjectDto.end_date)
       return {
@@ -146,21 +136,15 @@ export class ProjectsService {
     //   where["search"] = search
     console.log("incoming request before query.agentCode: ", query, "company_id: ", company_id)
 
+    console.log('where\n', where)
     // if we have assigned a query to the uri, we just return the corresponding function.
     if (query.agentCode)
       return this.getAllAssignedProjects(query.agentCode, company_id);
-
-<<<<<<< HEAD
 
     let q = Object.create({ where });
     console.log("incoming request  after query.agentCode : ", query)
     const queryOptions = {
       where,
-=======
-    console.log("incoming request  after query.agentCode : ", query)
-    const options = {
-      ...q,
->>>>>>> 5466791 (updated the attendance sheet model. added trainer object to gheter all trainer artifacts)
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
@@ -176,6 +160,7 @@ export class ProjectsService {
         this.prismaService.project.count({ where }),
         this.prismaService.project.findMany(queryOptions),
       ]);
+      console.log('project from service with query\n', projects)
 
       if (typeof projects != 'undefined' && projects.length) {
         // get the list of project uuid code
@@ -203,6 +188,8 @@ export class ProjectsService {
           }
           return acc
         }, projects);
+
+        console.log('projectResponse\n', projectResponse)
 
         return {
           status: 200,

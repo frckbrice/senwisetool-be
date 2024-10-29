@@ -2,8 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } f
 import { SocialService } from './social.service';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
-import { Prisma, Role, User } from '@prisma/client';
-import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
+import { Prisma, Role } from '@prisma/client';
 
 @Controller('socials')
 export class SocialController {
@@ -13,20 +12,20 @@ export class SocialController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADG, Role.IT_SUPPORT)
   create(@Body() createSocialDto: Prisma.SocialCreateInput) {
-    return this.socialService.create(createSocialDto)
+    return this.socialService
   }
 
   @Get()
   @UseGuards(RolesGuard)
   @Roles(Role.ADG, Role.AUDITOR, Role.IT_SUPPORT)
-  findAll(@Query() query: { activity_title: string }, @CurrentUser() user: Partial<User>) {
-    return this.socialService.findAll(query, <string>user.company_id)
+  findAll(@Query() query: { activity_title: string }, company_id: string) {
+    return this.socialService.findAll(query, company_id)
   }
 
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles(Role.ADG, Role.AUDITOR, Role.IT_SUPPORT)
-  findOne(@Param('id') id: string) {
+  findOne(@Param() id: string) {
     return this.socialService.findOne(id)
   }
 
