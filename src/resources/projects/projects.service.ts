@@ -130,9 +130,12 @@ export class ProjectsService {
 
   async findAll(query: Partial<PaginationProjectQueryDto> | any, company_id: string) {
 
+    console.log('company_id\n', company_id)
     const { status, type, page, perPage, search, campaign_id, } = query;
     const where = Object.create({ company_id });
+    console.log('first where clause \n', where)
     let Query = Object.create({ where });
+    console.log("first query\n", Query)
 
     if (status) {
       where['status'] = status;
@@ -153,13 +156,14 @@ export class ProjectsService {
       where["search"] = search
 
 
+    console.log('where\n', where)
     // if we have assigned a query to the uri, we just return the corresponding function.
     if (query.agentCode)
       return this.getAllAssignedProjects(query.agentCode, company_id);
 
 
     Query = {
-      ...Query,
+      ...where,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
@@ -170,10 +174,21 @@ export class ProjectsService {
     // for each project, assign its 4 dgits code
     // find all the project with the latest start date with its status and type
     try {
+      console.log('Query from service\n\n', Query)
       const [total, projects] = await this.prismaService.$transaction([
         this.prismaService.project.count(),
-        this.prismaService.project.findMany(Query),
+        this.prismaService.project.findMany({
+          where: {
+            type,
+            company_id,
+            campaign_id
+          },
+          orderBy: {
+            start_date: 'desc',
+          },
+        }),
       ]);
+      console.log('project from service with query\n', projects)
 
       if (typeof projects != 'undefined' && projects.length) {
         // get the list of project uuid code
@@ -201,6 +216,8 @@ export class ProjectsService {
           }
           return acc
         }, projects);
+
+        console.log('projectResponse\n', projectResponse)
 
         return {
           status: 200,

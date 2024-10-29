@@ -1,6 +1,7 @@
 import { Market, $Enums, CampaignStatus } from "@prisma/client";
 
 export class MarketEntity implements Market {
+    nom_fournisseur: string;
     bon_entree_magazin_url: string;
     bordereau_vente_url: string;
     company_id: string;
