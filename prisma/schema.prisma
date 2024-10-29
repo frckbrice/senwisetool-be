@@ -618,3 +618,31 @@ model Transaction {
 //   training_id String
 //   training Training @relation(fields: [training_id], references: [id])
 // }
+
+// Table for chapter 4 Agriculture
+model Agriculture {
+  id               String @id @default(cuid())
+  company_id       String
+  activity_title   String
+  pictures_url     String[]
+  documents_url    String[]
+  pv_url           String[]
+}
+
+model Social {
+  id             String @id @default(cuid())
+  company_id       String
+  activity_title   String
+  pictures_url     String[]
+  documents_url    String[]
+  pv_url           String[]
+}
+
+model Environment {
+  id             String @id @default(cuid())
+  company_id       String
+  activity_title   String
+  pictures_url     String[]
+  documents_url    String[]
+  pv_url           String[]
+}

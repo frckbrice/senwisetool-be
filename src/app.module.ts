@@ -40,6 +40,10 @@ import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { CompanyCampaignModule } from './resources/company_campaign/company_campaign.module';
 import { ProjectAssigneeModule } from './resources/project-assignee/project-assignee.module';
+import { AgricultureModule } from './resources/agriculture/agriculture.module';
+import { EnvironmentModule } from './resources/environment/environment.module';
+import { SocialModule } from './resources/social/social.module';
+
 
 @Module({
   imports: [
@@ -82,6 +86,9 @@ import { ProjectAssigneeModule } from './resources/project-assignee/project-assi
     MailModule,
     CompanyCampaignModule,
     ProjectAssigneeModule,
+    AgricultureModule,
+    EnvironmentModule,
+    SocialModule
   ],
   controllers: [AppController],
   providers: [
