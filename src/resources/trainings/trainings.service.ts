@@ -40,6 +40,15 @@ export class TrainingService {
     console.log("after creation: ", "training_code: ", training_code, "uuid: ", uuid)
 
     try {
+
+      // const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
+      // await this.projectAssigneeService.create({
+      //   agentCode: projectCode,
+      //   projectCodes: [uuid],
+      //   company_id: createTrainingDto.company
+      //   project_type: createProjectDto.type
+      // })
+
       const result = await this.prismaService.training.create({
         data: {
           ...createTrainingDto,
@@ -129,6 +138,7 @@ export class TrainingService {
           await this.projectAssigneeService
             .getAllTheAssigneesCodesFromAListOfProjectUuidsOfACompany(listOfUuidCodes, <string>company_id);
 
+            console.log('assignees =>', assignees)
         // Create mapping for matching uuids
         const mappedList = assignees?.data?.flatMap(assignee =>
           assignee.projectCodes
@@ -138,6 +148,7 @@ export class TrainingService {
               uuid: uuid
             }))
         );
+        console.log('mapped list\n', mappedList)
         // assign coresponding code to each project.
         const projectResponse = mappedList?.reduce((acc, curr, index) => {
           if (acc.find(p => p.code === curr.uuid)) {
@@ -146,6 +157,8 @@ export class TrainingService {
           }
           return acc
         }, trainings);
+
+        console.log('training response \n', projectResponse)
 
         return {
           status: 200,

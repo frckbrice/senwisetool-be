@@ -49,7 +49,6 @@ export class ProjectsService {
       };
 
     // validate date so that end date should be greater than start date
-    console.log(createProjectDto)
     if (createProjectDto.start_date > createProjectDto.end_date)
       return {
         data: null,
@@ -66,18 +65,19 @@ export class ProjectsService {
       await this.projectAssigneeService.create({
         agentCode: projectCode,
         projectCodes: [uuid],
-        company_id
+        company_id,
+        // project_type: createProjectDto.type
       })
 
       // check if there is an existing project/assignee with the same code 4 digits
-      const existingAssignee = await this.projectAssigneeService.findOne(projectCode);
-      if (existingAssignee?.data?.length) {
-        return {
-          data: null,
-          message: 'this code is already in use, Please try again',
-          status: 400
-        }
-      }
+      // const existingAssignee = await this.projectAssigneeService.findOne(projectCode);
+      // if (existingAssignee?.data?.length) {
+      //   return {
+      //     data: null,
+      //     message: 'this code is already in use, Please try again',
+      //     status: 400
+      //   }
+      // }
 
       const result = await this.prismaService.$transaction(async (tx) => {
         const result = await tx.project.create({
@@ -131,10 +131,12 @@ export class ProjectsService {
 
   async findAll(query: Partial<PaginationProjectQueryDto> | any, company_id: string) {
 
+    console.log('company_id\n', company_id)
     const { status, type, page, perPage, search, campaign_id, } = query;
     const where = Object.create({ company_id });
+    console.log('first where clause \n', where)
     let Query = Object.create({ where });
-
+  
     if (status) {
       where['status'] = status;
     }
@@ -160,7 +162,7 @@ export class ProjectsService {
 
 
     Query = {
-      ...Query,
+      ...where,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
@@ -173,8 +175,18 @@ export class ProjectsService {
     try {
       const [total, projects] = await this.prismaService.$transaction([
         this.prismaService.project.count(),
-        this.prismaService.project.findMany(Query),
+        this.prismaService.project.findMany({
+          where: {
+            type,
+            company_id,
+            campaign_id
+          },
+          orderBy: {
+            start_date: 'desc',
+          },
+        }),
       ]);
+
       if (typeof projects != 'undefined' && projects.length) {
         // get the list of project uuid code
         const listOfUuidCodes = projects?.map((p) => p.code);
@@ -192,6 +204,7 @@ export class ProjectsService {
               uuid: uuid
             }))
         );
+
         // assign coresponding code to each project.
         const projectResponse = mappedList?.reduce((acc, curr, index) => {
           if (acc.find(p => p.code === curr.uuid)) {

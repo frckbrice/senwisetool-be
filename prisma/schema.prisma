@@ -147,7 +147,7 @@ model Company {
 
   logo  String ? 
   // to constraint companies to add an email for reclamations directed to the head office support
-head_office_email String 
+  head_office_email String 
 
   payment_mode String ?
   company_paypal_email String ?
@@ -162,7 +162,8 @@ head_office_email String
   region String
   timezone String @default("UTC")
 
-// the case where the company account will be deactivate
+  
+  // the case where the company account will be deactivate
   status CompanyStatus ? 
   users  User[]
   projects Project[]
@@ -192,8 +193,9 @@ model Assignee {
   id  String @id @default(cuid())
   agentCode  String @unique
   projectCodes  String[]
-  company_id  String @unique
+  company_id  String
   fullName String?
+  project_type String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   deleted_at DateTime @updatedAt
@@ -517,6 +519,7 @@ model Market {
   end_date DateTime
   // market_number Int
   price_of_theday Int
+  nom_fournisseur String
 
   description String
   location String
@@ -607,3 +610,37 @@ model Transaction {
 //   training_id String
 //   training Training @relation(fields: [training_id], references: [id])
 // }
+
+// Table for chapter 4 Agriculture
+model Agriculture {
+  id               String @id @default(cuid())
+  company_id       String
+  activity_title   String
+  pictures_url     String[]
+  documents_url    String[]
+  pv_url           String[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Social {
+  id             String @id @default(cuid())
+  company_id       String
+  activity_title   String
+  pictures_url     String[]
+  documents_url    String[]
+  pv_url           String[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Environment {
+  id             String @id @default(cuid())
+  company_id       String
+  activity_title   String
+  pictures_url     String[]
+  documents_url    String[]
+  pv_url           String[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}

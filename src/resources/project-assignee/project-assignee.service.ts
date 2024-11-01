@@ -149,11 +149,13 @@ export class ProjectAssigneeService {
   async findAllSubAccounts(company_id: string) {
 
     try {
+      console.log('company_id\n', company_id)
 
       const data = await this.prismaService.assignee.findMany({
-        // where: {
-        //   company_id
-        // }
+        
+        where: {
+          company_id
+        }
       })
       if (data)
         return {

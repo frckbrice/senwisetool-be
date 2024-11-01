@@ -31,9 +31,9 @@ export class ProjectAssigneeController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADG, Role.AUDITOR, Role.IT_SUPPORT)
   findAllSubAccounts(@Query() query: { company_id: string }) {
+    console.log('company_id from controler\n', query)
     return this.projectAssigneeService.findAllSubAccounts(query.company_id)
   }
-
 
   @Get(':id')
   @Roles(Role.ADG, Role.AUDITOR)
