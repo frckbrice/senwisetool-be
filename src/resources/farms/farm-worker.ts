@@ -16,38 +16,38 @@ parentPort?.on('message', async ({ data, id }) => {
     if (!data?.project_data?.project_data?.farmer_ID_card_number)
         throw new HttpException(`No Farmer ID card number Provided: `, HttpStatus.BAD_REQUEST);
 
+    // find the farmer with the same ID card number if he exist.
     farmer = await prisma.farmer.findUnique({
         where: {
             farmer_ID_card_number: data?.project_data?.project_data?.farmer_ID_card_number,
-
         }
     })
 
-    // if No farm er in the DB, we create the new farmer.
+    // if No farmer with the same ID card number in the DB, we create the new farmer.
     if (!farmer) {
         farmer = await prisma.farmer.create({
             data: {
                 company_id: data?.company_id,
                 farmer_name: data?.project_data?.project_data?.farmer_name,
                 farmer_contact: data?.project_data?.project_data?.farmer_contact,
-                council: "",
                 farmer_ID_card_number: data?.project_data?.project_data?.farmer_ID_card_number,
                 inspection_date: data?.project_data?.project_data?.date,
                 village: data?.project_data?.project_data?.village,
-                certification_year: "1970",
+                certification_year: "1970",  // fictive year number to indicate that the farmer hasn't yet been certified.
                 inspector_name: data?.project_data?.project_data?.collector_name,
                 inspector_contact: "",
                 weed_application: "",
                 weed_application_quantity: 0,
                 pesticide_used: "",
                 pesticide_quantity: 0,
-                farmer_photos: []
+                farmer_photos: data?.project_data?.project_data?.farmer_photos,
+                council: data?.council,
             }
         })
     }
 
     // construct the farm object 
-    const farmerObject = {
+    const farmObject = {
         location: data.project_data?.project_data?.location, // Json ?  @default("{}")  @db.JsonB
         farmer_id: farmer?.id ? farmer?.id : data?.project_data?.project_data?.farmer_ID_card_number,// String,
 
@@ -65,12 +65,12 @@ parentPort?.on('message', async ({ data, id }) => {
 
         const newFarmData = await prisma.farm.create({
             data: {
-                location: farmerObject?.location,
+                location: farmObject?.location,
                 farmer_id: <string>farmer?.id,
-                village: farmerObject?.village,
-                plantation_creation_date: new Date(farmerObject?.plantation_creation_date).toISOString(),
-                estimate_area: farmerObject?.estimate_area,
-                plantation_photos: farmerObject?.plantation_photos,
+                village: farmObject?.village,
+                plantation_creation_date: new Date(farmObject?.plantation_creation_date).toISOString(),
+                estimate_area: farmObject?.estimate_area,
+                plantation_photos: farmObject?.plantation_photos,
                 farm_image_url: ""
             }
         });

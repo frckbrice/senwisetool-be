@@ -61,14 +61,14 @@ export class InspectionDataService {
           // council here is added because we are trying to fetch farmer from mobile later based on location/city.
           if (type.toString().toLocaleLowerCase().includes('initial_inspection')) {
             const result = await this.fieldWorker.storeFarmerData(JSON.stringify({ ...data, council }));
-            if (typeof result != 'undefined')
+            if (typeof result != 'undefined' && result)
               status = true
           } else
 
             // store data for  farm 
             if (type.toString().toLocaleLowerCase().includes('mapping')) {
-              const result = await this.farmWorker.storeFarmData(JSON.stringify({ ...data, company_id }));
-              if (typeof result != 'undefined') {
+              const result = await this.farmWorker.storeFarmData(JSON.stringify({ ...data, company_id, council }));
+              if (typeof result != 'undefined' && result) {
                 console.log("\n\nfarm data  registered successfully: ", result)
                 status = true;
               }
@@ -76,7 +76,7 @@ export class InspectionDataService {
             else
               if (type.toString().toLocaleLowerCase().includes('training')) {
                 const result = await this.attendenceSheetWorker.storeAttendanceData(JSON.stringify(data));
-                if (typeof result != 'undefined') {
+                if (typeof result != 'undefined' && result) {
                   console.log("\n\participants and attendance of this training project registered successfully: ", result)
                   status = true;
                 }

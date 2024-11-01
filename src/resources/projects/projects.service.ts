@@ -42,6 +42,11 @@ export class ProjectsService {
       },
     });
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 5466791 (updated the attendance sheet model. added trainer object to gheter all trainer artifacts)
     if (project !== null) {
       console.log("after checking duplicate :existing, ", project);
       return {
@@ -141,11 +146,17 @@ export class ProjectsService {
     if (query.agentCode)
       return this.getAllAssignedProjects(query.agentCode, company_id);
 
+<<<<<<< HEAD
 
     let q = Object.create({ where });
     console.log("incoming request  after query.agentCode : ", query)
     const queryOptions = {
       where,
+=======
+    console.log("incoming request  after query.agentCode : ", query)
+    const options = {
+      ...q,
+>>>>>>> 5466791 (updated the attendance sheet model. added trainer object to gheter all trainer artifacts)
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {

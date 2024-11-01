@@ -200,7 +200,7 @@ export class TrainingService {
             where: {
               code: codeVal,
               status: ProjectStatus.DEPLOYED,
-              company_id,
+              company_id: company_id,
             },
             select: {
               status: true,
