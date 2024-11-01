@@ -194,7 +194,7 @@ model Assignee {
   projectCodes  String[]
   company_id  String 
   fullName String?
-
+  project_type String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   deleted_at DateTime @updatedAt

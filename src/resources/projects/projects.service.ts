@@ -161,7 +161,6 @@ export class ProjectsService {
         this.prismaService.project.count({ where }),
         this.prismaService.project.findMany(queryOptions),
       ]);
-      console.log('project from service with query\n', projects)
 
       if (typeof projects != 'undefined' && projects.length) {
         // get the list of project uuid code
@@ -189,8 +188,6 @@ export class ProjectsService {
           }
           return acc
         }, projects);
-
-        console.log('projectResponse\n', projectResponse)
 
         return {
           status: 200,
