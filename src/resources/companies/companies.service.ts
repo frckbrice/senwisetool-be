@@ -166,6 +166,7 @@ export class ComapnyService {
           paypal_id: true,
           email: true,
           status: true,
+          logo: true
         },
       });
 

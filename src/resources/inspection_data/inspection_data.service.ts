@@ -67,6 +67,7 @@ export class InspectionDataService {
   //TODO: create pagination for inspection_data resource
   async findAll(query: { project_id: string; page?: number; perPage?: number }) {
     try {
+      console.log('project_id from inspetion_data table', query.project_id)
       if (query?.project_id) {
         const [total, inspectionData] = await this.prismaService.$transaction([
           this.prismaService.inspection_data.count({}),
@@ -81,6 +82,7 @@ export class InspectionDataService {
             },
           }),
         ]);
+        console.log('inspection data from service\n', inspectionData)
         return {
           total,
           data: inspectionData,

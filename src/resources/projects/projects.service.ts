@@ -65,7 +65,8 @@ export class ProjectsService {
       await this.projectAssigneeService.create({
         agentCode: projectCode,
         projectCodes: [uuid],
-        company_id
+        company_id,
+        // project_type: createProjectDto.type
       })
 
       // check if there is an existing project/assignee with the same code 4 digits
@@ -135,8 +136,7 @@ export class ProjectsService {
     const where = Object.create({ company_id });
     console.log('first where clause \n', where)
     let Query = Object.create({ where });
-    console.log("first query\n", Query)
-
+  
     if (status) {
       where['status'] = status;
     }
@@ -156,7 +156,6 @@ export class ProjectsService {
       where["search"] = search
 
 
-    console.log('where\n', where)
     // if we have assigned a query to the uri, we just return the corresponding function.
     if (query.agentCode)
       return this.getAllAssignedProjects(query.agentCode, company_id);
@@ -174,7 +173,6 @@ export class ProjectsService {
     // for each project, assign its 4 dgits code
     // find all the project with the latest start date with its status and type
     try {
-      console.log('Query from service\n\n', Query)
       const [total, projects] = await this.prismaService.$transaction([
         this.prismaService.project.count(),
         this.prismaService.project.findMany({
@@ -188,7 +186,6 @@ export class ProjectsService {
           },
         }),
       ]);
-      console.log('project from service with query\n', projects)
 
       if (typeof projects != 'undefined' && projects.length) {
         // get the list of project uuid code
@@ -216,8 +213,6 @@ export class ProjectsService {
           }
           return acc
         }, projects);
-
-        console.log('projectResponse\n', projectResponse)
 
         return {
           status: 200,
