@@ -316,7 +316,7 @@ model Farmer {
   company_id String 
   farmer_name String
   farmer_contact String
-council String
+  council String
   farmer_ID_card_number String @unique
   inspection_date String
   village String
@@ -329,8 +329,10 @@ council String
   pesticide_quantity Int
   farmer_photos String[]
   farm Farm[]
-created_at DateTime @default(now())
+  created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+
   @@index([id, farmer_ID_card_number, farmer_contact])
 }
 
@@ -370,17 +372,19 @@ model Farm_coordinates{
   @@index([farm_id])
 }
 
-
+// for trainer in attendance_sheet, we create an object for each trainer
+// this contains: name, signature, proof of concepts
+// here we display them in the form of array of objects inside JSON.
 model Attendance_sheet {
   id String @id @default(cuid())
   date String
   title String
   modules String[]
-  trainers String[]
-  trainer_signature String[]
+  trainers Json @default("{}")  @db.JsonB
+  // trainer_signature String[]
   location String
   report_url String
-  trainer_proof_of_competency String[]
+  // trainer_proof_of_competency String[]
   photos String[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

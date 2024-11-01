@@ -9,6 +9,9 @@ import { PrismaService } from 'src/adapters/config/prisma.service';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { FieldWorkerHost } from './worker-host';
 import { FarmWorkerHost } from './worker-host-farm';
+import { AttendanceSheetWorker } from './worker-host-training';
+
+const resourceList = ['initial_inspection', 'mapping', 'trainings']
 
 @Injectable()
 export class InspectionDataService {
@@ -18,48 +21,67 @@ export class InspectionDataService {
     private readonly prismaService: PrismaService,
     private readonly fieldWorker: FieldWorkerHost,
     private readonly farmWorker: FarmWorkerHost,
+    private readonly attendenceSheetWorker: AttendanceSheetWorker,
   ) { }
   async create(createInspectionDatumDto: Prisma.Inspection_dataCreateInput & { council: string }, type: string) {
     let status: boolean = false;
 
     console.log("\n\ndata from mobile : ", createInspectionDatumDto);
     console.log("\n\ntype : ", type);
-    let city;
+    let city: string;
     // get the council from the   incoming mobile data
     if (createInspectionDatumDto?.council) {
       city = createInspectionDatumDto?.council;
-
     }
 
     const { council, ...res } = createInspectionDatumDto
 
     // type is used to Identify which project is being uploaded.
     // this triggers a specific operation like storing farmer data at initial inspection only.
+    let data;
+
     try {
-      const data = await this.prismaService.inspection_data.create({
-        data: res,
-      });
+      if (resourceList.includes(type)) {
+        data = await this.prismaService.$transaction(async () => {
+          const data = await this.prismaService.inspection_data.create({
+            data: res,
+          });
 
-      if (typeof data != 'undefined') {
-
-        // store the data for farmer via the worker thread
-        // council here is added because we are trying to fetch farmer from mobile later based on location/city.
-        if (type.toString().toLocaleLowerCase().includes('initial_inspection')) {
-          const result = await this.fieldWorker.storeFarmerData(JSON.stringify({ ...data, council: city }));
-          if (typeof result != 'undefined')
-            status = true
-        }
-
-        // store data for  farm 
-        if (type.toString().toLocaleLowerCase().includes('mapping')) {
-          const result = await this.farmWorker.storeFarmData(JSON.stringify(data));
-          if (typeof result != 'undefined') {
-
-            console.log("\n\nfarm data registered successfully: ", result)
-            status = true;
-
+          // store the data for farmer via the worker thread
+          // council here is added because we are trying to fetch farmer from mobile later based on location/city.
+          if (type.toString().toLocaleLowerCase().includes('initial_inspection')) {
+            const result = await this.fieldWorker.storeFarmerData(JSON.stringify({ ...data, council: city }));
+            if (typeof result != 'undefined')
+              status = true
           }
-        }
+
+          // store data for  farm 
+          if (type.toString().toLocaleLowerCase().includes('mapping')) {
+            const result = await this.farmWorker.storeFarmData(JSON.stringify(data));
+            if (typeof result != 'undefined') {
+              console.log("\n\nfarm data  registered successfully: ", result)
+              status = true;
+            }
+          }
+
+          if (type.toString().toLocaleLowerCase().includes('training')) {
+            const result = await this.attendenceSheetWorker.storeAttendanceData(JSON.stringify(data));
+            if (typeof result != 'undefined') {
+              console.log("\n\nfarm data registered successfully: ", result)
+              status = true;
+            }
+          }
+
+          return data
+        });
+
+      } else {
+        data = await this.prismaService.inspection_data.create({
+          data: res,
+        });
+      }
+
+      if (data) {
         return {
           data,
           status: HttpStatus.CREATED,

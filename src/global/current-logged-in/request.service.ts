@@ -26,19 +26,21 @@ export class RequestService {
       },
     });
 
+    console.log("\n existing user : ", existingUser)
+
     let userRole: Role = Role.ADG;
     if (payload?.org_role) userRole = Role.PDG;
 
 
-    const user: Partial<User> = {
-      id: existingUser?.id ?? payload?.sub,
-      email: existingUser?.email ?? payload?.user_email,
-      first_name: existingUser?.first_name ?? payload?.user_first_name,
-      role: existingUser?.role ?? userRole,
-      company_id: existingUser?.company_id ?? "",
-    };
+    // const user: Partial<User> = {
+    //   id: existingUser?.id ?? payload?.sub,
+    //   email: existingUser?.email ?? payload?.user_email,
+    //   first_name: existingUser?.first_name ?? payload?.user_first_name,
+    //   role: existingUser?.role ?? userRole,
+    //   company_id: existingUser?.company_id ?? "",
+    // };
 
-    return user;
+    return existingUser;
   }
 
   set currentUserId(userId: string) {

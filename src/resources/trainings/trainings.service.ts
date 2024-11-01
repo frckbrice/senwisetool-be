@@ -36,12 +36,13 @@ export class TrainingService {
 
     // create a mapping code
     const { uuid, code: training_code } = generateMapping(crypto.randomUUID());
+
     await this.projectAssigneeService.create({
       agentCode: training_code,
       projectCodes: [uuid],
       company_id: <string>user?.company_id
     })
-    console.log("after creation: ", "training_code: ", training_code, "uuid: ", uuid)
+    console.log("after training creation: ", "training_code: ", training_code, "uuid: ", uuid)
 
     try {
       const result = await this.prismaService.training.create({
@@ -194,7 +195,7 @@ export class TrainingService {
             where: {
               code: codeVal,
               status: ProjectStatus.DEPLOYED,
-              company_id: "cm2o8s2d1000aiwig7n53l3e2",
+              company_id: company_id,
             },
             select: {
               status: true,

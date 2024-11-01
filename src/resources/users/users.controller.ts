@@ -78,6 +78,16 @@ export class UsersController {
     return this.usersService.findOne(<string>user?.email);
   }
 
+  @Get(':id')
+  @Roles(Role.ADG, Role.IT_SUPPORT)
+  @UseGuards(RolesGuard)
+  @UseInterceptors(UserInterceptor)
+  @ApiOperation({ summary: 'get single user by id' })
+  getOneUserById(@Param('id') id: string) {
+
+    return this.usersService.findOne(id);
+  }
+
   @Patch(':id')
   @Roles(Role.ADG, Role.IT_SUPPORT)
   @UseGuards(RolesGuard)

@@ -43,14 +43,13 @@ export class ProjectsService {
 
 
 
-    if (typeof project != 'undefined') {
+    if (project !== null) {
       console.log("after checking duplicate :existing, ", project);
       return {
         data: project,
         status: 409,
-        message: `Project  ${createProjectDto.title} already exists`,
+        message: `Project  "${createProjectDto.title}" already exists`,
       };
-
     }
 
     // validate date so that end date should be greater than start date
@@ -148,13 +147,13 @@ export class ProjectsService {
 
     // if (search)
     //   where["search"] = search
-    console.log("incoming request before query.agentCode: ", query)
+    console.log("incoming request before query.agentCode: ", query, "company_id: ", company_id)
 
     // if we have assigned a query to the uri, we just return the corresponding function.
     if (query.agentCode)
       return this.getAllAssignedProjects(query.agentCode, company_id);
 
-    console.log("incoming request after query.agentCode: ", query)
+    console.log("incoming request  after query.agentCode : ", query)
     const options = {
       ...q,
       take: perPage ?? 20,
@@ -225,28 +224,19 @@ export class ProjectsService {
   }
 
   async findOne(project_id: string) {
-    const where = {} as {
-      id: string | undefined;
-      slug: string | undefined;
-    };
-    if (project_id.toString().includes('-')) {
-      where['slug'] = project_id;
-    } else {
-      where['id'] = project_id;
-    }
-
-
 
     try {
       const result = await this.prismaService.project.findUnique({
-        where,
+        where: {
+          id: project_id,
+        }
       });
 
       if (result)
         return {
           data: result,
           status: 200,
-          message: `project fetched successfully`,
+          message: `project  fetched successfully`,
         };
       else
         return {
@@ -564,7 +554,8 @@ export class ProjectsService {
         console.log("list of  codes: ", listOfCodes)
         let listOfUuids, projects;
         if (listOfCodes.length === 1) {
-
+          console.log("\n\n got a single project: ",)
+          console.log("\n\n company ID: ", company_id)
           // get all oject having the the uuid
           const [codeVal] = listOfCodes;
           console.log("value: ", codeVal);
@@ -572,7 +563,7 @@ export class ProjectsService {
             where: {
               code: codeVal,
               status: ProjectStatus.DEPLOYED,
-              company_id: "cm2qjm4mg000dshwofqj1uplx",
+              company_id,
             },
             select: {
               status: true,

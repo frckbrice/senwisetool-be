@@ -41,7 +41,7 @@ export class TrainingSessionService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientValidationError) {
         this.logger.error(
-          `Error while creating attendance_sheet ${error.name}: Validation error \n\n ${error}`,
+          `Error while  creating attendance_sheet ${error.name}: Validation error \n\n ${error}`,
           TrainingSessionService.name,
         );
         throw new InternalServerErrorException(

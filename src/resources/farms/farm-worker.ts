@@ -9,17 +9,16 @@ const logger = new LoggerService();
 
 parentPort?.on('message', async ({ data, id }) => {
 
-    // if (!data?.project_data?.project_data?.farmer_ID_card_number)
-    //     throw new HttpException(`No Farmer ID card number Provided: `, HttpStatus.BAD_REQUEST);
+    if (!data?.project_data?.project_data?.farmer_ID_card_number)
+        throw new HttpException(`No Farmer ID card number Provided: `, HttpStatus.BAD_REQUEST);
 
     const farmer = await prisma.farmer.findUnique({
         where: {
-            farmer_ID_card_number: '66474848488558',
-            //  data?.project_data?.project_data?.farmer_ID_card_number ? data?.project_data?.project_data?.farmer_ID_card_number : '66474848488558',
-            // id: "cm2rg7tpp0003jvueu96q8uko"
+            farmer_ID_card_number: data?.project_data?.project_data?.farmer_ID_card_number,
+
         }
     })
-    console.log("\n\farm worker received this is farmer data: ", farmer);
+    console.log("\n\farm  worker received this is farmer data: ", farmer);
     // construct the farmer object 
 
     const farmerObject = {
@@ -29,7 +28,7 @@ parentPort?.on('message', async ({ data, id }) => {
         village: data?.project_data?.project_data?.village,// String
         plantation_creation_date: data?.project_data?.project_data?.plantation_creation_date ? data?.project_data?.project_data?.plantation_creation_date : data?.collected_at,  //DateTime
         farm_image_url: data?.project_data?.project_data?.plantation_photos[0], // String
-        estimate_area: !isNaN(data?.project_data?.project_data?.estimated_area) ? data?.project_data?.project_data?.estimated_area : 0, //Float
+        estimate_area: !isNaN(data?.project_data?.project_data?.estimated_area) ? +data?.project_data?.project_data?.estimated_area : 0, //Float
 
         plantation_photos: data?.project_data?.project_data?.plantation_photos // String[]
     }
@@ -42,17 +41,17 @@ parentPort?.on('message', async ({ data, id }) => {
                     location: farmerObject?.location,
                     farmer_id: <string>farmer?.id,
                     village: farmerObject?.village,
-                    plantation_creation_date: farmerObject?.plantation_creation_date,
+                    plantation_creation_date: new Date(farmerObject?.plantation_creation_date).toISOString(),
                     estimate_area: farmerObject?.estimate_area,
                     plantation_photos: farmerObject?.plantation_photos,
                     farm_image_url: ""
                 }
             });
 
-            // this is to get the historique  of the farms of a specific farmer.
+            // this is to  get the historique  of the farms of a specific farmer.
             const farmCoordinates = {
                 farm_id: newFarmData?.id,// String
-                location: farmerObject?.location,// Json ?  @default("{}")  @db.JsonB
+                // location: farmerObject?.location,// Json ?  @default("{}")  @db.JsonB 
 
                 coordinates: data.project_data?.project_data?.coordinates, //Json ?  @default("{}")  @db.JsonB
                 collector_name: data.project_data?.project_data?.collector_name // String

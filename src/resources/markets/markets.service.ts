@@ -300,6 +300,7 @@ export class MarketsService {
   async getTheAssignedMarket(agentCode: string, company_id: string) {
     try {
       const currentDate = new Date(Date.now()).toISOString();
+
       console.log("request market by agent code: " + agentCode);
       const listOfMarkets = await this.projectAssigneeService.findOne(agentCode);
       const marketUUID = listOfMarkets?.data?.[0];
