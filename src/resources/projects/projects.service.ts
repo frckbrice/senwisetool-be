@@ -131,7 +131,6 @@ export class ProjectsService {
     const { status, type, page, perPage, search, campaign_id, } = query;
     const where = Object.create({ company_id });
 
-
     if (status) {
       where['status'] = status;
     }
@@ -151,7 +150,6 @@ export class ProjectsService {
     //   where["search"] = search
     console.log("incoming request before query.agentCode: ", query, "company_id: ", company_id)
 
-    console.log('where\n', where)
     // if we have assigned a query to the uri, we just return the corresponding function.
     if (query.agentCode)
       return this.getAllAssignedProjects(query.agentCode, company_id);
@@ -176,7 +174,6 @@ export class ProjectsService {
         this.prismaService.project.count(),
         this.prismaService.project.findMany(options),
       ]);
-      console.log('project from service with query\n', projects)
 
       if (typeof projects != 'undefined' && projects.length) {
         // get the list of project uuid code
@@ -204,8 +201,6 @@ export class ProjectsService {
           }
           return acc
         }, projects);
-
-        console.log('projectResponse\n', projectResponse)
 
         return {
           status: 200,

@@ -3,7 +3,8 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } f
 import { EnvironmentService } from './environment.service';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role, User } from '@prisma/client';
+import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
 
 @Controller('environments')
 export class EnvironmentController {
@@ -19,8 +20,8 @@ export class EnvironmentController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles(Role.ADG, Role.AUDITOR, Role.IT_SUPPORT)
-  findAll(@Query() query: { activity_title: string }, company_id: string) {
-    return this.environmentService.getAll(query, company_id)
+  findAll(@Query() query: { activity_title: string }, @CurrentUser() user: Partial<User>) {
+    return this.environmentService.getAll(query, <string>user.company_id)
   }
 
   @Get(':id')
