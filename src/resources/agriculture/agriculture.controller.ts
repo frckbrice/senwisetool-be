@@ -1,9 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role, User } from '@prisma/client';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { AgricultureService } from './agriculture.service';
+import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
 
 @Controller('agricultures')
 @ApiTags('environment')
@@ -20,10 +21,11 @@ export class AgricultureController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
-  findAll(@Query() query: { activity: string }, company_id: string) {
-    return this.agricultureService.findAll(query, company_id)
+  findAll(@Query() query: { activity: string }, @CurrentUser() user: Partial<User>) {
+    return this.agricultureService.findAll(query, <string>user.company_id)
   }
   findOne(@Param('id') id: string) {
+    console.log('id from controller', id)
     return this.agricultureService.findOne(id)
   }
 

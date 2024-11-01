@@ -632,6 +632,8 @@ model Agriculture {
   pictures_url     String[]
   documents_url    String[]
   pv_url           String[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Social {
@@ -641,6 +643,8 @@ model Social {
   pictures_url     String[]
   documents_url    String[]
   pv_url           String[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Environment {
