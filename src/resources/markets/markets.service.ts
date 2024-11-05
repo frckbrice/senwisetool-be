@@ -103,6 +103,7 @@ export class MarketsService {
     }
 
     if (agentCode) {
+
       return await this.getTheAssignedMarket(agentCode, company_id)
     }
 

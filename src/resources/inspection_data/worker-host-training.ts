@@ -66,17 +66,10 @@ export class AttendanceSheetWorker implements OnApplicationBootstrap, OnApplicat
             return returnValue;
         } catch (error) {
             this.logger.error(
-<<<<<<< HEAD
                 `Error creating participants and attendance sheet data of the training session.  \n\n ${error}`,
                 AttendanceSheetWorker.name,
             );
             throw new HttpException('Error creating participants and attendance sheet data of the training session.', HttpStatus.INTERNAL_SERVER_ERROR);
-=======
-                `Error creating farmer data  \n\n ${error}`,
-                AttendanceSheetWorker.name,
-            );
-            throw new HttpException('Error creating farmer data', HttpStatus.INTERNAL_SERVER_ERROR);
->>>>>>> 5466791 (updated the attendance sheet model. added trainer object to gheter all trainer artifacts)
         }
     }
 
