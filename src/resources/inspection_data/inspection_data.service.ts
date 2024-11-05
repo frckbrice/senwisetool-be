@@ -67,7 +67,7 @@ export class InspectionDataService {
           if (type.toString().toLocaleLowerCase().includes('training')) {
             const result = await this.attendenceSheetWorker.storeAttendanceData(JSON.stringify(data));
             if (typeof result != 'undefined') {
-              console.log("\n\nfarm data registered successfully: ", result)
+              console.log("\n\participants and attendance of this training project registered successfully: ", result)
               status = true;
             }
           }

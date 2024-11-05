@@ -72,10 +72,10 @@ export class FarmWorkerHost implements OnApplicationBootstrap, OnApplicationShut
             return returnValue;
         } catch (error) {
             this.logger.error(
-                `Error creating farmer data  \n\n ${error}`,
+                `Error creating farmer data for mapping  \n\n ${error}`,
                 FarmWorkerHost.name,
             );
-            throw new HttpException('Error creating farmer data', HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException('Error creating farmer data for mapping', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

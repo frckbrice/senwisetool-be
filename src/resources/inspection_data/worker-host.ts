@@ -93,10 +93,10 @@ export class FieldWorkerHost implements OnApplicationBootstrap, OnApplicationShu
             return returnValue;
         } catch (error) {
             this.logger.error(
-                `Error creating farmer data  \n\n ${error}`,
+                `Error creating farmer data for inspection \n\n ${error}`,
                 FieldWorkerHost.name,
             );
-            throw new HttpException('Error creating farmer data', HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException('Error creating farmer data for inspection', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

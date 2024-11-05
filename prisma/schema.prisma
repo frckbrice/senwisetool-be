@@ -375,16 +375,17 @@ model Farm_coordinates{
 // for trainer in attendance_sheet, we create an object for each trainer
 // this contains: name, signature, proof of concepts
 // here we display them in the form of array of objects inside JSON.
+//   // trainer_signature String[]
+   // trainer_proof_of_competency String[]
 model Attendance_sheet {
   id String @id @default(cuid())
   date String
   title String
   modules String[]
-  trainers Json @default("{}")  @db.JsonB
-  // trainer_signature String[]
+  trainers Json @default("[{}]")  @db.JsonB
   location String
   report_url String
-  // trainer_proof_of_competency String[]
+ 
   photos String[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -526,24 +527,27 @@ model Market {
   provider String
   description String
   location String
+  // each produc  belongs to specific campaign.
+  campaign_id String
   type_of_market MarketType @default(COCOA)
-  bordereau_vente_url String
-  bon_entree_magazin_url String
-  accompanying_url String
-  transmission_url String
+  bordereau_vente_url String ?
+  bon_entree_magazin_url String ?
+  accompanying_url String ? 
+  transmission_url String ?
+    // this represnt the total number of bags bought during this market.
+  product_quantity Int ?
 
-  status CampaignStatus @default(CLOSED) // to specify if the market is closed or open. we are just re-using the Status already created for campain
+  status CampaignStatus @default(OPEN) // to specify if the market is closed or open. we are just re-using the Status already created for campain
   // when the market is closed we generate a code that represent the stock for that market.
   code String ? @unique
-  // this represnt the total number of bags bought during this market.
-  product_quantity Int
+
   company Company @relation(fields: [company_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   // market_audit Market_audit[]
   transaction Transaction[]
   receipts Receipt[]
-  campaign_id String
+
 
   @@index([company_id, start_date, end_date, code])
 }
@@ -582,26 +586,27 @@ market_number Int
 
 model Transaction {
   id String @id @default(cuid())
-  market_id String
-  date DateTime @default(now())
+  market_number String
+  date String
 
   level_of_traceability String
   driver_name String
-  quantity Int 
+  // quantity Int 
   humidity Int
   net_weight_declared_in_Ton Float
 
   humidity_level_of_product String?
   total_quantity_in_bags Int 
+  sender_name String
   receiver_name String
   // TODO: cross check the importance of these signatures 
   sender_signature String
   driver_signature String
   product_quality String
   vehicule_immatriculation_number String
-  min_com_verif_agent_name_and_sig String
+  min_com_sig String
 
-  market Market @relation(fields: [market_id], references: [id])
+  market Market @relation(fields: [market_number], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }

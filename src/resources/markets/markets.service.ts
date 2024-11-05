@@ -34,7 +34,7 @@ export class MarketsService {
     company_id: string
   }) {
 
-    // validate date so that end date should be greater than start date
+    //validate date so that end date should be greater than start date
     if (createMarketDto.start_date > createMarketDto.end_date)
       return {
         data: null,
@@ -49,24 +49,12 @@ export class MarketsService {
       company_id
     })
     try {
-      const result = await this.prismaService.$transaction(async (tx) => {
-        const result = await tx.market.create({
-          data: {
-            ...createMarketDto,
-            code: UID,
-            end_date: "1970-01-01T00:00:00+01:00",
-          },
-        });
-
-        // set the market audit to know who is in charge of the market
-        // await tx.market_audit.create({
-        //   data: {
-        //     market_id: result.id,
-        //     user_id: user_id,
-        //   },
-        // });
-
-        return result;
+      const result = await this.prismaService.market.create({
+        data: {
+          ...createMarketDto,
+          code: UID,
+          end_date: "1970-01-01T00:00:00+01:00",
+        },
       });
 
       if (result)
@@ -112,6 +100,7 @@ export class MarketsService {
       where['company_id'] = company_id;
     }
     if (agentCode) {
+
       return await this.getTheAssignedMarket(agentCode, company_id)
 
     }
@@ -287,7 +276,7 @@ export class MarketsService {
         };
     } catch (err) {
       this.logger.error(
-        "Can't delete a market with market_id " + market_id + '\n\n ' + err,
+        "Can't delete a market with market_id  " + market_id + '\n\n ' + err,
         MarketsService.name,
       );
       throw new InternalServerErrorException(
@@ -305,7 +294,7 @@ export class MarketsService {
       const listOfMarkets = await this.projectAssigneeService.findOne(agentCode);
       const marketUUID = listOfMarkets?.data?.[0];
       console.log("corresponding agent code UUID: " + marketUUID);
-      return await this.prismaService.market.findFirst({
+      const data = await this.prismaService.market.findFirst({
         where: {
           AND: [
             { code: marketUUID },
@@ -313,8 +302,8 @@ export class MarketsService {
             { status: CampaignStatus.OPEN }, // selct open market.
             { start_date: { gte: currentDate } }
           ]
+          // select: {
         },
-        // select: {
         //   id: true,
         //   market_number: true,
         //   start_date: true,
@@ -325,13 +314,37 @@ export class MarketsService {
         include: {
           company: {
             select: {
-              id: true,
               name: true,
               logo: true
             }
           }
         }
-      })
+      });
+
+      if (data)
+        return {
+          data: {
+            company_id: data?.company_id,
+            market_number: data?.id,
+            start_date: data?.start_date,
+            end_date: data?.end_date,
+            status: data?.status,
+            price_of_day: data?.price_of_theday,
+            location: data?.location,
+            type_of_market: data?.type_of_market,
+            company_name: data?.company?.name,
+            company_logo: data?.company?.logo
+          }
+          ,
+          status: 200,
+          message: `market fetched successfully`,
+        };
+      else
+        return {
+          data: null,
+          status: 400,
+          message: `Failed to fetch market`,
+        };
     } catch (error) {
       this.logger.error(` errror getting the market assigned to this agent code: ${agentCode}. error: ${error}`)
       throw new HttpException(`errror getting the market assigned to this agent code:`, HttpStatus.NOT_FOUND)

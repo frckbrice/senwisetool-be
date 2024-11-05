@@ -79,9 +79,9 @@ export class FarmersService {
     const { page, perPage, location, phone } = query;
     const where = Object.create({});
 
-    if (location)
-      where['location'] = { contains: location ?? undefined };
-    where['company_id'] = company_id;
+    if (location) // get only farmer of a certain location for fone markets functionality
+      where['location'] = { contains: location };
+    where['company_id'] = company_id; // all the farmers are fetched by companyID
     let q = Object.create({ where });
     const Query = {
       ...q,
