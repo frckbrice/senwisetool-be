@@ -41,7 +41,7 @@ export class InspectionDataService {
     let data;
 
     try {
-      if (resourceList.includes(type)) {
+      if (resourceList.includes(type.toLocaleLowerCase())) {
         data = await this.prismaService.$transaction(async () => {
           const data = await this.prismaService.inspection_data.create({
             data: res,
