@@ -12,7 +12,7 @@ const logger = new LoggerService();
 parentPort?.on('message', async ({ data, id }) => {
 
     // construct the farmer object
-    console.log("\n\farmer worker  received this data : ", data);
+    console.log("\n\n farmer worker  received this data : ", data);
     const farmerObject = {
         company_id: data?.project_data?.company_id,
         farmer_name: data?.project_data.project_data.metaData?.farmer_name,

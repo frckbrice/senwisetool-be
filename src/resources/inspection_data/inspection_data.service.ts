@@ -23,10 +23,14 @@ export class InspectionDataService {
     private readonly farmWorker: FarmWorkerHost,
     private readonly attendenceSheetWorker: AttendanceSheetWorker,
   ) { }
-  async create(createInspectionDatumDto: Prisma.Inspection_dataCreateInput & { council: string }, type: string) {
+  async create(
+    createInspectionDatumDto: Prisma.Inspection_dataCreateInput & { council?: string },
+    type: string,
+    company_id?: string,
+  ) {
     let status: boolean = false;
 
-    console.log("\n\ndata from mobile : ", createInspectionDatumDto);
+    console.log("\n\ndata from mobile: ", createInspectionDatumDto);
     console.log("\n\ntype : ", type);
     let city: string;
     // get the council from the   incoming mobile data
@@ -37,48 +41,50 @@ export class InspectionDataService {
     const { council, ...res } = createInspectionDatumDto
 
     // type is used to Identify which project is being uploaded.
-    // this triggers a specific operation like storing farmer data at initial inspection only.
+    // this triggers a specific operation like storing farmer data at initial inspection only .
     let data;
 
     try {
-      if (resourceList.includes(type.toLocaleLowerCase())) {
-        data = await this.prismaService.$transaction(async () => {
-          const data = await this.prismaService.inspection_data.create({
-            data: res,
-          });
-
-          // store the data for farmer via the worker thread
-          // council here is added because we are trying to fetch farmer from mobile later based on location/city.
-          if (type.toString().toLocaleLowerCase().includes('initial_inspection')) {
-            const result = await this.fieldWorker.storeFarmerData(JSON.stringify({ ...data, council: city }));
-            if (typeof result != 'undefined')
-              status = true
-          }
-
-          // store data for  farm 
-          if (type.toString().toLocaleLowerCase().includes('mapping')) {
-            const result = await this.farmWorker.storeFarmData(JSON.stringify(data));
-            if (typeof result != 'undefined') {
-              console.log("\n\nfarm data  registered successfully: ", result)
-              status = true;
-            }
-          }
-
-          if (type.toString().toLocaleLowerCase().includes('training')) {
-            const result = await this.attendenceSheetWorker.storeAttendanceData(JSON.stringify(data));
-            if (typeof result != 'undefined') {
-              console.log("\n\participants and attendance of this training project registered successfully: ", result)
-              status = true;
-            }
-          }
-
-          return data
-        });
-
-      } else {
+      if (type.toString().toLocaleLowerCase().includes('internal_inspection') ||
+        type.toString().toLocaleLowerCase().includes('auto_evaluation')) {
         data = await this.prismaService.inspection_data.create({
           data: res,
         });
+      }
+      else {
+        // data = await this.prismaService.$transaction(async () => {
+        data = await this.prismaService.inspection_data.create({
+          data: res,
+        });
+        if (data)
+          // store the data for farmer via the worker thread
+          // council here is added because we are trying to fetch farmer from mobile later based on location/city.
+          if (type.toString().toLocaleLowerCase().includes('initial_inspection')) {
+            const result = await this.fieldWorker.storeFarmerData(JSON.stringify({ ...data, council }));
+            if (typeof result != 'undefined')
+              status = true
+          } else
+
+            // store data for  farm 
+            if (type.toString().toLocaleLowerCase().includes('mapping')) {
+              const result = await this.farmWorker.storeFarmData(JSON.stringify({ ...data, company_id }));
+              if (typeof result != 'undefined') {
+                console.log("\n\nfarm data  registered successfully: ", result)
+                status = true;
+              }
+            }
+            else
+              if (type.toString().toLocaleLowerCase().includes('training')) {
+                const result = await this.attendenceSheetWorker.storeAttendanceData(JSON.stringify(data));
+                if (typeof result != 'undefined') {
+                  console.log("\n\participants and attendance of this training project registered successfully: ", result)
+                  status = true;
+                }
+              }
+
+        //   return data
+        // });
+
       }
 
       if (data) {

@@ -9,18 +9,44 @@ const logger = new LoggerService();
 
 parentPort?.on('message', async ({ data, id }) => {
 
+    console.log("\n\n farm  worker for mapping received data: ", data);
+
+    let farmer;
+
     if (!data?.project_data?.project_data?.farmer_ID_card_number)
         throw new HttpException(`No Farmer ID card number Provided: `, HttpStatus.BAD_REQUEST);
 
-    const farmer = await prisma.farmer.findUnique({
+    farmer = await prisma.farmer.findUnique({
         where: {
             farmer_ID_card_number: data?.project_data?.project_data?.farmer_ID_card_number,
 
         }
     })
-    console.log("\n\farm  worker received this is farmer data: ", farmer);
-    // construct the farmer object 
 
+    // if No farm er in the DB, we create the new farmer.
+    if (!farmer) {
+        farmer = await prisma.farmer.create({
+            data: {
+                company_id: data?.company_id,
+                farmer_name: data?.project_data?.project_data?.farmer_name,
+                farmer_contact: data?.project_data?.project_data?.farmer_contact,
+                council: "",
+                farmer_ID_card_number: data?.project_data?.project_data?.farmer_ID_card_number,
+                inspection_date: data?.project_data?.project_data?.date,
+                village: data?.project_data?.project_data?.village,
+                certification_year: "1970",
+                inspector_name: data?.project_data?.project_data?.collector_name,
+                inspector_contact: "",
+                weed_application: "",
+                weed_application_quantity: 0,
+                pesticide_used: "",
+                pesticide_quantity: 0,
+                farmer_photos: []
+            }
+        })
+    }
+
+    // construct the farm object 
     const farmerObject = {
         location: data.project_data?.project_data?.location, // Json ?  @default("{}")  @db.JsonB
         farmer_id: farmer?.id ? farmer?.id : data?.project_data?.project_data?.farmer_ID_card_number,// String,
@@ -34,38 +60,38 @@ parentPort?.on('message', async ({ data, id }) => {
     }
 
     try {
-        const result = await prisma.$transaction(async () => {
-            // TODO: you may want to call directly the farmer service to delegate this task to.
-            const newFarmData = await prisma.farm.create({
-                data: {
-                    location: farmerObject?.location,
-                    farmer_id: <string>farmer?.id,
-                    village: farmerObject?.village,
-                    plantation_creation_date: new Date(farmerObject?.plantation_creation_date).toISOString(),
-                    estimate_area: farmerObject?.estimate_area,
-                    plantation_photos: farmerObject?.plantation_photos,
-                    farm_image_url: ""
-                }
-            });
+        // const result = await prisma.$transaction(async () => {})
+        // TODO: you may want to call directly the farmer service to delegate this task to.
 
-            // this is to  get the historique  of the farms of a specific farmer.
-            const farmCoordinates = {
-                farm_id: newFarmData?.id,// String
-                // location: farmerObject?.location,// Json ?  @default("{}")  @db.JsonB 
-
-                coordinates: data.project_data?.project_data?.coordinates, //Json ?  @default("{}")  @db.JsonB
-                collector_name: data.project_data?.project_data?.collector_name // String
+        const newFarmData = await prisma.farm.create({
+            data: {
+                location: farmerObject?.location,
+                farmer_id: <string>farmer?.id,
+                village: farmerObject?.village,
+                plantation_creation_date: new Date(farmerObject?.plantation_creation_date).toISOString(),
+                estimate_area: farmerObject?.estimate_area,
+                plantation_photos: farmerObject?.plantation_photos,
+                farm_image_url: ""
             }
+        });
 
-            const farmCoordinate = await prisma.farm_coordinates.create({
-                data: farmCoordinates
-            });
+        // this is to  get the historique of the farms of a specific farmer.
+        const farmCoordinates = {
+            farm_id: newFarmData?.id,// String
+            // location: farmerObject?.location,// Json ?  @default("{}")  @db.JsonB 
 
-            return {
-                farm: newFarmData,
-                farmCoordinate
-            }
-        })
+            coordinates: data.project_data?.project_data?.coordinates, //Json ?  @default("{}")  @db.JsonB
+            collector_name: data.project_data?.project_data?.collector_name // String
+        }
+
+        const farmCoordinate = await prisma.farm_coordinates.create({
+            data: farmCoordinates
+        });
+
+        const result = {
+            farm: newFarmData,
+            farmCoordinate
+        }
 
 
         parentPort?.postMessage({ result, id });

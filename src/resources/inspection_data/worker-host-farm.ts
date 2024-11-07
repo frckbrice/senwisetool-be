@@ -50,6 +50,7 @@ export class FarmWorkerHost implements OnApplicationBootstrap, OnApplicationShut
     async storeFarmData(data: any) {
 
         const uniqueId = randomUUID(); // Generating a unique ID for the task
+        console.log("data received in the worker: ", data)
 
         try {
             // Sending a message to the worker thread with the input number and unique ID

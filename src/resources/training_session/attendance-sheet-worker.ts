@@ -28,8 +28,8 @@ parentPort?.on('message', async ({ data, id }) => {
 
     const participantsObj = data?.project_data?.participants;
 
-    console.log("title of the training:", attendance_sheet.title);
-    console.log("list of participants:\n ", participantsObj);
+    console.log("title of the training: ", attendance_sheet.title);
+    console.log("list of participants\n : ", participantsObj);
 
 
     try {

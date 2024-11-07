@@ -13,9 +13,10 @@ import { InspectionDataService } from './inspection_data.service';
 import { CreateInspectionDatumDto } from './dto/create-inspection_datum.dto';
 import { UpdateInspectionDatumDto } from './dto/update-inspection_datum.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role, User } from '@prisma/client';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
+import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
 
 @ApiTags('inspection_data')
 @Controller('inspection_data')
@@ -26,11 +27,13 @@ export class InspectionDataController {
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'create project data' })
-  create(@Body() createInspectionDatumDto: Prisma.Inspection_dataCreateInput & { council: string },
-    @Query() query: { type: string }
+  create(
+    @Body() createInspectionDatumDto: Prisma.Inspection_dataCreateInput & { council?: string },
+    @Query() query: { type: string },
+    @CurrentUser() user: Partial<User>,
   ) {
-
-    return this.inspectionDataService.create(createInspectionDatumDto, query.type);
+    console.log("\n\n value to upload: ", createInspectionDatumDto);
+    return this.inspectionDataService.create(createInspectionDatumDto, query.type, <string>user?.company_id);
   }
 
   @Roles(Role.ADG)
