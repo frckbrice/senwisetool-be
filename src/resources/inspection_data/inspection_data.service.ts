@@ -30,7 +30,7 @@ export class InspectionDataService {
   ) {
     let status: boolean = false;
 
-    console.log("\n\ndata from mobile: ", createInspectionDatumDto);
+    console.log("\n\n data from mobile: ", createInspectionDatumDto);
     console.log("\n\ntype : ", type);
     let city: string;
     // get the council from the   incoming mobile data

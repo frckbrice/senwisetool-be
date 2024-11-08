@@ -11,7 +11,7 @@ import { NextFunction, Request, Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { Role, User } from '@prisma/client';
 import { LoggerService } from 'src/global/logger/logger.service';
-import { PrismaService } from 'src/adapters/config/prisma.service';
+
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {

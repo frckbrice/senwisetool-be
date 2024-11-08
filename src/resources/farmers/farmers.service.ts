@@ -106,7 +106,8 @@ export class FarmersService {
             farmer_name: f.farmer_name,
             farmer_id: f.id,
             farmer_ID_card_number: f.farmer_ID_card_number,
-            village: f.village
+            village: f.village,
+            farmer_contact: f.farmer_contact
           })) : farmers,
           total,
           page: query.page ?? 0,
