@@ -322,9 +322,9 @@ export class MarketsService {
             location: data?.location,
             type_of_market: data?.type_of_market,
             company_name: data?.company?.name,
-            company_logo: data?.company?.logo
-          }
-          ,
+            company_logo: data?.company?.logo,
+            provider: data?.provider
+          },
           status: 200,
           message: `market fetched successfully`,
         };
