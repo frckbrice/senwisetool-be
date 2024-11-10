@@ -327,6 +327,7 @@ model Farmer {
   weed_application String
   weed_application_quantity Int
   pesticide_used String
+  status SubscriptionStatus ? @default(ACTIVE) 
   pesticide_quantity Int
   farmer_photos String[]
   farm Farm[]
@@ -334,7 +335,7 @@ model Farmer {
   updated_at DateTime @updatedAt
 
 
-  @@index([id, farmer_ID_card_number, farmer_contact])
+  @@index([id, farmer_ID_card_number, farmer_contact, council])
 }
 
 model Farm {
@@ -550,7 +551,7 @@ model Market {
   receipts Receipt[]
 
 
-  @@index([company_id, start_date, end_date, code])
+  @@index([company_id, start_date, end_date, code, status])
 }
 
 model Receipt {

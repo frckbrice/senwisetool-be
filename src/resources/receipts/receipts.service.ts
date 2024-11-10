@@ -1,4 +1,5 @@
 import {
+  HttpException,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
@@ -59,28 +60,28 @@ export class ReceiptService {
     }
   }
 
-  async findAll(query: any) {
+  async findAll(query: any, company_id: string) {
     // find all the receipt with the latest start date with its status and type
     const { page, perPage, market_id } = query;
-    const where = Object.create({});
 
-    if (market_id)
-      where['market_id'] = market_id;
+    const where: any = {
+      company_id,
+      ...(market_id && { id: market_id }),
+    };
 
-    let Query = Object.create({ where });
-    Query = {
-      ...Query,
+    const queryOptions = {
+      where,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
-        created_at: 'desc',
+        created_at: 'desc' as const, // Explicitly use SortOrder type
       },
     };
     // find all the companies
     try {
       const [total, receipts] = await this.prismaService.$transaction([
         this.prismaService.receipt.count(),
-        this.prismaService.receipt.findMany(Query),
+        this.prismaService.receipt.findMany(queryOptions),
       ]);
       if (receipts.length)
         return {
@@ -111,7 +112,7 @@ export class ReceiptService {
     }
   }
 
-  async findOne(receipt_id: string) {
+  async findOne(receipt_id: string,) {
     try {
       const result = await this.prismaService.receipt.findUnique({
         where: {
@@ -138,6 +139,17 @@ export class ReceiptService {
   }
 
   async update(id: string, updateReceiptDto: Prisma.ReceiptUpdateInput) {
+
+    // make sure the receipt exists
+    const existingReceipt = await this.prismaService.receipt.findUnique({
+      where: {
+        id,
+      }
+    })
+
+    if (!existingReceipt)
+      throw new HttpException(`NO receipt with id: ${id}`, HttpStatus.BAD_REQUEST)
+
     try {
       const result = await this.prismaService.receipt.update({
         data: updateReceiptDto,
@@ -170,6 +182,17 @@ export class ReceiptService {
   }
 
   async remove(receipt_id: string) {
+
+    // make sure the receipt exists
+    const existingReceipt = await this.prismaService.receipt.findUnique({
+      where: {
+        id: receipt_id,
+      }
+    })
+
+    if (!existingReceipt)
+      throw new HttpException(`NO receipt with id: ${receipt_id}`, HttpStatus.BAD_REQUEST)
+
     try {
       const result = await this.prismaService.receipt.delete({
         where: {

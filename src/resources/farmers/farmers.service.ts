@@ -77,27 +77,30 @@ export class FarmersService {
   async findAll(query: any, company_id: string) {
     // find all the farmer with the latest start date with its status and type
     const { page, perPage, location, phone } = query;
-    const where = Object.create({});
 
-    if (location) // get only farmer of a certain location for fone markets functionality
-      where['location'] = { contains: location };
-    where['company_id'] = company_id; // all the farmers are fetched by companyID
-    let q = Object.create({ where });
-    const Query = {
-      ...q,
+    const where: any = {
+      company_id,
+      ...(location && { council: { contains: location } }),
+    };
+
+    const queryOptions = {
+      where,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
-        created_at: 'desc',
+        created_at: 'desc' as const, // Explicitly use SortOrder type
       },
     };
 
+    console.log({ queryOptions })
     // find all the companies
     try {
+      // Fetch total count with the same filters and the paginated farmers
       const [total, farmers] = await this.prismaService.$transaction([
-        this.prismaService.farmer.count(),
-        this.prismaService.farmer.findMany(Query),
+        this.prismaService.farmer.count({ where }),
+        this.prismaService.farmer.findMany(queryOptions),
       ]);
+
       if (farmers.length)
         return {
           status: 200,

@@ -29,28 +29,27 @@ export class ReceiptController {
   @ApiOperation({ summary: 'create project data' })
   @UseGuards(RolesGuard)
   create(
-    @Body() createInspectionDatumDto: Prisma.ReceiptCreateInput,
+    @Body() createreceiptDatumDto: Prisma.ReceiptCreateInput,
     @CurrentUser() user: Partial<User>,
   ) {
-    return this.receiptService.create(createInspectionDatumDto, user);
+    return this.receiptService.create(createreceiptDatumDto, user);
   }
 
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
   @Get()
   @ApiOperation({ summary: 'find all receipts' })
-  findAll(@Query() query: any) {
-    return this.receiptService.findAll(query);
+  findAll(@Query() query: any, @CurrentUser() user: Partial<User>) {
+    return this.receiptService.findAll(query, <string>user?.company_id);
   }
 
   // get the current receipt
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
-  @Get('current')
+  @Get(':id')
   @ApiOperation({ summary: 'find the currently receipt of the connected user' })
-  findOne(@CurrentUser() user: Partial<User>) {
+  findOne(@Param('id') id: string) {
 
-    const id = <string>user?.company_id;
     return this.receiptService.findOne(id);
   }
 
@@ -60,9 +59,9 @@ export class ReceiptController {
   @ApiOperation({ summary: 'update one receipt with its id' })
   update(
     @Param('id') id: string,
-    @Body() updateInspectionDatumDto: Prisma.ReceiptUpdateInput,
+    @Body() updateReceiptDatumDto: Prisma.ReceiptUpdateInput,
   ) {
-    return this.receiptService.update(id, updateInspectionDatumDto);
+    return this.receiptService.update(id, updateReceiptDatumDto);
   }
 
   @Roles(Role.ADG)
