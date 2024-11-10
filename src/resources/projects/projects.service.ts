@@ -32,7 +32,8 @@ export class ProjectsService {
     company_id: string;
   }) {
 
-    console.log("before checking duplicate : ")
+    if (!company_id)
+      throw new HttpException(`No company ID. cannot create project`, HttpStatus.FORBIDDEN);
 
     // avoid creating the same project twice with the same title
     const project = await this.prismaService.project.findFirst({
@@ -40,8 +41,6 @@ export class ProjectsService {
         slug: this.slugify.slugify(createProjectDto.title),
       },
     });
-
-
 
     if (project !== null) {
       console.log("after checking duplicate :existing, ", project);
@@ -53,7 +52,7 @@ export class ProjectsService {
     }
 
     // validate date so that end date should be greater than start date
-    console.log("incomning project dto: ", createProjectDto)
+
 
     if (createProjectDto.start_date > createProjectDto.end_date)
       return {
@@ -63,44 +62,30 @@ export class ProjectsService {
       };
 
     try {
-      console.log("after checking data : ", createProjectDto)
-      // // check if there is an existing project/assignee with the same code 4 digits
-      // const existingAssignee = await this.projectAssigneeService.findOne(projectCode);
-      // if (existingAssignee?.data?.length) {
-      //   return {
-      //     data: null,
-      //     message: 'this code is already in use, Please try again',
-      //     status: 400
-      //   }
-      // }
 
-      /**
-   * 1. create mapping with created uuid
-   * 2. persist this mapping in the DB for later retrieval 
-   */
-      const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
+
+      const { uuid: UID, code: projectCode } = generateMapping(crypto.randomUUID());
       const assignee = await this.projectAssigneeService.create({
         agentCode: projectCode,
-        projectCodes: [uuid],
+        projectCodes: [UID],
         company_id
       })
 
-      console.log("Assignee created: ", assignee)
+      console.log("from project service assignee created : ", assignee);
 
       const result = await this.prismaService.project.create({
         data: {
           ...createProjectDto,
           slug: this.slugify.slugify(createProjectDto.title),
-          code: uuid,
+          code: UID,
           deployed_at: "1970-01-01T00:00:00+01:00",
           archived_at: "1970-01-01T00:00:00+01:00",
           deleted_at: "1970-01-01T00:00:00+01:00",
           updated_at: "1970-01-01T00:00:00+01:00",
         },
       });
-      console.log("project created: ", result)
-      if (result) {
 
+      if (result) {
         return {
           data: { ...result, code: projectCode },
           status: 201,
@@ -129,7 +114,9 @@ export class ProjectsService {
 
     console.log('company_id\n', company_id)
     const { status, type, page, perPage, search, campaign_id, } = query;
-    const where = Object.create({ company_id });
+    const where: any = {
+      company_id
+    };
 
     if (status) {
       where['status'] = status;
@@ -157,12 +144,12 @@ export class ProjectsService {
 
     let q = Object.create({ where });
     console.log("incoming request  after query.agentCode : ", query)
-    const options = {
-      ...q,
+    const queryOptions = {
+      where,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
-        start_date: 'desc',
+        start_date: 'desc' as const,
       },
     };
 
@@ -171,8 +158,8 @@ export class ProjectsService {
     try {
       console.log('Query from service\n\n', q)
       const [total, projects] = await this.prismaService.$transaction([
-        this.prismaService.project.count(),
-        this.prismaService.project.findMany(options),
+        this.prismaService.project.count({ where }),
+        this.prismaService.project.findMany(queryOptions),
       ]);
 
       if (typeof projects != 'undefined' && projects.length) {

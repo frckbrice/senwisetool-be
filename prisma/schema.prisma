@@ -130,7 +130,7 @@ model User {
   company       Company @relation(fields: [company_id], references: [id])
   status        UserStatus
   // farm          Farm[] 
-  receipt       Receipt?
+  // receipt       Receipt?
   // market_audit  Market_audit[]
   // training_audits Company_training_audit[]
 
@@ -192,14 +192,14 @@ model Assignee {
   id  String @id @default(cuid())
   agentCode  String @unique
   projectCodes  String[]
-  company_id  String
+  company_id  String 
   fullName String?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   deleted_at DateTime @updatedAt
 
-  @@index([id, agentCode, company_id])
+  @@index([id, projectCodes, company_id])
 }
 
 model Project {
@@ -331,6 +331,7 @@ model Farmer {
   pesticide_quantity Int
   farmer_photos String[]
   farm Farm[]
+  receipts Receipt[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -556,34 +557,36 @@ model Market {
 
 model Receipt {
   id String @id @default(cuid())
-  market_id String
+  market_id String @unique
   village String
   farmer_id String @unique
-market_number Int
+
   date DateTime 
-  weight Float
+  weight String
   humidity String
-  netWeight Int
-  agentName String
+  net_weight Int
+  agent_name String
   refraction String
-  pricePerKg Float
-  totalPrice Float
+  price_per_kg String
+  total_price Float
   currency String
-  totalWeight Float
+  total_weight String
 
   salePhotoUrl String[]
-  net_paid Int 
-  farmerSignature String
-  agentSignature String
+
+  agent_signature String
+  farmer_signature String
   gpsLocation Json
 
   product_name String
 
 
-  user User @relation(fields: [farmer_id], references: [id])
+  farmer Farmer @relation(fields: [farmer_id], references: [id])
   market Market @relation(fields: [market_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@index([market_id, farmer_id, date, id])
 }
 
 model Transaction {

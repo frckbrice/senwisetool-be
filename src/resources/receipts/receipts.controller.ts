@@ -28,6 +28,7 @@ export class ReceiptController {
   @Post()
   @ApiOperation({ summary: 'create project data' })
   @UseGuards(RolesGuard)
+  @Roles(Role.ADG, Role.AGENT)
   create(
     @Body() createreceiptDatumDto: Prisma.ReceiptCreateInput,
     @CurrentUser() user: Partial<User>,

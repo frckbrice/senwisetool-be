@@ -67,10 +67,26 @@ export class AuthMiddleware implements NestMiddleware {
             const currentUser = await this.requestService.getUserWithSub(payload)
 
             // set  current user to the request for next processing in guard.
-            req['user'] = currentUser;
 
-            // allow company creation to be public access.
-            // we need the current user to help creating him alongside the company creation.
+            if (!currentUser) {
+                req['user'] = {
+                    id: payload.userId,
+                    first_name: <string>payload?.user_first_name,
+                    email: payload?.user_email,
+                    role: <Role>Role.ADG,
+                }
+            } else {
+                // set the current user id
+                this.requestService.currentUserId = <string>currentUser?.id;
+                req['user'] = currentUser;
+            }
+
+            /**
+             * we allow /v1/companies to be public here because we want to take advantage 
+             * of having the user in the request. this help us create the first user of the
+             * company along with its company.
+             */
+
             if (
                 req.method == 'POST' &&
                 this.allowPostRoutes.includes('/v1/companies')
@@ -79,9 +95,6 @@ export class AuthMiddleware implements NestMiddleware {
                 this.logger.log('Allowing public  access to route  to create company ', AuthMiddleware.name);
                 return next();
             }
-
-            // set the current user id
-            this.requestService.currentUserId = <string>currentUser.id;
 
             next();
 

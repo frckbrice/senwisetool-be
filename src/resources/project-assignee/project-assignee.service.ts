@@ -11,24 +11,27 @@ export class ProjectAssigneeService {
   constructor(private prismaService: PrismaService) { }
   async create(createProjectAssigneeDto: Prisma.AssigneeCreateInput) {
 
-
-    if (!createProjectAssigneeDto?.agentCode)
+    console.log("from project assignee from servce => ", createProjectAssigneeDto)
+    if (!createProjectAssigneeDto?.agentCode || !createProjectAssigneeDto.company_id)
       return {
         status: 400,
         message: "INVALID CREDENTIALS",
         data: null
       }
     try {
-      console.log("project assignee from servce => ", createProjectAssigneeDto)
+
       const data = await this.prismaService.assignee.create({
         data: createProjectAssigneeDto
       });
-      if (typeof data != 'undefined')
+      if (typeof data != 'undefined' && data) {
+        console.log("assignee created: ", data)
         return {
           data,
           message: "Project Assigned to this user created successfully",
           status: 201
         }
+      }
+
       return {
         data: null,
         message: "Failed to assign projects to this user",
@@ -160,7 +163,7 @@ export class ProjectAssigneeService {
       console.log('company_id\n', company_id)
 
       const data = await this.prismaService.assignee.findMany({
-        
+
         where: {
           company_id
         }

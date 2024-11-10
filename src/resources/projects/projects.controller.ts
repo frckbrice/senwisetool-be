@@ -47,7 +47,8 @@ export class ProjectsController {
     @Body() createProjectDto: Prisma.ProjectCreateInput,
     @CurrentUser() user: Partial<User>,
   ) {
-    console.log("hit create  project controller: data,", createProjectDto);
+
+    console.log("project controller current user: ", user);
     return this.projectsService.create({
       createProjectDto,
       company_id: <string>user.company_id,

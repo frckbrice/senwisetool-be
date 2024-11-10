@@ -74,7 +74,7 @@ CREATE TABLE "Company" (
     "description" TEXT NOT NULL,
     "region" TEXT NOT NULL,
     "timezone" TEXT NOT NULL DEFAULT 'UTC',
-    "status" "CompanyStatus",
+    "status" "CompanyStatus" DEFAULT 'INACTIVE',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -216,6 +216,7 @@ CREATE TABLE "Farmer" (
     "weed_application" TEXT NOT NULL,
     "weed_application_quantity" INTEGER NOT NULL,
     "pesticide_used" TEXT NOT NULL,
+    "status" "SubscriptionStatus" DEFAULT 'ACTIVE',
     "pesticide_quantity" INTEGER NOT NULL,
     "farmer_photos" TEXT[],
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -258,11 +259,9 @@ CREATE TABLE "Attendance_sheet" (
     "date" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "modules" TEXT[],
-    "trainers" TEXT[],
-    "trainer_signature" TEXT[],
+    "trainers" JSONB NOT NULL DEFAULT '[{}]',
     "location" TEXT NOT NULL,
     "report_url" TEXT NOT NULL,
-    "trainer_proof_of_competency" TEXT[],
     "photos" TEXT[],
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -355,17 +354,17 @@ CREATE TABLE "Market" (
     "provider" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "location" TEXT NOT NULL,
+    "campaign_id" TEXT NOT NULL,
     "type_of_market" "MarketType" NOT NULL DEFAULT 'COCOA',
-    "bordereau_vente_url" TEXT NOT NULL,
-    "bon_entree_magazin_url" TEXT NOT NULL,
-    "accompanying_url" TEXT NOT NULL,
-    "transmission_url" TEXT NOT NULL,
-    "status" "CampaignStatus" NOT NULL DEFAULT 'CLOSED',
+    "bordereau_vente_url" TEXT,
+    "bon_entree_magazin_url" TEXT,
+    "accompanying_url" TEXT,
+    "transmission_url" TEXT,
+    "product_quantity" INTEGER,
+    "status" "CampaignStatus" NOT NULL DEFAULT 'OPEN',
     "code" TEXT,
-    "product_quantity" INTEGER NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "campaign_id" TEXT NOT NULL,
 
     CONSTRAINT "Market_pkey" PRIMARY KEY ("id")
 );
@@ -376,21 +375,19 @@ CREATE TABLE "Receipt" (
     "market_id" TEXT NOT NULL,
     "village" TEXT NOT NULL,
     "farmer_id" TEXT NOT NULL,
-    "market_number" INTEGER NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
-    "weight" DOUBLE PRECISION NOT NULL,
+    "weight" TEXT NOT NULL,
     "humidity" TEXT NOT NULL,
-    "netWeight" INTEGER NOT NULL,
-    "agentName" TEXT NOT NULL,
+    "net_weight" INTEGER NOT NULL,
+    "agent_name" TEXT NOT NULL,
     "refraction" TEXT NOT NULL,
-    "pricePerKg" DOUBLE PRECISION NOT NULL,
-    "totalPrice" DOUBLE PRECISION NOT NULL,
+    "price_per_kg" TEXT NOT NULL,
+    "total_price" DOUBLE PRECISION NOT NULL,
     "currency" TEXT NOT NULL,
-    "totalWeight" DOUBLE PRECISION NOT NULL,
+    "total_weight" TEXT NOT NULL,
     "salePhotoUrl" TEXT[],
-    "net_paid" INTEGER NOT NULL,
-    "farmerSignature" TEXT NOT NULL,
-    "agentSignature" TEXT NOT NULL,
+    "agent_signature" TEXT NOT NULL,
+    "farmer_signature" TEXT NOT NULL,
     "gpsLocation" JSONB NOT NULL,
     "product_name" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -402,25 +399,67 @@ CREATE TABLE "Receipt" (
 -- CreateTable
 CREATE TABLE "Transaction" (
     "id" TEXT NOT NULL,
-    "market_id" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "market_number" TEXT NOT NULL,
+    "date" TEXT NOT NULL,
     "level_of_traceability" TEXT NOT NULL,
     "driver_name" TEXT NOT NULL,
-    "quantity" INTEGER NOT NULL,
     "humidity" INTEGER NOT NULL,
     "net_weight_declared_in_Ton" DOUBLE PRECISION NOT NULL,
     "humidity_level_of_product" TEXT,
     "total_quantity_in_bags" INTEGER NOT NULL,
+    "sender_name" TEXT NOT NULL,
     "receiver_name" TEXT NOT NULL,
     "sender_signature" TEXT NOT NULL,
     "driver_signature" TEXT NOT NULL,
     "product_quality" TEXT NOT NULL,
     "vehicule_immatriculation_number" TEXT NOT NULL,
-    "min_com_verif_agent_name_and_sig" TEXT NOT NULL,
+    "min_com_sig" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Agriculture" (
+    "id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
+    "activity_title" TEXT NOT NULL,
+    "pictures_url" TEXT[],
+    "documents_url" TEXT[],
+    "pv_url" TEXT[],
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Agriculture_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Social" (
+    "id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
+    "activity_title" TEXT NOT NULL,
+    "pictures_url" TEXT[],
+    "documents_url" TEXT[],
+    "pv_url" TEXT[],
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Social_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Environment" (
+    "id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
+    "activity_title" TEXT NOT NULL,
+    "pictures_url" TEXT[],
+    "documents_url" TEXT[],
+    "pv_url" TEXT[],
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Environment_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -442,7 +481,7 @@ CREATE UNIQUE INDEX "Assignee_agentCode_key" ON "Assignee"("agentCode");
 CREATE UNIQUE INDEX "Assignee_company_id_key" ON "Assignee"("company_id");
 
 -- CreateIndex
-CREATE INDEX "Assignee_id_agentCode_company_id_idx" ON "Assignee"("id", "agentCode", "company_id");
+CREATE INDEX "Assignee_id_projectCodes_company_id_idx" ON "Assignee"("id", "projectCodes", "company_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Project_code_key" ON "Project"("code");
@@ -463,7 +502,7 @@ CREATE INDEX "Inspection_data_project_id_idx" ON "Inspection_data"("project_id")
 CREATE UNIQUE INDEX "Farmer_farmer_ID_card_number_key" ON "Farmer"("farmer_ID_card_number");
 
 -- CreateIndex
-CREATE INDEX "Farmer_id_farmer_ID_card_number_farmer_contact_idx" ON "Farmer"("id", "farmer_ID_card_number", "farmer_contact");
+CREATE INDEX "Farmer_id_farmer_ID_card_number_farmer_contact_council_idx" ON "Farmer"("id", "farmer_ID_card_number", "farmer_contact", "council");
 
 -- CreateIndex
 CREATE INDEX "Farm_farmer_id_location_idx" ON "Farm"("farmer_id", "location");
@@ -493,10 +532,16 @@ CREATE INDEX "Price_plan_product_name_id_plan_name_status_idx" ON "Price_plan"("
 CREATE UNIQUE INDEX "Market_code_key" ON "Market"("code");
 
 -- CreateIndex
-CREATE INDEX "Market_company_id_start_date_end_date_code_idx" ON "Market"("company_id", "start_date", "end_date", "code");
+CREATE INDEX "Market_company_id_start_date_end_date_code_status_idx" ON "Market"("company_id", "start_date", "end_date", "code", "status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Receipt_market_id_key" ON "Receipt"("market_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Receipt_farmer_id_key" ON "Receipt"("farmer_id");
+
+-- CreateIndex
+CREATE INDEX "Receipt_market_id_farmer_id_date_id_idx" ON "Receipt"("market_id", "farmer_id", "date", "id");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -535,10 +580,10 @@ ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_plan_id_fkey" FOREIGN KE
 ALTER TABLE "Market" ADD CONSTRAINT "Market_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Receipt" ADD CONSTRAINT "Receipt_farmer_id_fkey" FOREIGN KEY ("farmer_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Receipt" ADD CONSTRAINT "Receipt_farmer_id_fkey" FOREIGN KEY ("farmer_id") REFERENCES "Farmer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Receipt" ADD CONSTRAINT "Receipt_market_id_fkey" FOREIGN KEY ("market_id") REFERENCES "Market"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_market_id_fkey" FOREIGN KEY ("market_id") REFERENCES "Market"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_market_number_fkey" FOREIGN KEY ("market_number") REFERENCES "Market"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

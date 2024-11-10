@@ -39,7 +39,7 @@ export class RolesGuard implements CanActivate {
     //     })
     // }
 
-    // allow route access for public routes like : health check,
+    // allow route access for public routes like : health check etc.
     if (!requiredRoles && !user) {
       this.logger.log('user allowed access to route handler', RolesGuard.name);
       return true;

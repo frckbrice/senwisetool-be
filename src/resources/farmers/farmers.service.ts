@@ -88,7 +88,7 @@ export class FarmersService {
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
-        created_at: 'desc' as const, // Explicitly use SortOrder type
+        created_at: 'desc' as const, //Explicitly use SortOrder type
       },
     };
 

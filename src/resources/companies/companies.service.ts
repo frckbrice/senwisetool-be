@@ -60,7 +60,7 @@ export class ComapnyService {
 
         // We create the user object here. This is a design decision. because we need to create the ADG along with its company. May be updated later.
         await this.userService.createUserFromCompany({
-          id: <string>user.id,
+          id: <string>user.id,  // we assign the clerk user Id to our Prisma user
           first_name: <string>user.first_name,
           email: <string>user.email,
           role: <string>user.role,

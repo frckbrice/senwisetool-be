@@ -119,10 +119,9 @@ export class MarketsService {
 
     };
 
-    console.log({ where })
     // find all the market with the latest start date with its status and type
     try {
-      console.log('fetching markets')
+
       const [total, markets] = await this.prismaService.$transaction([
         this.prismaService.market.count({
           where
