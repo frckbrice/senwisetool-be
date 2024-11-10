@@ -74,11 +74,9 @@ CREATE TABLE "Company" (
     "description" TEXT NOT NULL,
     "region" TEXT NOT NULL,
     "timezone" TEXT NOT NULL DEFAULT 'UTC',
-<<<<<<<< HEAD:prisma/migrations/20241110173641_restart/migration.sql
+
     "status" "CompanyStatus" DEFAULT 'INACTIVE',
-========
-    "status" "CompanyStatus",
->>>>>>>> 671436c (basic re-setup):prisma/migrations/20241028080320_reset_db/migration.sql
+
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -220,10 +218,9 @@ CREATE TABLE "Farmer" (
     "weed_application" TEXT NOT NULL,
     "weed_application_quantity" INTEGER NOT NULL,
     "pesticide_used" TEXT NOT NULL,
-<<<<<<<< HEAD:prisma/migrations/20241110173641_restart/migration.sql
+
     "status" "SubscriptionStatus" DEFAULT 'ACTIVE',
-========
->>>>>>>> 671436c (basic re-setup):prisma/migrations/20241028080320_reset_db/migration.sql
+
     "pesticide_quantity" INTEGER NOT NULL,
     "farmer_photos" TEXT[],
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -266,17 +263,10 @@ CREATE TABLE "Attendance_sheet" (
     "date" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "modules" TEXT[],
-<<<<<<<< HEAD:prisma/migrations/20241110173641_restart/migration.sql
+
     "trainers" JSONB NOT NULL DEFAULT '[{}]',
     "location" TEXT NOT NULL,
     "report_url" TEXT NOT NULL,
-========
-    "trainers" TEXT[],
-    "trainer_signature" TEXT[],
-    "location" TEXT NOT NULL,
-    "report_url" TEXT NOT NULL,
-    "trainer_proof_of_competency" TEXT[],
->>>>>>>> 671436c (basic re-setup):prisma/migrations/20241028080320_reset_db/migration.sql
     "photos" TEXT[],
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -369,17 +359,8 @@ CREATE TABLE "Market" (
     "provider" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "location" TEXT NOT NULL,
-<<<<<<<< HEAD:prisma/migrations/20241110173641_restart/migration.sql
-    "campaign_id" TEXT NOT NULL,
-    "type_of_market" "MarketType" NOT NULL DEFAULT 'COCOA',
-    "bordereau_vente_url" TEXT,
-    "bon_entree_magazin_url" TEXT,
-    "accompanying_url" TEXT,
-    "transmission_url" TEXT,
-    "product_quantity" INTEGER,
-    "status" "CampaignStatus" NOT NULL DEFAULT 'OPEN',
-    "code" TEXT,
-========
+
+
     "type_of_market" "MarketType" NOT NULL DEFAULT 'COCOA',
     "bordereau_vente_url" TEXT NOT NULL,
     "bon_entree_magazin_url" TEXT NOT NULL,
@@ -388,7 +369,7 @@ CREATE TABLE "Market" (
     "status" "CampaignStatus" NOT NULL DEFAULT 'CLOSED',
     "code" TEXT,
     "product_quantity" INTEGER NOT NULL,
->>>>>>>> 671436c (basic re-setup):prisma/migrations/20241028080320_reset_db/migration.sql
+
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "campaign_id" TEXT NOT NULL,
@@ -402,10 +383,10 @@ CREATE TABLE "Receipt" (
     "market_id" TEXT NOT NULL,
     "village" TEXT NOT NULL,
     "farmer_id" TEXT NOT NULL,
-    "market_number" INTEGER NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
-<<<<<<<< HEAD:prisma/migrations/20241110173641_restart/migration.sql
+
     "weight" TEXT NOT NULL,
+
     "humidity" TEXT NOT NULL,
     "net_weight" INTEGER NOT NULL,
     "agent_name" TEXT NOT NULL,
@@ -415,23 +396,10 @@ CREATE TABLE "Receipt" (
     "currency" TEXT NOT NULL,
     "total_weight" TEXT NOT NULL,
     "salePhotoUrl" TEXT[],
+
     "agent_signature" TEXT NOT NULL,
     "farmer_signature" TEXT NOT NULL,
-========
-    "weight" DOUBLE PRECISION NOT NULL,
-    "humidity" TEXT NOT NULL,
-    "netWeight" INTEGER NOT NULL,
-    "agentName" TEXT NOT NULL,
-    "refraction" TEXT NOT NULL,
-    "pricePerKg" DOUBLE PRECISION NOT NULL,
-    "totalPrice" DOUBLE PRECISION NOT NULL,
-    "currency" TEXT NOT NULL,
-    "totalWeight" DOUBLE PRECISION NOT NULL,
-    "salePhotoUrl" TEXT[],
-    "net_paid" INTEGER NOT NULL,
-    "farmerSignature" TEXT NOT NULL,
-    "agentSignature" TEXT NOT NULL,
->>>>>>>> 671436c (basic re-setup):prisma/migrations/20241028080320_reset_db/migration.sql
+
     "gpsLocation" JSONB NOT NULL,
     "product_name" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -464,7 +432,6 @@ CREATE TABLE "Transaction" (
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
 );
 
-<<<<<<<< HEAD:prisma/migrations/20241110173641_restart/migration.sql
 -- CreateTable
 CREATE TABLE "Agriculture" (
     "id" TEXT NOT NULL,
@@ -507,8 +474,6 @@ CREATE TABLE "Environment" (
     CONSTRAINT "Environment_pkey" PRIMARY KEY ("id")
 );
 
-========
->>>>>>>> 671436c (basic re-setup):prisma/migrations/20241028080320_reset_db/migration.sql
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -528,11 +493,10 @@ CREATE UNIQUE INDEX "Assignee_agentCode_key" ON "Assignee"("agentCode");
 CREATE UNIQUE INDEX "Assignee_company_id_key" ON "Assignee"("company_id");
 
 -- CreateIndex
-<<<<<<<< HEAD:prisma/migrations/20241110173641_restart/migration.sql
-CREATE INDEX "Assignee_id_projectCodes_company_id_idx" ON "Assignee"("id", "projectCodes", "company_id");
-========
+
+
 CREATE INDEX "Assignee_id_agentCode_company_id_idx" ON "Assignee"("id", "agentCode", "company_id");
->>>>>>>> 671436c (basic re-setup):prisma/migrations/20241028080320_reset_db/migration.sql
+
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Project_code_key" ON "Project"("code");
@@ -553,11 +517,9 @@ CREATE INDEX "Inspection_data_project_id_idx" ON "Inspection_data"("project_id")
 CREATE UNIQUE INDEX "Farmer_farmer_ID_card_number_key" ON "Farmer"("farmer_ID_card_number");
 
 -- CreateIndex
-<<<<<<<< HEAD:prisma/migrations/20241110173641_restart/migration.sql
+
 CREATE INDEX "Farmer_id_farmer_ID_card_number_farmer_contact_council_idx" ON "Farmer"("id", "farmer_ID_card_number", "farmer_contact", "council");
-========
-CREATE INDEX "Farmer_id_farmer_ID_card_number_farmer_contact_idx" ON "Farmer"("id", "farmer_ID_card_number", "farmer_contact");
->>>>>>>> 671436c (basic re-setup):prisma/migrations/20241028080320_reset_db/migration.sql
+
 
 -- CreateIndex
 CREATE INDEX "Farm_farmer_id_location_idx" ON "Farm"("farmer_id", "location");
@@ -587,17 +549,9 @@ CREATE INDEX "Price_plan_product_name_id_plan_name_status_idx" ON "Price_plan"("
 CREATE UNIQUE INDEX "Market_code_key" ON "Market"("code");
 
 -- CreateIndex
-<<<<<<<< HEAD:prisma/migrations/20241110173641_restart/migration.sql
+
 CREATE INDEX "Market_company_id_start_date_end_date_code_status_idx" ON "Market"("company_id", "start_date", "end_date", "code", "status");
 
--- CreateIndex
-CREATE UNIQUE INDEX "Receipt_market_id_key" ON "Receipt"("market_id");
-========
-CREATE INDEX "Market_company_id_start_date_end_date_code_idx" ON "Market"("company_id", "start_date", "end_date", "code");
->>>>>>>> 671436c (basic re-setup):prisma/migrations/20241028080320_reset_db/migration.sql
-
--- CreateIndex
-CREATE UNIQUE INDEX "Receipt_farmer_id_key" ON "Receipt"("farmer_id");
 
 -- CreateIndex
 CREATE INDEX "Receipt_market_id_farmer_id_date_id_idx" ON "Receipt"("market_id", "farmer_id", "date", "id");
@@ -645,8 +599,6 @@ ALTER TABLE "Receipt" ADD CONSTRAINT "Receipt_farmer_id_fkey" FOREIGN KEY ("farm
 ALTER TABLE "Receipt" ADD CONSTRAINT "Receipt_market_id_fkey" FOREIGN KEY ("market_id") REFERENCES "Market"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-<<<<<<<< HEAD:prisma/migrations/20241110173641_restart/migration.sql
+
 ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_market_number_fkey" FOREIGN KEY ("market_number") REFERENCES "Market"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-========
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_market_id_fkey" FOREIGN KEY ("market_id") REFERENCES "Market"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
->>>>>>>> 671436c (basic re-setup):prisma/migrations/20241028080320_reset_db/migration.sql
+
