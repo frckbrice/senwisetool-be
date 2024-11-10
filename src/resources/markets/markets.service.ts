@@ -79,12 +79,12 @@ export class MarketsService {
   }
 
   async findAll(query: Partial<PaginationMarketQueryDto>, company_id: string) {
-  
-    const { status, type, page, perPage,
+
+    const {
+      status, type, page, perPage,
       search, campaign_id, agentCode } = query;
-    const where: any = {
-      company_id,
-    }
+
+    const where: any = {};
 
     if (status) {
       where['status'] = status;
@@ -98,6 +98,10 @@ export class MarketsService {
       where['campaign_id'] = campaign_id;
     }
 
+    if (company_id) {
+      where['company_id'] = company_id;
+    }
+
     if (agentCode) {
       return await this.getTheAssignedMarket(agentCode, company_id)
     }
@@ -105,31 +109,31 @@ export class MarketsService {
     if (search)
       where["search"] = search;
 
-  const queryOptions = {
-      ...where,
+    const queryOptions = {
+      where,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
         start_date: 'desc' as const,
       },
-  }  
+
+    };
+
+    console.log({ where })
     // find all the market with the latest start date with its status and type
     try {
       console.log('fetching markets')
       const [total, markets] = await this.prismaService.$transaction([
-        this.prismaService.market.count(),
-        this.prismaService.market.findMany({
-          ...queryOptions,
-          include: {
-            transaction: true,
-          }
+        this.prismaService.market.count({
+          where
         }),
+        this.prismaService.market.findMany(queryOptions),
       ]);
       if (markets.length)
         return {
           status: 200,
           message: 'markets fetched successfully',
-          // data: agentCode ? markets.map((m) => ({})) : [],
+
           data: markets,
           total,
           page: query.page ?? 0,
@@ -139,7 +143,7 @@ export class MarketsService {
       else
         return {
           status: HttpStatus.NOT_FOUND,
-          message: 'No markets found ',
+          message: 'No markets found',
           data: [],
           total,
           page: query.page ?? 0,
@@ -147,7 +151,7 @@ export class MarketsService {
           totalPages: Math.ceil(total / (query.perPage ?? 20)),
         };
     } catch (error) {
-      this.logger.error('Error fetching markets', MarketsService.name);
+      this.logger.error(`Error fetching markets' \n\n, ${error}`, MarketsService.name);
       throw new NotFoundException('Error fetching markets');
     }
   }
