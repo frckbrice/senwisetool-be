@@ -100,9 +100,7 @@ export class MarketsService {
       where['company_id'] = company_id;
     }
     if (agentCode) {
-
       return await this.getTheAssignedMarket(agentCode, company_id)
-
     }
 
     if (search)
@@ -293,24 +291,18 @@ export class MarketsService {
       console.log("request market by agent code: " + agentCode);
       const listOfMarkets = await this.projectAssigneeService.findOne(agentCode);
       const marketUUID = listOfMarkets?.data?.[0];
-      console.log("corresponding agent code UUID: " + marketUUID);
+
+      console.log({ marketUUID, company_id, status: CampaignStatus.OPEN, start_date: { gte: currentDate } })
       const data = await this.prismaService.market.findFirst({
         where: {
           AND: [
-            { code: marketUUID },
-            { company_id },
+            { code: marketUUID }, // sselect market by uuid
+            { company_id }, //select current user connected company market
             { status: CampaignStatus.OPEN }, // selct open market.
-            { start_date: { gte: currentDate } }
+            // { start_date: { gte: currentDate } }
           ]
-          // select: {
+
         },
-        //   id: true,
-        //   market_number: true,
-        //   start_date: true,
-        //   end_date: true,
-        //   status: true,
-        //   company_id: true,
-        // },
         include: {
           company: {
             select: {
