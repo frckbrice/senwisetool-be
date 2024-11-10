@@ -79,6 +79,7 @@ export class MarketsService {
   }
 
   async findAll(query: Partial<PaginationMarketQueryDto>, company_id: string) {
+  
     const { status, type, page, perPage,
       search, campaign_id, agentCode } = query;
     const where: any = {
@@ -118,10 +119,9 @@ export class MarketsService {
       const [total, markets] = await this.prismaService.$transaction([
         this.prismaService.market.count(),
         this.prismaService.market.findMany({
-          ...Query,
+          ...queryOptions,
           include: {
             transaction: true,
-            receipts: true
           }
         }),
       ]);
