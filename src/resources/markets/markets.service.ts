@@ -81,8 +81,9 @@ export class MarketsService {
   async findAll(query: Partial<PaginationMarketQueryDto>, company_id: string) {
     const { status, type, page, perPage,
       search, campaign_id, agentCode } = query;
-    const where = Object.create({});
-    let Query = Object.create({ where });
+    const where: any = {
+      company_id,
+    }
 
     if (status) {
       where['status'] = status;
@@ -96,9 +97,6 @@ export class MarketsService {
       where['campaign_id'] = campaign_id;
     }
 
-    if (company_id) {
-      where['company_id'] = company_id;
-    }
     if (agentCode) {
       return await this.getTheAssignedMarket(agentCode, company_id)
     }
@@ -106,15 +104,14 @@ export class MarketsService {
     if (search)
       where["search"] = search;
 
-    Query = {
-      ...Query,
+  const queryOptions = {
+      ...where,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
-        start_date: 'desc',
+        start_date: 'desc' as const,
       },
-
-    };
+  }  
     // find all the market with the latest start date with its status and type
     try {
       console.log('fetching markets')
