@@ -132,7 +132,7 @@ export class FarmersService {
         `Error fetching farmers \n\n ${error}`,
         FarmersService.name,
       );
-      throw new NotFoundException('Error fetching farmers');
+      throw new NotFoundException('Error fetching farmers ');
     }
   }
 
