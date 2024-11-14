@@ -72,7 +72,7 @@ export class ComapnyService {
         });
         this.logger.log(`start emitting company.created`, ComapnyService.name);
         // send message for company created in senwisetool system
-        this.eventEmitter.emit('company.created', result);
+        // this.eventEmitter.emit('company.created', result);
 
         return result;
       });

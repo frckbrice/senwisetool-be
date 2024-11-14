@@ -77,6 +77,7 @@ export class FarmersService {
   async findAll(query: any, company_id: string) {
     // find all the farmer with the latest start date with its status and type
     const { page, perPage, location, phone } = query;
+    console.log('farmer from farmService\n', company_id)
     let Query = Object.create({});
     Query = {
       ...Query,
@@ -93,11 +94,12 @@ export class FarmersService {
         this.prismaService.farmer.findMany({
           where: {
             company_id,
-            location: { contains: location },
+            // location: { contains: location },
           },
           ...Query,
         }),
       ]);
+      console.log("Farmers\n\n", farmers)
       if (farmers.length)
         return {
           status: 200,
@@ -137,14 +139,7 @@ export class FarmersService {
       const result = await this.prismaService.farmer.findUnique({
         where: {
           id: farmer_id,
-        },
-        select: {
-          id: true,
-          village: true,
-          farmer_name: true,
-          farmer_contact: true,
-          company_id: true,
-        },
+        }
       });
 
       if (result)

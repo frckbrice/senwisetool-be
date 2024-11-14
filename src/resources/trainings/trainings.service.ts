@@ -41,13 +41,13 @@ export class TrainingService {
 
     try {
 
-      // const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
-      // await this.projectAssigneeService.create({
-      //   agentCode: projectCode,
-      //   projectCodes: [uuid],
-      //   company_id: createTrainingDto.company
-      //   project_type: createProjectDto.type
-      // })
+      const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
+      await this.projectAssigneeService.create({
+        agentCode: projectCode,
+        projectCodes: [uuid],
+        company_id: <string>user.company_id,
+        project_type: "TRAINING"
+      })
 
       const result = await this.prismaService.training.create({
         data: {
@@ -128,7 +128,7 @@ export class TrainingService {
           }
         }),
       ]);
-      console.log("trainings:", trainings)
+      // console.log("trainings:", trainings)
       if (trainings.length) {
 
         // get the list of project uuid code
@@ -138,7 +138,7 @@ export class TrainingService {
           await this.projectAssigneeService
             .getAllTheAssigneesCodesFromAListOfProjectUuidsOfACompany(listOfUuidCodes, <string>company_id);
 
-            console.log('assignees =>', assignees)
+            // console.log('assignees =>', assignees)
         // Create mapping for matching uuids
         const mappedList = assignees?.data?.flatMap(assignee =>
           assignee.projectCodes
@@ -148,7 +148,7 @@ export class TrainingService {
               uuid: uuid
             }))
         );
-        console.log('mapped list\n', mappedList)
+        // console.log('mapped list\n', mappedList)
         // assign coresponding code to each project.
         const projectResponse = mappedList?.reduce((acc, curr, index) => {
           if (acc.find(p => p.code === curr.uuid)) {
@@ -158,7 +158,7 @@ export class TrainingService {
           return acc
         }, trainings);
 
-        console.log('training response \n', projectResponse)
+        // console.log('training response \n', projectResponse)
 
         return {
           status: 200,

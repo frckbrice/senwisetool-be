@@ -72,8 +72,8 @@ export class EnvironmentService {
         }
       }
       return {
-        status: 400,
-        message: "FAiled to fetch all environments data",
+        status: HttpStatus.NOT_FOUND,
+        message: "No environments data found for this company",
         data: null
       }
 

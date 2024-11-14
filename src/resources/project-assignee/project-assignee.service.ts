@@ -157,12 +157,19 @@ export class ProjectAssigneeService {
           company_id
         }
       })
-      if (data)
+      if (data) {
+        const returnedProject = []
+        for (const item of data) {
+          if (item.projectCodes[0].length < 5) {
+            returnedProject.push(item)
+          }
+        }
         return {
-          data: data,
+          data: returnedProject,
           message: "Successfully fetch all su accounts",
           status: 200
         }
+      }
       return {
         data: null,
         message: "Failed fetching subaccounts",

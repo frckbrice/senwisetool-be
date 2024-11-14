@@ -51,6 +51,7 @@ export class CompanyController {
   @ApiOperation({ summary: 'find the currently company of the connected user' })
   findOne(@CurrentUser() user: Partial<User>) {
 
+    console.log("user\n", user)
     const id = <string>user?.company_id;
     return this.companyService.findOne(id);
   }

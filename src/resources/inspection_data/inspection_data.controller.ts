@@ -49,6 +49,15 @@ export class InspectionDataController {
     return this.inspectionDataService.findOne(id);
   }
 
+  @Get(':id/current')
+  @Roles(Role.ADG)
+  @UseGuards(RolesGuard)
+  @ApiOperation({summary: 'find inspection data by project_id'})
+  getAll(@Param('id') id: string) {
+    return this.inspectionDataService.getAll(id)
+  }
+
+
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
   @Patch(':id')

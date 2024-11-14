@@ -85,10 +85,13 @@ export class MarketsService {
   }
 
   async findAll(query: Partial<PaginationMarketQueryDto>, company_id: string) {
+    console.log('company_id =>', company_id)
     const { status, type, page, perPage,
       search, campaign_id, agentCode } = query;
     const where = Object.create({});
     let Query = Object.create({ where });
+
+    console.log({company_id, campaign_id})
 
     if (status) {
       where['status'] = status;
@@ -99,7 +102,7 @@ export class MarketsService {
     }
 
     if (campaign_id) {
-      where['campaign_id'] = campaign_id;
+      where['campaign_id'] = (campaign_id).slice(0, -1)
     }
 
     if (company_id) {
@@ -113,6 +116,7 @@ export class MarketsService {
     if (search)
       where["search"] = search;
 
+    console.log('where =>', where)
     Query = {
       ...Query,
       take: perPage ?? 20,
@@ -122,13 +126,14 @@ export class MarketsService {
       },
 
     };
+    console.log("Query =>", Query)
     // find all the market with the latest start date with its status and type
     try {
       console.log('fetching markets')
       const [total, markets] = await this.prismaService.$transaction([
         this.prismaService.market.count(),
         this.prismaService.market.findMany({
-          ...Query,
+          where,
           include: {
             transaction: true,
             receipts: true
@@ -174,6 +179,10 @@ export class MarketsService {
         where: {
           id: market_id,
           campaign_id: currentCampaign?.id as string
+        },
+        include: {
+          transaction: true,
+          receipts: true,
         },
         // select: {
         //   market_number: true,

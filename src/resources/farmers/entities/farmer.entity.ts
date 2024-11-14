@@ -1,6 +1,8 @@
 import { Farmer } from '@prisma/client';
 
 export class FarmerType implements Farmer {
+    created_at: Date;
+    council: string;
     certification_year: string;
     company_id: string;
     farmer_ID_card_number: string;

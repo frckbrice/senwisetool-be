@@ -102,6 +102,38 @@ export class InspectionDataService {
     }
   }
 
+  // Find all data collected for a particular project
+  async getAll(id: string) {
+    try {
+      const result = await this.prismaService.inspection_data.findMany({
+        where: {
+          project_id: id
+        }
+      })
+      if (result.length) {
+        return {
+          data: result,
+          message: "This are inspection all inspection data for this project",
+          status: 201
+        }
+      } else return {
+        status: HttpStatus.NOT_FOUND,
+        message: "Data not found",
+        data: null
+      }
+
+
+    } catch (error) {
+      this.logger.error(
+        "Can't Fetch project collected data with project_id" + id + '\n\n ' + error,
+        InspectionDataService.name,
+      );
+      throw new InternalServerErrorException(
+        "Can't Fetch project collected data with project_id" + id,
+      );
+    }
+  }
+
   async findOne(id: string) {
     try {
       const result = await this.prismaService.inspection_data
