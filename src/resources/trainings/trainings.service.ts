@@ -148,7 +148,6 @@ export class TrainingService {
               uuid: uuid
             }))
         );
-        // console.log('mapped list\n', mappedList)
         // assign coresponding code to each project.
         const projectResponse = mappedList?.reduce((acc, curr, index) => {
           if (acc.find(p => p.code === curr.uuid)) {
@@ -157,8 +156,6 @@ export class TrainingService {
           }
           return acc
         }, trainings);
-
-        // console.log('training response \n', projectResponse)
 
         return {
           status: 200,
