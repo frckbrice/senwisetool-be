@@ -545,11 +545,11 @@ export class ProjectsService {
         console.log("list of  codes: ", listOfCodes)
         let listOfUuids, projects;
         if (listOfCodes.length === 1) {
-          console.log("\n\n got a single project: ",)
+          console.log("\n\n got a single project: ")
           console.log("\n\n company ID: ", company_id)
           // get all oject having the the uuid
           const [codeVal] = listOfCodes;
-          console.log("value: ", codeVal);
+
           projects = await this.prismaService.project.findMany({
             where: {
               code: codeVal,
@@ -557,12 +557,12 @@ export class ProjectsService {
               company_id,
             },
             select: {
-              status: true,
+              // status: true,
               type: true,
               id: true,
               title: true,
               project_structure: true,
-              campaign_id: true,
+              // campaign_id: true,
               company_id: true,
               city: true
             },
@@ -580,12 +580,12 @@ export class ProjectsService {
               company_id
             },
             select: {
-              status: true,
+              // status: true,
               type: true,
               id: true,
               title: true,
               project_structure: true,
-              campaign_id: true,
+              // campaign_id: true,
               company_id: true,
               city: true
             },
@@ -611,7 +611,7 @@ export class ProjectsService {
           message: "Failed to fetch projects assigned to this agent",
         }
 
-      } else return {
+      } else return { // there is no project codes for this agent.
         data: [],
         status: HttpStatus.BAD_REQUEST,
         message: "This code has No projects assigned to.",
