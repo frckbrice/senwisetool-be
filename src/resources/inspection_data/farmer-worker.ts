@@ -18,6 +18,7 @@ parentPort?.on('message', async ({ data, id }) => {
         farmer_ID_card_number: data?.project_data.metaData?.farmer_ID_card_number,
         inspection_date: data?.project_data.metaData?.inspection_date,
         village: data?.project_data.metaData?.village,
+        council: data?.project_data.state,
         certification_year: data?.project_data.metaData?.certification_year,
         inspector_name: data?.project_data.metaData?.inspector_name,
         inspector_contact: data?.project_data.metaData?.inspector_contact,

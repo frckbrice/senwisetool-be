@@ -110,6 +110,12 @@ enum InvitationStatus {
   NOT_CONFIRMED
 }
 
+enum IncomeAndShareResponsabilityType {
+  PAYMENT_JUSTIFICATION
+  SUSTENABILITY_DIFFERENTIAL
+  INVESTMENT_MANAGEMENT_PLAN
+}
+
 
 model User {
   id           String    @id @default(cuid())
@@ -318,6 +324,7 @@ model Farmer {
   company_id String 
   farmer_name String
   farmer_contact String
+  council String
 
   farmer_ID_card_number String @unique
   inspection_date String
@@ -330,6 +337,7 @@ model Farmer {
   pesticide_used String
   pesticide_quantity Int
   farmer_photos String[]
+  created_at DateTime @default(now())
 
   @@index([id, farmer_ID_card_number, farmer_contact])
 }
@@ -519,21 +527,21 @@ model Market {
   end_date DateTime
   // market_number Int
   price_of_theday Int
-  nom_fournisseur String
+  supplier String
 
   description String
   location String
   type_of_market MarketType @default(COCOA)
-  bordereau_vente_url String
-  bon_entree_magazin_url String
-  accompanying_url String
-  transmission_url String
+  bordereau_vente_url String ?
+  bon_entree_magazin_url String ?
+  accompanying_url String ?
+  transmission_url String ?
 
-  status CampaignStatus @default(CLOSED) // to specify if the market is closed or open. we are just re-using the Status already created for campain
+  status CampaignStatus @default(OPEN) // to specify if the market is closed or open. we are just re-using the Status already created for campain
   // when the market is closed we generate a code that represent the stock for that market.
   code String ? @unique
   // this represnt the total number of bags bought during this market.
-  product_quantity Int
+  product_quantity Int ?
   company Company @relation(fields: [company_id], references: [id])
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -643,4 +651,19 @@ model Environment {
   pv_url           String[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model RevenuEtResponsabilitePartager {
+  id                 String @id @default(cuid())
+  company_id         String
+  agreement_pv       String[]
+  proof_of_expenses  String[]
+  proof_of_paiement  String[]
+  pv_url            String[]
+  first_buyer_proof String[]
+  producer_payment_proof String[]
+  management_plan String[]
+  type             IncomeAndShareResponsabilityType
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 }

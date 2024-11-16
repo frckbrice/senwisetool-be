@@ -19,6 +19,14 @@ export class ProjectAssigneeController {
     return this.projectAssigneeService.create(createProjectAssigneeDto);
   }
 
+  // assigne to multiple agents one or more projects. Bulk create
+  @Post('bulkCreate')
+  @Roles(Role.ADG)
+  @UseGuards(RolesGuard)
+  bulkCreate(@Body() createProjectAssigneeDto: Prisma.AssigneeCreateInput[]) {
+    return this.projectAssigneeService.bulkCreate(createProjectAssigneeDto);
+  }
+
   @Get()
   @Roles(Role.ADG, Role.AUDITOR)
   @UseGuards(RolesGuard)

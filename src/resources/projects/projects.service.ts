@@ -66,7 +66,7 @@ export class ProjectsService {
         agentCode: projectCode,
         projectCodes: [uuid],
         company_id,
-        // project_type: createProjectDto.type
+        project_type: createProjectDto.type
       })
 
       // check if there is an existing project/assignee with the same code 4 digits
@@ -129,6 +129,95 @@ export class ProjectsService {
     }
   }
 
+  // get all company's projects code
+  async findAllProjectCodesOfCompany(query: Partial<PaginationProjectQueryDto> | any, company_id: string) {
+    const { campaign_id, type } = query
+    console.log("fetching all project codes")
+    try {
+      const [total, projects] = await this.prismaService.$transaction([
+        this.prismaService.project.count(),
+        this.prismaService.project.findMany({
+          where: {
+            company_id,
+            campaign_id
+          },
+          select: {
+            id: true,
+            type: true,
+            code: true,
+            title: true,
+          },
+          orderBy: {
+            start_date: 'desc',
+          },
+        }),
+      ]);
+
+      if (typeof projects != 'undefined' && projects.length) {
+        // get the list of project uuid code
+        const listOfUuidCodes = projects?.map((p) => p.code);
+        // get all the corresponding 4 digits codes for each project
+        const assignees =
+          await this.projectAssigneeService
+            .getAllTheAssigneesCodesFromAListOfProjectUuidsOfACompany(listOfUuidCodes, <string>company_id);
+
+        // Create mapping for matching uuids
+        const mappedList = assignees?.data?.flatMap(assignee =>
+          assignee.projectCodes
+            .filter(uuid => listOfUuidCodes.includes(uuid))
+            .map(uuid => ({
+              agentCode: assignee.agentCode,
+              uuid: uuid
+            }))
+        );
+
+        // assign coresponding code to each project.
+        const projectResponse = mappedList?.reduce((acc, curr, index) => {
+          if (acc.find(p => p.code === curr.uuid)) {
+            const val = acc[index]
+            acc = [...acc, { ...val, code: curr.agentCode }]
+          }
+          return acc
+        }, projects);
+
+        // send only projects with 4 digit code
+        let result: any[] = []
+        if (projectResponse) {
+          for (const item of projectResponse) {
+            if (item.code.length < 5) {
+              result.push(item)
+            }
+          }
+        }
+
+        return {
+          status: 200,
+          message: 'projects fetched successfully',
+          data: result,
+          total,
+          page: query.page ?? 0,
+          perPage: query.perPage ?? 20,
+          totalPages: Math.ceil(total / (query.perPage ?? 20)),
+        };
+      }
+
+      else
+        return {
+          status: 404,
+          message: 'No projects found',
+          data: [],
+          total,
+          page: query.page ?? 0,
+          perPage: query.perPage ?? 20,
+          totalPages: Math.ceil(total / (query.perPage ?? 20)),
+        };
+    } catch (error) {
+      this.logger.error('Error fetching projects', ProjectsService.name);
+      throw new NotFoundException('Error fetching projects');
+    }
+
+  }
+
   async findAll(query: Partial<PaginationProjectQueryDto> | any, company_id: string) {
 
     console.log('company_id\n', company_id)
@@ -136,7 +225,8 @@ export class ProjectsService {
     const where = Object.create({ company_id });
     console.log('first where clause \n', where)
     let Query = Object.create({ where });
-  
+
+    console.log({ campaign_id, company_id })
     if (status) {
       where['status'] = status;
     }

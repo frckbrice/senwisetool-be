@@ -43,6 +43,7 @@ import { ProjectAssigneeModule } from './resources/project-assignee/project-assi
 import { AgricultureModule } from './resources/agriculture/agriculture.module';
 import { EnvironmentModule } from './resources/environment/environment.module';
 import { SocialModule } from './resources/social/social.module';
+import { RevenuEtResponsabilitePartagerModule } from './resources/revenu-et-responsabilite-partager/revenu-et-responsabilite-partager.module';
 
 
 @Module({
@@ -88,7 +89,8 @@ import { SocialModule } from './resources/social/social.module';
     ProjectAssigneeModule,
     AgricultureModule,
     EnvironmentModule,
-    SocialModule
+    SocialModule,
+    RevenuEtResponsabilitePartagerModule
   ],
   controllers: [AppController],
   providers: [
