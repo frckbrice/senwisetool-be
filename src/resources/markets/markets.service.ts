@@ -147,7 +147,7 @@ export class MarketsService {
           data: [],
           total,
           page: query.page ?? 0,
-          perPage: query.perPage ?? 20,
+          perPage: query.perPage ?? 20 - 1,
           totalPages: Math.ceil(total / (query.perPage ?? 20)),
         };
     } catch (error) {

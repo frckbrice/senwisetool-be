@@ -9,7 +9,7 @@ const logger = new LoggerService();
 
 parentPort?.on('message', async ({ data, id }) => {
 
-    console.log("\n\n farm  worker for mapping received data: ", data);
+    console.log("\n\n farm  worker  for mapping received data: ", data);
 
     let farmer;
 

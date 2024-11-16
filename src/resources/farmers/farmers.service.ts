@@ -76,11 +76,12 @@ export class FarmersService {
 
   async findAll(query: any, company_id: string) {
     // find all the farmer with the latest start date with its status and type
-    const { page, perPage, location, phone } = query;
+    const { page, perPage, location, phone, name } = query;
 
     const where: any = {
       company_id,
       ...(location && { council: { contains: location } }),
+      ...(name && { farmer_name: name })
     };
 
     const queryOptions = {
