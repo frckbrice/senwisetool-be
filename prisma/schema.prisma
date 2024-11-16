@@ -110,6 +110,12 @@ enum InvitationStatus {
   NOT_CONFIRMED
 }
 
+enum IncomeAndShareResponsabilityType {
+  PAYMENT_JUSTIFICATION
+  SUSTENABILITY_DIFFERENTIAL
+  INVESTMENT_MANAGEMENT_PLAN
+}
+
 
 model User {
   id           String    @id @default(cuid())
@@ -645,4 +651,19 @@ model Environment {
   pv_url           String[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model RevenuEtResponsabilitePartager {
+  id                 String @id @default(cuid())
+  company_id         String
+  agreement_pv       String[]
+  proof_of_expenses  String[]
+  proof_of_paiement  String[]
+  pv_url            String[]
+  first_buyer_proof String[]
+  producer_payment_proof String[]
+  management_plan String[]
+  type             IncomeAndShareResponsabilityType
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 }

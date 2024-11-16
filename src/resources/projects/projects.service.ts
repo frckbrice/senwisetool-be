@@ -180,10 +180,20 @@ export class ProjectsService {
           return acc
         }, projects);
 
+        // send only projects with 4 digit code
+        let result: any[] = []
+        if (projectResponse) {
+          for (const item of projectResponse) {
+            if (item.code.length < 5) {
+              result.push(item)
+            }
+          }
+        }
+
         return {
           status: 200,
           message: 'projects fetched successfully',
-          data: projectResponse,
+          data: result,
           total,
           page: query.page ?? 0,
           perPage: query.perPage ?? 20,
