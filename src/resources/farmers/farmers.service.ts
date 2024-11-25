@@ -23,7 +23,7 @@ export class FarmersService {
 
 
   async create(
-    createFarmerDto: Prisma.FarmerCreateInput,
+    createFarmerDto: Prisma.FarmerCreateInput
   ) {
     // avoid creating farmer twice
     console.log('\n\nfarmer  payload: ', createFarmerDto);

@@ -24,6 +24,10 @@ export class AgricultureController {
   findAll(@Query() query: { activity: string }, @CurrentUser() user: Partial<User>) {
     return this.agricultureService.findAll(query, <string>user.company_id)
   }
+
+  @Get(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADG, Role.AUDITOR, Role.IT_SUPPORT)
   findOne(@Param('id') id: string) {
     console.log('id from controller', id)
     return this.agricultureService.findOne(id)

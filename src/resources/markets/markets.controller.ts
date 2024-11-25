@@ -94,7 +94,6 @@ export class MarketsController {
     return this.marketsService.update({
       id: market_id,
       updateMarketDto,
-      user_id: <string>user.id,
     });
   }
 

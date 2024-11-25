@@ -9,7 +9,7 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import { ReceiptService } from './receipts.service';
+import { ReceiptService, ReceiptTypeWithoutFarmerId } from './receipts.service';
 
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Prisma, Role, User } from '@prisma/client';
@@ -30,7 +30,7 @@ export class ReceiptController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADG, Role.AGENT)
   create(
-    @Body() createreceiptDatumDto: Prisma.ReceiptCreateInput,
+    @Body() createreceiptDatumDto: Prisma.ReceiptUncheckedCreateInput | ReceiptTypeWithoutFarmerId,
     @CurrentUser() user: Partial<User>,
   ) {
     return this.receiptService.create(createreceiptDatumDto, user);

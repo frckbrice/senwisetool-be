@@ -86,6 +86,8 @@ export class MarketsService {
 
     const where: any = {};
 
+    console.log({ company_id, campaign_id })
+
     if (status) {
       where['status'] = status;
     }
@@ -95,7 +97,7 @@ export class MarketsService {
     }
 
     if (campaign_id) {
-      where['campaign_id'] = campaign_id;
+      where['campaign_id'] = (campaign_id).slice(0, -1)
     }
 
     if (company_id) {
@@ -119,7 +121,6 @@ export class MarketsService {
       },
 
     };
-
     // find all the market with the latest start date with its status and type
     try {
 
@@ -169,6 +170,10 @@ export class MarketsService {
           id: market_id,
           campaign_id: currentCampaign?.id as string
         },
+        include: {
+          transaction: true,
+          receipts: true,
+        },
         // select: {
         //   market_number: true,
         //   start_date: true,
@@ -206,19 +211,18 @@ export class MarketsService {
 
   async update({
     id,
-    user_id,
     updateMarketDto,
   }: {
     id: string;
-    user_id: string;
     updateMarketDto: Prisma.MarketUpdateInput;
   }) {
 
     // check if the market exists first
     const existingMarket = await this.findOne(id);
-    if (typeof existingMarket == 'undefined')
-      throw new HttpException(` No market with that Id`, HttpStatus.BAD_REQUEST);
+    if (!existingMarket)
+      throw new HttpException(`There is No existing market with that Id `, HttpStatus.BAD_REQUEST);
 
+    console.log("\n\n incoming updateMarketDto: ", updateMarketDto);
 
     try {
       const result = await this.prismaService.market.update({
@@ -227,6 +231,8 @@ export class MarketsService {
           id,
         },
       });
+
+      console.log("\n\n updated market data: ", result);
 
       if (result)
         return {
@@ -299,7 +305,7 @@ export class MarketsService {
           AND: [
             { code: marketUUID }, // sselect market by uuid
             { company_id }, //select current user connected company market
-            { status: CampaignStatus.OPEN }, // selct open market.
+            { status: CampaignStatus.OPEN }, // select open market.
             // { start_date: { gte: currentDate } }
           ]
 
@@ -327,7 +333,7 @@ export class MarketsService {
             type_of_market: data?.type_of_market,
             company_name: data?.company?.name,
             company_logo: data?.company?.logo,
-            provider: data?.provider
+            supplier: data?.supplier
           },
           status: 200,
           message: `market fetched successfully`,

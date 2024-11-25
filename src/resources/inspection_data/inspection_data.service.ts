@@ -56,31 +56,35 @@ export class InspectionDataService {
         data = await this.prismaService.inspection_data.create({
           data: res,
         });
-        if (data)
+        if (data) {
           // store the data for farmer via the worker thread
           // council here is added because we are trying to fetch farmer from mobile later based on location/city.
-          if (type.toString().toLocaleLowerCase().includes('initial_inspection')) {
+          if (type.toString().toLocaleLowerCase().includes('_inspection')) {
             const result = await this.fieldWorker.storeFarmerData(JSON.stringify({ ...data, council }));
-            if (typeof result != 'undefined' && result)
+            if (typeof result != 'undefined' && result) {
+              console.log("farmer created successfully: ", result);
               status = true
-          } else
-
-            // store data for  farm 
-            if (type.toString().toLocaleLowerCase().includes('mapping')) {
-              const result = await this.farmWorker.storeFarmData(JSON.stringify({ ...data, company_id, council }));
-              if (typeof result != 'undefined' && result) {
-                console.log("\n\nfarm data  registered successfully: ", result)
-                status = true;
-              }
             }
-            else
-              if (type.toString().toLocaleLowerCase().includes('training')) {
-                const result = await this.attendenceSheetWorker.storeAttendanceData(JSON.stringify(data));
-                if (typeof result != 'undefined' && result) {
-                  console.log("\n\participants and attendance of this training project registered successfully: ", result)
-                  status = true;
-                }
-              }
+
+          }
+          // store data for  farm 
+          if (type.toString().toLocaleLowerCase().includes('mapping')) {
+            const result = await this.farmWorker.storeFarmData(JSON.stringify({ ...data, company_id, council }));
+            if (typeof result != 'undefined' && result) {
+              console.log("\n\nfarm data  registered successfully: ", result)
+              status = true;
+            }
+          }
+
+          if (type.toString().toLocaleLowerCase().includes('training')) {
+            const result = await this.attendenceSheetWorker.storeAttendanceData(JSON.stringify(data));
+            if (typeof result != 'undefined' && result) {
+              console.log("\n\participants and attendance of this training project registered successfully: ", result)
+              status = true;
+            }
+          }
+        }
+
 
         //   return data
         // });
@@ -147,6 +151,38 @@ export class InspectionDataService {
         InspectionDataService.name,
       );
       throw new NotFoundException('can find all the inspection data');
+    }
+  }
+
+  // Find all data collected for a particular project
+  async getAll(id: string) {
+    try {
+      const result = await this.prismaService.inspection_data.findMany({
+        where: {
+          project_id: id
+        }
+      })
+      if (result.length) {
+        return {
+          data: result,
+          message: "This are inspection all inspection data for this project",
+          status: 201
+        }
+      } else return {
+        status: HttpStatus.NOT_FOUND,
+        message: "Data not found",
+        data: null
+      }
+
+
+    } catch (error) {
+      this.logger.error(
+        "Can't Fetch project collected data with project_id" + id + '\n\n ' + error,
+        InspectionDataService.name,
+      );
+      throw new InternalServerErrorException(
+        "Can't Fetch project collected data with project_id" + id,
+      );
     }
   }
 

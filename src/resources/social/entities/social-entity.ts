@@ -1,1 +1,1 @@
-export class Agriculture  {}
+export class Social { }

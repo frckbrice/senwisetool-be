@@ -36,4 +36,5 @@ export class CompanyType implements Company {
   updated_at: Date;
   head_office_email: string
   region: string;
+  company_bucket: string;
 }

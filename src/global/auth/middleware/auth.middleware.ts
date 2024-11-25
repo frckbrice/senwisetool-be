@@ -84,7 +84,7 @@ export class AuthMiddleware implements NestMiddleware {
             /**
              * we allow /v1/companies to be public here because we want to take advantage 
              * of having the user in the request. this help us create the first user of the
-             * company along with its company.
+             * company along with its company .
              */
 
             if (

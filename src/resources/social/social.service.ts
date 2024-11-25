@@ -7,7 +7,7 @@ import { PaginationSocialDto } from './dto/pagination-social.dto';
 @Injectable()
 export class SocialService {
   private readonly logger = new LoggerService(SocialService.name)
-  
+
   constructor(
     private readonly prismaService: PrismaService
   ) { }
@@ -174,8 +174,8 @@ export class SocialService {
 
 
     } catch (error) {
-      this.logger.error(`Can't delete environment record of id ${id} \n\n ${error}`, SocialService.name)
-      throw new InternalServerErrorException("Can't delete data agriculture")
+      this.logger.error(`Can't delete Social record of id ${id} \n\n ${error}`, SocialService.name)
+      throw new InternalServerErrorException("Can't delete data Social")
     }
   }
 }

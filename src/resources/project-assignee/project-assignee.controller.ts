@@ -8,8 +8,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
 
 
-@Controller('project_assignee')
-@ApiTags('project_assignee')
+@Controller('project_assignees')
+@ApiTags('project_assignees')
 export class ProjectAssigneeController {
   constructor(private readonly projectAssigneeService: ProjectAssigneeService) { }
 
@@ -18,6 +18,14 @@ export class ProjectAssigneeController {
   @UseGuards(RolesGuard)
   create(@Body() createProjectAssigneeDto: Prisma.AssigneeCreateInput) {
     return this.projectAssigneeService.create(createProjectAssigneeDto);
+  }
+
+  // assigne to multiple agents one or more projects. Bulk create
+  @Post('bulkCreate')
+  @Roles(Role.ADG)
+  @UseGuards(RolesGuard)
+  bulkCreate(@Body() createProjectAssigneeDto: Prisma.AssigneeCreateInput[]) {
+    return this.projectAssigneeService.bulkCreate(createProjectAssigneeDto);
   }
 
   @Get()

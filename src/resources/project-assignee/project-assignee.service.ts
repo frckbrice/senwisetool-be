@@ -43,6 +43,32 @@ export class ProjectAssigneeService {
     }
   }
 
+  // create multiple records at a time
+  async bulkCreate(createProjectAssigneeDto: Prisma.AssigneeCreateInput[]) {
+    try {
+      let result = []
+      for (const item of createProjectAssigneeDto) {
+        const data = await this.prismaService.assignee.create({
+          data: item
+        })
+        result.push(data)
+      }
+      if (typeof result != "undefined") return {
+        data: result,
+        message: "All agent code created successfully",
+        status: 201
+      }
+      return {
+        data: null,
+        message: "Failed to assign projects to this user",
+        status: 400
+      }
+    } catch (error) {
+      this.logger.error(`Failed to assign projects to this user \n\n ${error}`, ProjectAssigneeService.name);
+      throw new HttpException('Failed to updated project codes to this user', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async getAllAssigneeFromThisProject(code?: string) {
     let options = {}
 
@@ -168,12 +194,19 @@ export class ProjectAssigneeService {
           company_id
         }
       })
-      if (data)
+      if (data) {
+        const returnedProject = []
+        for (const item of data) {
+          if (item.projectCodes[0].length < 5) {
+            returnedProject.push(item)
+          }
+        }
         return {
-          data: data,
+          data: returnedProject,
           message: "Successfully fetch all su accounts",
           status: 200
         }
+      }
       return {
         data: null,
         message: "Failed fetching subaccounts",

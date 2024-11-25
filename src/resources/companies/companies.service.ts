@@ -68,7 +68,7 @@ export class ComapnyService {
         });
         this.logger.log(`start emitting company.created`, ComapnyService.name);
         // send message for company created in senwisetool system
-        this.eventEmitter.emit('company.created', result);
+        // this.eventEmitter.emit('company.created', result);
 
         return result;
       });
@@ -162,7 +162,8 @@ export class ComapnyService {
           paypal_id: true,
           email: true,
           status: true,
-          logo: true
+          logo: true,
+          company_bucket: true
         },
       });
 

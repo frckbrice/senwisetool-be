@@ -34,6 +34,9 @@ CREATE TYPE "MarketType" AS ENUM ('COCOA', 'COFFEE', 'BANANA', 'WOOD', 'OTHER');
 -- CreateEnum
 CREATE TYPE "InvitationStatus" AS ENUM ('CONFIRMED', 'NOT_CONFIRMED');
 
+-- CreateEnum
+CREATE TYPE "IncomeAndShareResponsabilityType" AS ENUM ('PAYMENT_JUSTIFICATION', 'SUSTENABILITY_DIFFERENTIAL', 'INVESTMENT_MANAGEMENT_PLAN');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -74,9 +77,7 @@ CREATE TABLE "Company" (
     "description" TEXT NOT NULL,
     "region" TEXT NOT NULL,
     "timezone" TEXT NOT NULL DEFAULT 'UTC',
-
     "status" "CompanyStatus" DEFAULT 'INACTIVE',
-
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -104,6 +105,7 @@ CREATE TABLE "Assignee" (
     "projectCodes" TEXT[],
     "company_id" TEXT NOT NULL,
     "fullName" TEXT,
+    "project_type" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3) NOT NULL,
@@ -218,9 +220,7 @@ CREATE TABLE "Farmer" (
     "weed_application" TEXT NOT NULL,
     "weed_application_quantity" INTEGER NOT NULL,
     "pesticide_used" TEXT NOT NULL,
-
     "status" "SubscriptionStatus" DEFAULT 'ACTIVE',
-
     "pesticide_quantity" INTEGER NOT NULL,
     "farmer_photos" TEXT[],
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -263,7 +263,6 @@ CREATE TABLE "Attendance_sheet" (
     "date" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "modules" TEXT[],
-
     "trainers" JSONB NOT NULL DEFAULT '[{}]',
     "location" TEXT NOT NULL,
     "report_url" TEXT NOT NULL,
@@ -356,23 +355,20 @@ CREATE TABLE "Market" (
     "start_date" TIMESTAMP(3) NOT NULL,
     "end_date" TIMESTAMP(3) NOT NULL,
     "price_of_theday" INTEGER NOT NULL,
-    "provider" TEXT NOT NULL,
+    "supplier" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "location" TEXT NOT NULL,
-
-
+    "campaign_id" TEXT NOT NULL,
     "type_of_market" "MarketType" NOT NULL DEFAULT 'COCOA',
-    "bordereau_vente_url" TEXT NOT NULL,
-    "bon_entree_magazin_url" TEXT NOT NULL,
-    "accompanying_url" TEXT NOT NULL,
-    "transmission_url" TEXT NOT NULL,
-    "status" "CampaignStatus" NOT NULL DEFAULT 'CLOSED',
+    "bordereau_vente_url" TEXT,
+    "bon_entree_magazin_url" TEXT,
+    "accompanying_url" TEXT,
+    "transmission_url" TEXT,
+    "product_quantity" INTEGER,
+    "status" "CampaignStatus" NOT NULL DEFAULT 'OPEN',
     "code" TEXT,
-    "product_quantity" INTEGER NOT NULL,
-
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "campaign_id" TEXT NOT NULL,
 
     CONSTRAINT "Market_pkey" PRIMARY KEY ("id")
 );
@@ -384,9 +380,7 @@ CREATE TABLE "Receipt" (
     "village" TEXT NOT NULL,
     "farmer_id" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
-
     "weight" TEXT NOT NULL,
-
     "humidity" TEXT NOT NULL,
     "net_weight" INTEGER NOT NULL,
     "agent_name" TEXT NOT NULL,
@@ -396,10 +390,8 @@ CREATE TABLE "Receipt" (
     "currency" TEXT NOT NULL,
     "total_weight" TEXT NOT NULL,
     "salePhotoUrl" TEXT[],
-
     "agent_signature" TEXT NOT NULL,
     "farmer_signature" TEXT NOT NULL,
-
     "gpsLocation" JSONB NOT NULL,
     "product_name" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -474,6 +466,24 @@ CREATE TABLE "Environment" (
     CONSTRAINT "Environment_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "RevenuEtResponsabilitePartager" (
+    "id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
+    "agreement_pv" TEXT[],
+    "proof_of_expenses" TEXT[],
+    "proof_of_paiement" TEXT[],
+    "pv_url" TEXT[],
+    "first_buyer_proof" TEXT[],
+    "producer_payment_proof" TEXT[],
+    "management_plan" TEXT[],
+    "type" "IncomeAndShareResponsabilityType" NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "RevenuEtResponsabilitePartager_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -490,13 +500,7 @@ CREATE INDEX "Company_id_status_email_idx" ON "Company"("id", "status", "email")
 CREATE UNIQUE INDEX "Assignee_agentCode_key" ON "Assignee"("agentCode");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Assignee_company_id_key" ON "Assignee"("company_id");
-
--- CreateIndex
-
-
-CREATE INDEX "Assignee_id_agentCode_company_id_idx" ON "Assignee"("id", "agentCode", "company_id");
-
+CREATE INDEX "Assignee_id_projectCodes_company_id_idx" ON "Assignee"("id", "projectCodes", "company_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Project_code_key" ON "Project"("code");
@@ -517,9 +521,7 @@ CREATE INDEX "Inspection_data_project_id_idx" ON "Inspection_data"("project_id")
 CREATE UNIQUE INDEX "Farmer_farmer_ID_card_number_key" ON "Farmer"("farmer_ID_card_number");
 
 -- CreateIndex
-
 CREATE INDEX "Farmer_id_farmer_ID_card_number_farmer_contact_council_idx" ON "Farmer"("id", "farmer_ID_card_number", "farmer_contact", "council");
-
 
 -- CreateIndex
 CREATE INDEX "Farm_farmer_id_location_idx" ON "Farm"("farmer_id", "location");
@@ -549,9 +551,10 @@ CREATE INDEX "Price_plan_product_name_id_plan_name_status_idx" ON "Price_plan"("
 CREATE UNIQUE INDEX "Market_code_key" ON "Market"("code");
 
 -- CreateIndex
-
 CREATE INDEX "Market_company_id_start_date_end_date_code_status_idx" ON "Market"("company_id", "start_date", "end_date", "code", "status");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Receipt_market_id_key" ON "Receipt"("market_id");
 
 -- CreateIndex
 CREATE INDEX "Receipt_market_id_farmer_id_date_id_idx" ON "Receipt"("market_id", "farmer_id", "date", "id");
@@ -599,6 +602,4 @@ ALTER TABLE "Receipt" ADD CONSTRAINT "Receipt_farmer_id_fkey" FOREIGN KEY ("farm
 ALTER TABLE "Receipt" ADD CONSTRAINT "Receipt_market_id_fkey" FOREIGN KEY ("market_id") REFERENCES "Market"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-
 ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_market_number_fkey" FOREIGN KEY ("market_number") REFERENCES "Market"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-

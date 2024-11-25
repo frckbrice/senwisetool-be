@@ -125,7 +125,7 @@ export class TrainingService {
           }
         }),
       ]);
-      console.log("trainings:", trainings)
+      // console.log("trainings:", trainings)
       if (trainings.length) {
 
         // get the list of project uuid code
@@ -206,8 +206,11 @@ export class TrainingService {
               status: true,
               id: true,
               title: true,
-              company_id: true
-
+              company_id: true,
+              modules: true,
+              location: true,
+              start_date: true,
+              end_date: true
             },
           });
           console.log("current project : ", projects)
@@ -226,7 +229,11 @@ export class TrainingService {
               status: true,
               id: true,
               title: true,
-              company_id: true
+              company_id: true,
+              modules: true,
+              location: true,
+              start_date: true,
+              end_date: true
             },
           });
         }

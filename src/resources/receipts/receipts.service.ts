@@ -7,11 +7,24 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PrismaService } from 'src/adapters/config/prisma.service';
-import { Prisma, User } from '@prisma/client';
+import { Prisma, User, Farmer, Receipt } from '@prisma/client';
 import { LoggerService } from 'src/global/logger/logger.service';
-import { UsersService } from '../users/users.service';
-import { Slugify } from 'src/global/utils/slugilfy';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ReceiptType } from './entities/receipt.entity';
+
+import { FarmersService } from '../farmers/farmers.service';
+import { InputJsonValue } from '@prisma/client/runtime/library';
+
+type ReceiptTypeWithFarmerId = ReceiptType;
+export type ReceiptTypeWithoutFarmerId = ReceiptTypeWithFarmerId & {
+  farmer: {
+    farmer_name: string;
+    village: string;
+    farmer_contact: string;
+    farmer_ID_card_number: string;
+    inspector_contact: string;
+    location: string;
+  }
+};
 
 @Injectable()
 export class ReceiptService {
@@ -19,27 +32,103 @@ export class ReceiptService {
 
   constructor(
     private readonly prismaService: PrismaService,
-
+    private readonly farmerService: FarmersService
   ) { }
 
 
+
   async create(
-    createReceiptDto: Prisma.ReceiptCreateInput,
-    user: Partial<User>,
+    createReceiptDto: Prisma.ReceiptUncheckedCreateInput | ReceiptTypeWithoutFarmerId,
+    user?: Partial<User>,
   ) {
     // avoid creating receipt twice
-    console.log('\n\n receipt payload: ', createReceiptDto);
+    console.log('\n\n receipt payload:', createReceiptDto);
+    let farmerObject: Farmer, result: Receipt;
     try {
 
-      const result = await this.prismaService.receipt.create({
-        data: createReceiptDto
-      });
-      if (result)
+      // Automatically create farmer if not found in DB
+      if (!createReceiptDto.farmer_id) {
+        if (!('farmer' in createReceiptDto)) {
+          throw new Error(
+            `there is no farmer Id available and NO farmer details provided. Cannot create farmer and his receipt.`
+          );
+        }
+        const { farmer, ...rest } = createReceiptDto;
+        farmerObject = (await this.farmerService.create({
+          farmer_ID_card_number: farmer?.farmer_ID_card_number,
+          farmer_name: farmer?.farmer_name,
+          farmer_contact: farmer?.farmer_contact,
+          village: farmer?.village,
+          inspector_name: createReceiptDto?.agent_name,
+          inspector_contact: farmer?.inspector_contact,
+          company_id: <string>user?.company_id,
+          certification_year: "1970",
+          council: farmer?.location,
+          inspection_date: new Date(createReceiptDto?.date).toISOString(),
+          pesticide_quantity: 0,
+          pesticide_used: "",
+          weed_application: "",
+          weed_application_quantity: 0,
+          farmer_photos: createReceiptDto?.salePhotoUrl
+        }))?.data as Farmer;
+        console.log('Farmer created:', farmerObject);
+        // Create the receipt
+
+        result = await this.prismaService.receipt.create({
+          data: {
+            agent_name: rest?.agent_name,
+            farmer_id: farmerObject?.id,
+            village: farmerObject?.village,
+            market_id: createReceiptDto?.market_id, // Use market_id directly instead of nested relation
+            agent_signature: rest?.agent_signature,
+            currency: rest?.currency,
+            farmer_signature: rest?.farmer_signature,
+            humidity: rest?.humidity,
+            net_weight: rest?.net_weight,
+            product_name: rest?.product_name,
+            price_per_kg: rest?.price_per_kg,
+            refraction: rest?.refraction,
+            total_price: rest?.total_price,
+            weight: rest?.weight,
+            gpsLocation: rest?.gpsLocation as InputJsonValue,
+            salePhotoUrl: rest?.salePhotoUrl,
+            date: rest?.date,
+          },
+        });
+      } else {
+        // Create the receipt directly if farmer_id exists
+        result = await this.prismaService.receipt.create({
+          data: {
+            market_id: createReceiptDto?.market_id,
+            agent_name: createReceiptDto?.agent_name,
+            farmer_id: createReceiptDto?.farmer_id,
+            village: createReceiptDto?.village,
+            agent_signature: createReceiptDto?.agent_signature,
+            currency: createReceiptDto?.currency,
+            date: createReceiptDto?.date,
+            farmer_signature: createReceiptDto?.farmer_signature,
+            humidity: createReceiptDto?.humidity,
+            net_weight: createReceiptDto?.net_weight,
+            product_name: createReceiptDto?.product_name,
+            price_per_kg: createReceiptDto?.price_per_kg,
+            gpsLocation: createReceiptDto?.gpsLocation as InputJsonValue,
+            refraction: createReceiptDto?.refraction,
+            total_price: createReceiptDto?.total_price,
+            weight: createReceiptDto?.weight,
+            salePhotoUrl: createReceiptDto?.salePhotoUrl,
+          },
+        });
+        console.log({ result });
+      }
+
+      if (result) {
+
         return {
           data: result,
           status: HttpStatus.CREATED,
-          message: `receipt created successfully`,
+          message: `receipt created successfully `,
         };
+      }
       else
         return {
           data: null,
@@ -47,14 +136,20 @@ export class ReceiptService {
           message: `Failed to create receipt`,
         };
     } catch (error) {
+      console.error('Error while creating receipt:', error);
+
       if (error instanceof Prisma.PrismaClientValidationError) {
         this.logger.error(
-          `Error while creating receipt ${error.name}: Validation error \n\n ${error}`,
+          `Validation error: ${error.message}`,
           ReceiptService.name,
         );
-        throw new InternalServerErrorException(
-          `Validation Error while creating receipt `
+        throw new InternalServerErrorException('Validation Error');
+      } else {
+        this.logger.error(
+          `Unexpected error: ${error.message}`,
+          ReceiptService.name,
         );
+        throw new InternalServerErrorException('Unexpected Error');
       }
 
     }

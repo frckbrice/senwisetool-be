@@ -32,6 +32,7 @@ export class ProjectsService {
     company_id: string;
   }) {
 
+    // it is needed for assignee creation.
     if (!company_id)
       throw new HttpException(`No company ID. cannot create project`, HttpStatus.FORBIDDEN);
 
@@ -52,7 +53,6 @@ export class ProjectsService {
     }
 
     // validate date so that end date should be greater than start date
-
     if (createProjectDto.start_date > createProjectDto.end_date)
       return {
         data: null,
@@ -117,6 +117,7 @@ export class ProjectsService {
       company_id
     };
 
+    console.log({ campaign_id, company_id })
     if (status) {
       where['status'] = status;
     }
@@ -131,10 +132,6 @@ export class ProjectsService {
 
     if (search)
       where["search"] = search
-
-    // if (search)
-    //   where["search"] = search
-    console.log("incoming request before query.agentCode: ", query, "company_id: ", company_id)
 
     // if we have assigned a query to the uri, we just return the corresponding function.
     if (query.agentCode)
@@ -566,6 +563,7 @@ export class ProjectsService {
               company_id: true,
               city: true
             },
+
           });
           console.log("current project : ", projects)
         } else {
@@ -608,7 +606,7 @@ export class ProjectsService {
         return {
           data: [],
           status: HttpStatus.BAD_REQUEST,
-          message: "Failed to fetch projects assigned to this agent",
+          message: "Failed to fetch projects assigned to this agent. the project is not possibly deployed or no company_id provided.",
         }
 
       } else return { // there is no project codes for this agent.

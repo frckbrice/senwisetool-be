@@ -1,6 +1,8 @@
 import { $Enums, Farmer } from '@prisma/client';
 
 export class FarmerType implements Farmer {
+    created_at: Date;
+    council: string;
     certification_year: string;
     company_id: string;
     farmer_ID_card_number: string;
@@ -16,8 +18,6 @@ export class FarmerType implements Farmer {
     village: string;
     weed_application: string;
     weed_application_quantity: number;
-    council: string;
-    created_at: Date;
     updated_at: Date;
     status: $Enums.SubscriptionStatus | null;
 }
