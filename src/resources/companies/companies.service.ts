@@ -10,7 +10,7 @@ import { CompanyStatus, Prisma, User } from '@prisma/client';
 import { PaginationCompanyQueryDto } from './dto/paginate-company.dto';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { UsersService } from '../users/users.service';
-// import { Slugify } from 'src/global/utils/slugilfy';
+import { Slugify } from 'src/global/utils/slugilfy';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
@@ -20,18 +20,11 @@ export class ComapnyService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly userService: UsersService,
-    // private slugifyService: Slugify,
+    private slugifyService: Slugify,
     private eventEmitter: EventEmitter2,
   ) { }
 
-  slugify(title: string) {
-    return title
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-_]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-  }
+
   async create(
     createCompanyDto: Prisma.CompanyCreateInput,
     user: Partial<User>,
@@ -41,14 +34,17 @@ export class ComapnyService {
 
     const company = await this.prismaService.company.findFirst({
       where: {
-        email: createCompanyDto.email,
+        OR: [
+          { email: createCompanyDto.email },
+          { head_office_email: createCompanyDto.email }
+        ]
       },
     });
     if (company)
       return {
         data: company,
         status: 409,
-        message: `Company ${createCompanyDto.name} already exists`,
+        message: `Company ${createCompanyDto.name} already exists or the head office email should be different`,
       };
     try {
       const { email, head_office_email } = createCompanyDto;
@@ -56,7 +52,7 @@ export class ComapnyService {
         const result = await this.prismaService.company.create({
           data: {
             ...createCompanyDto,
-            slug: this.slugify(createCompanyDto.name),
+            slug: this.slugifyService.slugify(createCompanyDto.name),
             head_office_email: head_office_email ?? email,
             status: CompanyStatus.INACTIVE, // has not yet subscribe to a price plan.
           },
@@ -64,7 +60,7 @@ export class ComapnyService {
 
         // We create the user object here. This is a design decision. because we need to create the ADG along with its company. May be updated later.
         await this.userService.createUserFromCompany({
-          id: <string>user.id,
+          id: <string>user.id,  // we assign the clerk user Id to our Prisma user
           first_name: <string>user.first_name,
           email: <string>user.email,
           role: <string>user.role,
@@ -166,7 +162,8 @@ export class ComapnyService {
           paypal_id: true,
           email: true,
           status: true,
-          logo: true
+          logo: true,
+          company_bucket: true
         },
       });
 

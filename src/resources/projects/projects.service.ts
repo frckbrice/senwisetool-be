@@ -32,7 +32,9 @@ export class ProjectsService {
     company_id: string;
   }) {
 
-
+    // it is needed for assignee creation.
+    if (!company_id)
+      throw new HttpException(`No company ID. cannot create project`, HttpStatus.FORBIDDEN);
 
     // avoid creating the same project twice with the same title
     const project = await this.prismaService.project.findFirst({
@@ -41,12 +43,14 @@ export class ProjectsService {
       },
     });
 
-    if (project)
+    if (project !== null) {
+      console.log("after checking duplicate :existing, ", project);
       return {
         data: project,
-        status: HttpStatus.CONFLICT,
-        message: `Project  ${createProjectDto.title} already exists`,
+        status: 409,
+        message: `Project  "${createProjectDto.title}" already exists`,
       };
+    }
 
     // validate date so that end date should be greater than start date
     if (createProjectDto.start_date > createProjectDto.end_date)
@@ -57,56 +61,30 @@ export class ProjectsService {
       };
 
     try {
-      /**
-   * 1. create mapping with created uuid
-   * 2. persist this mapping in the DB for later retrieval 
-   */
-      const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
-      await this.projectAssigneeService.create({
+
+
+      const { uuid: UID, code: projectCode } = generateMapping(crypto.randomUUID());
+      const assignee = await this.projectAssigneeService.create({
         agentCode: projectCode,
-        projectCodes: [uuid],
-        company_id,
-        project_type: createProjectDto.type
+        projectCodes: [UID],
+        company_id
       })
 
-      // check if there is an existing project/assignee with the same code 4 digits
-      // const existingAssignee = await this.projectAssigneeService.findOne(projectCode);
-      // if (existingAssignee?.data?.length) {
-      //   return {
-      //     data: null,
-      //     message: 'this code is already in use, Please try again',
-      //     status: 400
-      //   }
-      // }
+      console.log("from project service assignee created : ", assignee);
 
-      const result = await this.prismaService.$transaction(async (tx) => {
-        const result = await tx.project.create({
-          data: {
-            ...createProjectDto,
-            slug: this.slugify.slugify(createProjectDto.title),
-            code: uuid,
-            deployed_at: "1970-01-01T00:00:00+01:00",
-            archived_at: "1970-01-01T00:00:00+01:00",
-            deleted_at: "1970-01-01T00:00:00+01:00",
-            updated_at: "1970-01-01T00:00:00+01:00",
-          },
-        });
-
-        // set the project audit to know who is in charge of the project
-        // await tx.project_audit.create({
-        //   data: {
-        //     project_id: result.id,
-        //     user_id: user_id,
-        //     type_of_project: result.type,
-        //     action: createProjectDto.status
-        //   },
-        // });
-
-        return result;
+      const result = await this.prismaService.project.create({
+        data: {
+          ...createProjectDto,
+          slug: this.slugify.slugify(createProjectDto.title),
+          code: UID,
+          deployed_at: "1970-01-01T00:00:00+01:00",
+          archived_at: "1970-01-01T00:00:00+01:00",
+          deleted_at: "1970-01-01T00:00:00+01:00",
+          updated_at: "1970-01-01T00:00:00+01:00",
+        },
       });
 
       if (result) {
-
         return {
           data: { ...result, code: projectCode },
           status: 201,
@@ -129,102 +107,15 @@ export class ProjectsService {
     }
   }
 
-  // get all company's projects code
-  async findAllProjectCodesOfCompany(query: Partial<PaginationProjectQueryDto> | any, company_id: string) {
-    const { campaign_id, type } = query
-    console.log("fetching all project codes")
-    try {
-      const [total, projects] = await this.prismaService.$transaction([
-        this.prismaService.project.count(),
-        this.prismaService.project.findMany({
-          where: {
-            company_id,
-            campaign_id
-          },
-          select: {
-            id: true,
-            type: true,
-            code: true,
-            title: true,
-          },
-          orderBy: {
-            start_date: 'desc',
-          },
-        }),
-      ]);
-
-      if (typeof projects != 'undefined' && projects.length) {
-        // get the list of project uuid code
-        const listOfUuidCodes = projects?.map((p) => p.code);
-        // get all the corresponding 4 digits codes for each project
-        const assignees =
-          await this.projectAssigneeService
-            .getAllTheAssigneesCodesFromAListOfProjectUuidsOfACompany(listOfUuidCodes, <string>company_id);
-
-        // Create mapping for matching uuids
-        const mappedList = assignees?.data?.flatMap(assignee =>
-          assignee.projectCodes
-            .filter(uuid => listOfUuidCodes.includes(uuid))
-            .map(uuid => ({
-              agentCode: assignee.agentCode,
-              uuid: uuid
-            }))
-        );
-
-        // assign coresponding code to each project.
-        const projectResponse = mappedList?.reduce((acc, curr, index) => {
-          if (acc.find(p => p.code === curr.uuid)) {
-            const val = acc[index]
-            acc = [...acc, { ...val, code: curr.agentCode }]
-          }
-          return acc
-        }, projects);
-
-        // send only projects with 4 digit code
-        let result: any[] = []
-        if (projectResponse) {
-          for (const item of projectResponse) {
-            if (item.code.length < 5) {
-              result.push(item)
-            }
-          }
-        }
-
-        return {
-          status: 200,
-          message: 'projects fetched successfully',
-          data: result,
-          total,
-          page: query.page ?? 0,
-          perPage: query.perPage ?? 20,
-          totalPages: Math.ceil(total / (query.perPage ?? 20)),
-        };
-      }
-
-      else
-        return {
-          status: 404,
-          message: 'No projects found',
-          data: [],
-          total,
-          page: query.page ?? 0,
-          perPage: query.perPage ?? 20,
-          totalPages: Math.ceil(total / (query.perPage ?? 20)),
-        };
-    } catch (error) {
-      this.logger.error('Error fetching projects', ProjectsService.name);
-      throw new NotFoundException('Error fetching projects');
-    }
-
-  }
-
-  async findAll(query: Partial<PaginationProjectQueryDto> | any, company_id: string) {
+  async findAll(
+    query: Partial<PaginationProjectQueryDto> | any,
+    company_id: string) {
 
     console.log('company_id\n', company_id)
     const { status, type, page, perPage, search, campaign_id, } = query;
-    const where = Object.create({ company_id });
-    console.log('first where clause \n', where)
-    let Query = Object.create({ where });
+    const where: any = {
+      company_id
+    };
 
     console.log({ campaign_id, company_id })
     if (status) {
@@ -242,39 +133,28 @@ export class ProjectsService {
     if (search)
       where["search"] = search
 
-    if (search)
-      where["search"] = search
-
-
     // if we have assigned a query to the uri, we just return the corresponding function.
     if (query.agentCode)
       return this.getAllAssignedProjects(query.agentCode, company_id);
 
-
-    Query = {
-      ...where,
+    let q = Object.create({ where });
+    console.log("incoming request  after query.agentCode : ", query)
+    const queryOptions = {
+      where,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
-        start_date: 'desc',
+        start_date: 'desc' as const,
       },
     };
 
     // for each project, assign its 4 dgits code
     // find all the project with the latest start date with its status and type
     try {
+      console.log('Query from service\n\n', q)
       const [total, projects] = await this.prismaService.$transaction([
-        this.prismaService.project.count(),
-        this.prismaService.project.findMany({
-          where: {
-            type,
-            company_id,
-            campaign_id
-          },
-          orderBy: {
-            start_date: 'desc',
-          },
-        }),
+        this.prismaService.project.count({ where }),
+        this.prismaService.project.findMany(queryOptions),
       ]);
 
       if (typeof projects != 'undefined' && projects.length) {
@@ -322,7 +202,7 @@ export class ProjectsService {
           data: [],
           total,
           page: query.page ?? 0,
-          perPage: query.perPage ?? 20,
+          perPage: query.perPage ?? 20 - 1,
           totalPages: Math.ceil(total / (query.perPage ?? 20)),
         };
     } catch (error) {
@@ -332,28 +212,19 @@ export class ProjectsService {
   }
 
   async findOne(project_id: string) {
-    const where = {} as {
-      id: string | undefined;
-      slug: string | undefined;
-    };
-    if (project_id.toString().includes('-')) {
-      where['slug'] = project_id;
-    } else {
-      where['id'] = project_id;
-    }
-
-
 
     try {
       const result = await this.prismaService.project.findUnique({
-        where,
+        where: {
+          id: project_id,
+        }
       });
 
       if (result)
         return {
           data: result,
           status: 200,
-          message: `project fetched successfully`,
+          message: `project  fetched successfully`,
         };
       else
         return {
@@ -557,7 +428,7 @@ export class ProjectsService {
         ProjectsService.name,
       );
       throw new InternalServerErrorException(
-        "Can't update a project list ",
+        "Can't update a project list",
       );
     }
   }
@@ -663,29 +534,66 @@ export class ProjectsService {
   // get all the projects assigned to an agent
   async getAllAssignedProjects(agentCode: string, company_id?: string) {
     try {
+      console.log("inside get all assigned projects ");
       // get list of projects codes assigned to this agent
       const listOfCodes = (await this.projectAssigneeService.findOne(agentCode))?.data;
       if (listOfCodes?.length) {
 
-        const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
+        console.log("list of  codes: ", listOfCodes)
+        let listOfUuids, projects;
+        if (listOfCodes.length === 1) {
+          console.log("\n\n got a single project: ")
+          console.log("\n\n company ID: ", company_id)
+          // get all oject having the the uuid
+          const [codeVal] = listOfCodes;
 
-        // get all oject having the the uuid
-        const projects = await this.prismaService.project.findMany({
-          where: {
-            code: {
-              in: [...listOfUuids!]
+          projects = await this.prismaService.project.findMany({
+            where: {
+              code: codeVal,
+              status: ProjectStatus.DEPLOYED,
+              company_id,
             },
-            status: ProjectStatus.DEPLOYED,
-            company_id
-          },
-          select: {
-            status: true,
-            type: true,
-            id: true,
-            title: true,
+            select: {
+              // status: true,
+              type: true,
+              id: true,
+              title: true,
+              project_structure: true,
+              // campaign_id: true,
+              company_id: true,
+              city: true
+            },
 
-          },
-        });
+          });
+          console.log("current project : ", projects)
+        } else {
+          console.log("listOfCodes get  multiple code : ", listOfCodes);
+          listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes);
+          projects = await this.prismaService.project.findMany({
+            where: {
+              code: {
+                in: listOfUuids
+              },
+              status: ProjectStatus.DEPLOYED,
+              company_id
+            },
+            select: {
+              // status: true,
+              type: true,
+              id: true,
+              title: true,
+              project_structure: true,
+              // campaign_id: true,
+              company_id: true,
+              city: true
+            },
+          });
+        }
+
+
+        console.log("projects: ", projects);
+
+
         if (typeof projects != 'undefined' && projects.length) {
 
           return {
@@ -698,10 +606,10 @@ export class ProjectsService {
         return {
           data: [],
           status: HttpStatus.BAD_REQUEST,
-          message: "Failed to fetch projects assigned to this agent",
+          message: "Failed to fetch projects assigned to this agent. the project is not possibly deployed or no company_id provided.",
         }
 
-      } else return {
+      } else return { // there is no project codes for this agent.
         data: [],
         status: HttpStatus.BAD_REQUEST,
         message: "This code has No projects assigned to.",

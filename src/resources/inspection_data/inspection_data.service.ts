@@ -8,6 +8,10 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/adapters/config/prisma.service';
 import { LoggerService } from 'src/global/logger/logger.service';
 import { FieldWorkerHost } from './worker-host';
+import { FarmWorkerHost } from './worker-host-farm';
+import { AttendanceSheetWorker } from './worker-host-training';
+
+const resourceList = ['initial_inspection', 'mapping', 'trainings']
 
 @Injectable()
 export class InspectionDataService {
@@ -15,36 +19,84 @@ export class InspectionDataService {
 
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly fieldWorker: FieldWorkerHost
+    private readonly fieldWorker: FieldWorkerHost,
+    private readonly farmWorker: FarmWorkerHost,
+    private readonly attendenceSheetWorker: AttendanceSheetWorker,
   ) { }
-  async create(createInspectionDatumDto: Prisma.Inspection_dataCreateInput, type: string) {
+  async create(
+    createInspectionDatumDto: Prisma.Inspection_dataCreateInput & { council?: string },
+    type: string,
+    company_id?: string,
+  ) {
     let status: boolean = false;
 
+    console.log("\n\n data from mobile: ", createInspectionDatumDto);
+    console.log("\n\ntype : ", type);
+    let city: string;
+    // get the council from the   incoming mobile data
+    if (createInspectionDatumDto?.council) {
+      city = createInspectionDatumDto?.council;
+    }
+
+    const { council, ...res } = createInspectionDatumDto
+
+    // type is used to Identify which project is being uploaded.
+    // this triggers a specific operation like storing farmer data at initial inspection only .
+    let data;
+
     try {
-      const data = await this.prismaService.inspection_data.create({
-        data: createInspectionDatumDto,
-      });
+      if (type.toString().toLocaleLowerCase().includes('internal_inspection') ||
+        type.toString().toLocaleLowerCase().includes('auto_evaluation')) {
+        data = await this.prismaService.inspection_data.create({
+          data: res,
+        });
+      }
+      else {
+        // data = await this.prismaService.$transaction(async () => {
+        data = await this.prismaService.inspection_data.create({
+          data: res,
+        });
+        if (data) {
+          // store the data for farmer via the worker thread
+          // council here is added because we are trying to fetch farmer from mobile later based on location/city.
+          if (type.toString().toLocaleLowerCase().includes('_inspection')) {
+            const result = await this.fieldWorker.storeFarmerData(JSON.stringify({ ...data, council }));
+            if (typeof result != 'undefined' && result) {
+              console.log("farmer created successfully: ", result);
+              status = true
+            }
 
-      if (typeof data != 'undefined') {
+          }
+          // store data for  farm 
+          if (type.toString().toLocaleLowerCase().includes('mapping')) {
+            const result = await this.farmWorker.storeFarmData(JSON.stringify({ ...data, company_id, council }));
+            if (typeof result != 'undefined' && result) {
+              console.log("\n\nfarm data  registered successfully: ", result)
+              status = true;
+            }
+          }
 
-        // store the data for farmer in the worker thread
-        if (type.toString().toLocaleLowerCase().includes('initial_inspection')) {
-          const result = await this.fieldWorker.storeFarmerData(JSON.stringify(data));
-          if (typeof result != 'undefined')
-            status = true
+          if (type.toString().toLocaleLowerCase().includes('training')) {
+            const result = await this.attendenceSheetWorker.storeAttendanceData(JSON.stringify(data));
+            if (typeof result != 'undefined' && result) {
+              console.log("\n\participants and attendance of this training project registered successfully: ", result)
+              status = true;
+            }
+          }
         }
 
-        // store data for  farm 
-        // if(type.toString().toLocaleLowerCase().includes('mapping')){
-        //   const result = await this.fieldWorker.storeFarmData(JSON.stringify(data));
-        //   if (typeof result!= 'undefined')
-        //     status = true
-        // }
+
+        //   return data
+        // });
+
+      }
+
+      if (data) {
         return {
           data,
           status: HttpStatus.CREATED,
           message: `Project collected data was stored successfully in DB
-            ${status ? 'farmer also created' : ''}
+            ${status && type.includes('initial_inspection') ? 'farmer also created during this' + `${type}` : ''}
           `
         }
       }
@@ -57,7 +109,7 @@ export class InspectionDataService {
         }
     } catch (error) {
       this.logger.error(
-        'Failed to store project collected data',
+        `Failed to store project collected data , ${error}`,
         InspectionDataService.name,
       );
       throw new InternalServerErrorException('Failed to store project collected data');

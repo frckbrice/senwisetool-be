@@ -26,20 +26,20 @@ export class RolesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest();
 
     // block every resource mutation for non subscribed companies
-    if (request.method === "POST" || request.method === "PATCH" || request.method === "DELETE") {
-      const companyStatus = this.getCompanyStatus(user.company_id)
-        .then((response) => {
-          if (response?.status !== CompanyStatus.INACTIVE) {
-            this.logger.error(
-              'user not allowed access to route handler: company not subscribed',
-              RolesGuard.name,
-            );
-            return false;
-          }
-        })
-    }
+    // if (request.method === "POST" || request.method === "PATCH" || request.method === "DELETE") {
+    //   const companyStatus = this.getCompanyStatus(user.company_id)
+    //     .then((response) => {
+    //       if (response?.status === CompanyStatus.INACTIVE) {
+    //         this.logger.error(
+    //           'user not allowed access to route handler: company not subscribed',
+    //           RolesGuard.name,
+    //         );
+    //         return false;
+    //       }
+    //     })
+    // }
 
-    // allow route access for public routes like : health check,
+    // allow route access for public routes like : health check etc.
     if (!requiredRoles && !user) {
       this.logger.log('user allowed access to route handler', RolesGuard.name);
       return true;
@@ -48,7 +48,7 @@ export class RolesGuard implements CanActivate {
       !user
         ? this.logger.error('user not authenticated', RolesGuard.name)
         : this.logger.error(
-          'user not allowed access to route handler: no role attached',
+          'user not allowed to access the route handler: no role attached',
           RolesGuard.name,
         );
       return false;

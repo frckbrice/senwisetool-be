@@ -28,12 +28,14 @@ export class MarketsService {
   async create({
     createMarketDto,
     user_id,
+    company_id
   }: {
     createMarketDto: Prisma.MarketUncheckedCreateInput;
     user_id: string;
+    company_id: string
   }) {
 
-    // validate date so that end date should be greater than start date
+    //validate date so that end date should be greater than start date
     if (createMarketDto.start_date > createMarketDto.end_date)
       return {
         data: null,
@@ -41,40 +43,25 @@ export class MarketsService {
         message: `End date should be greater than or equal to start date`,
       };
 
-    const { uuid: UID, code: projectCode } = generateMapping(crypto.randomUUID());
-
+    const { uuid: UID, code: market_code } = generateMapping(crypto.randomUUID());
+    await this.projectAssigneeService.create({
+      agentCode: market_code,
+      projectCodes: [UID],
+      company_id,
+      project_type: "MARKET"
+    })
     try {
-      // create a market record on assignee table
-      await this.projectAssigneeService.create({
-        agentCode: projectCode,
-        projectCodes: [UID],
-        company_id: createMarketDto.company_id,
-        project_type: "MARKET"
-      })
-
-      const result = await this.prismaService.$transaction(async (tx) => {
-        const result = await tx.market.create({
-          data: {
-            ...createMarketDto,
-            code: UID,
-            end_date: "1970-01-01T00:00:00+01:00",
-          },
-        });
-
-        // set the market audit to know who is in charge of the market
-        // await tx.market_audit.create({
-        //   data: {
-        //     market_id: result.id,
-        //     user_id: user_id,
-        //   },
-        // });
-
-        return result;
+      const result = await this.prismaService.market.create({
+        data: {
+          ...createMarketDto,
+          code: UID,
+          end_date: "1970-01-01T00:00:00+01:00",
+        },
       });
 
       if (result)
         return {
-          data: { ...result, code: projectCode },
+          data: { ...result, code: market_code },
           status: 201,
           message: `market created successfully`,
         };
@@ -94,11 +81,12 @@ export class MarketsService {
   }
 
   async findAll(query: Partial<PaginationMarketQueryDto>, company_id: string) {
-    console.log('company_id =>', company_id)
-    const { status, type, page, perPage,
+
+    const {
+      status, type, page, perPage,
       search, campaign_id, agentCode } = query;
-    const where = Object.create({});
-    let Query = Object.create({ where });
+
+    const where: any = {};
 
     console.log({ company_id, campaign_id })
 
@@ -117,37 +105,32 @@ export class MarketsService {
     if (company_id) {
       where['company_id'] = company_id;
     }
-    if (agentCode) {
-      return await this.getTheAssignedMarket(agentCode, company_id)
 
+    if (agentCode) {
+
+      return await this.getTheAssignedMarket(agentCode, company_id)
     }
 
     if (search)
       where["search"] = search;
 
-    console.log('where =>', where)
-    Query = {
-      ...Query,
+    const queryOptions = {
+      where,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
-        start_date: 'desc',
+        start_date: 'desc' as const,
       },
 
     };
-    console.log("Query =>", Query)
     // find all the market with the latest start date with its status and type
     try {
-      console.log('fetching markets')
+
       const [total, markets] = await this.prismaService.$transaction([
-        this.prismaService.market.count(),
-        this.prismaService.market.findMany({
-          where,
-          include: {
-            transaction: true,
-            receipts: true
-          }
+        this.prismaService.market.count({
+          where
         }),
+        this.prismaService.market.findMany(queryOptions),
       ]);
 
       // Get list of market uuid code
@@ -189,7 +172,7 @@ export class MarketsService {
           data: marketResult,
           total,
           page: query.page ?? 0,
-          perPage: query.perPage ?? 20,
+          perPage: query.perPage ?? 20 - 1,
           totalPages: Math.ceil(total / (query.perPage ?? 20)),
         };
       }
@@ -203,7 +186,7 @@ export class MarketsService {
         totalPages: Math.ceil(total / (query.perPage ?? 20)),
       };
     } catch (error) {
-      this.logger.error('Error fetching markets', MarketsService.name);
+      this.logger.error(`Error fetching markets' \n\n, ${error}`, MarketsService.name);
       throw new NotFoundException('Error fetching markets');
     }
   }
@@ -336,19 +319,18 @@ export class MarketsService {
 
   async update({
     id,
-    user_id,
     updateMarketDto,
   }: {
     id: string;
-    user_id: string;
     updateMarketDto: Prisma.MarketUpdateInput;
   }) {
 
     // check if the market exists first
     const existingMarket = await this.findOne(id);
-    if (typeof existingMarket == 'undefined')
-      throw new HttpException(` No market with that Id`, HttpStatus.BAD_REQUEST);
+    if (!existingMarket)
+      throw new HttpException(`There is No existing market with that Id `, HttpStatus.BAD_REQUEST);
 
+    console.log("\n\n incoming updateMarketDto: ", updateMarketDto);
 
     try {
       const result = await this.prismaService.market.update({
@@ -357,6 +339,8 @@ export class MarketsService {
           id,
         },
       });
+
+      console.log("\n\n updated market data: ", result);
 
       if (result)
         return {
@@ -382,7 +366,7 @@ export class MarketsService {
   }
 
 
-  // update a single market
+  // update a single market 
   async remove({ market_id, user_id }: { market_id: string, user_id: string }) {
     try {
       const result = await this.prismaService.market.delete({
@@ -405,7 +389,7 @@ export class MarketsService {
         };
     } catch (err) {
       this.logger.error(
-        "Can't delete a market with market_id " + market_id + '\n\n ' + err,
+        "Can't delete a market with market_id  " + market_id + '\n\n ' + err,
         MarketsService.name,
       );
       throw new InternalServerErrorException(
@@ -418,37 +402,56 @@ export class MarketsService {
   async getTheAssignedMarket(agentCode: string, company_id: string) {
     try {
       const currentDate = new Date(Date.now()).toISOString();
+
       console.log("request market by agent code: " + agentCode);
       const listOfMarkets = await this.projectAssigneeService.findOne(agentCode);
       const marketUUID = listOfMarkets?.data?.[0];
-      console.log("corresponding agent code UUID: " + marketUUID);
-      return await this.prismaService.market.findFirst({
+
+      console.log({ marketUUID, company_id, status: CampaignStatus.OPEN, start_date: { gte: currentDate } })
+      const data = await this.prismaService.market.findFirst({
         where: {
           AND: [
-            { code: marketUUID },
-            { company_id },
-            { status: CampaignStatus.OPEN }, // selct open market.
-            { start_date: { gte: currentDate } }
+            { code: marketUUID }, // sselect market by uuid
+            { company_id }, //select current user connected company market
+            { status: CampaignStatus.OPEN }, // select open market.
+            // { start_date: { gte: currentDate } }
           ]
+
         },
-        // select: {
-        //   id: true,
-        //   market_number: true,
-        //   start_date: true,
-        //   end_date: true,
-        //   status: true,
-        //   company_id: true,
-        // },
         include: {
           company: {
             select: {
-              id: true,
               name: true,
               logo: true
             }
           }
         }
-      })
+      });
+
+      if (data)
+        return {
+          data: {
+            company_id: data?.company_id,
+            market_number: data?.id,
+            start_date: data?.start_date,
+            end_date: data?.end_date,
+            status: data?.status,
+            price_of_day: data?.price_of_theday,
+            location: data?.location,
+            type_of_market: data?.type_of_market,
+            company_name: data?.company?.name,
+            company_logo: data?.company?.logo,
+            supplier: data?.supplier
+          },
+          status: 200,
+          message: `market fetched successfully`,
+        };
+      else
+        return {
+          data: null,
+          status: 400,
+          message: `Failed to fetch market`,
+        };
     } catch (error) {
       this.logger.error(` errror getting the market assigned to this agent code: ${agentCode}. error: ${error}`)
       throw new HttpException(`errror getting the market assigned to this agent code:`, HttpStatus.NOT_FOUND)

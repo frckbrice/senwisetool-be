@@ -1,14 +1,15 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { ProjectAssigneeService } from './project-assignee.service';
 import { UpdateProjectAssigneeDto } from './dto/update-project-assignee.dto';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role, User } from '@prisma/client';
 import { Roles } from 'src/global/auth/guards/roles.decorator';
 import { RolesGuard } from 'src/global/auth/guards/auth.guard';
 import { ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
 
 
-@Controller('project_assignee')
-@ApiTags('project_assignee')
+@Controller('project_assignees')
+@ApiTags('project_assignees')
 export class ProjectAssigneeController {
   constructor(private readonly projectAssigneeService: ProjectAssigneeService) { }
 
@@ -30,8 +31,10 @@ export class ProjectAssigneeController {
   @Get()
   @Roles(Role.ADG, Role.AUDITOR)
   @UseGuards(RolesGuard)
-  findAll(@Query() query: { agentCode: string }) {
-    return this.projectAssigneeService.findAll(query.agentCode);
+  findAll(@Query() query: { agentCode: string },
+    @CurrentUser() user: Partial<User>
+  ) {
+    return this.projectAssigneeService.findAll(<string>user?.company_id, query.agentCode,);
   }
 
   // GET ALL SUBACCOUNTS OF A COMPANY
@@ -46,8 +49,11 @@ export class ProjectAssigneeController {
   @Get(':id')
   @Roles(Role.ADG, Role.AUDITOR)
   @UseGuards(RolesGuard)
-  findOne(@Param('id') id: string) {
-    return this.projectAssigneeService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: Partial<User>
+  ) {
+    return this.projectAssigneeService.findOne(id, <string>user?.company_id);
   }
 
   @Patch(':id')

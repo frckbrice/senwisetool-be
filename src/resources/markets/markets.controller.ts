@@ -48,7 +48,8 @@ export class MarketsController {
   ) {
     return this.marketsService.create({
       createMarketDto,
-      user_id: <string>user.id,
+      user_id: <string>user?.id,
+      company_id: <string>user?.company_id
     });
   }
 
@@ -71,7 +72,9 @@ export class MarketsController {
   })
   @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
   findAll(
-    @Query() query: PaginationMarketQueryDto, @CurrentUser() user: Partial<User>) {
+    @Query() query: PaginationMarketQueryDto,
+    @CurrentUser() user: Partial<User>
+  ) {
     return this.marketsService.findAll(query, <string>user.company_id);
   }
 
@@ -102,7 +105,6 @@ export class MarketsController {
     return this.marketsService.update({
       id: market_id,
       updateMarketDto,
-      user_id: <string>user.id,
     });
   }
 

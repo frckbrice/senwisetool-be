@@ -36,7 +36,7 @@ export class CompanyController {
     return this.companyService.create(createInspectionDatumDto, user);
   }
 
-  @Roles(Role.ADG)
+  @Roles(Role.ADG, Role.AUDITOR)
   @UseGuards(RolesGuard)
   @Get()
   @ApiOperation({ summary: 'find all companies' })
@@ -52,9 +52,21 @@ export class CompanyController {
   findOne(@CurrentUser() user: Partial<User>) {
 
     console.log("user\n", user)
-    const id = <string>user?.company_id;
+    return this.companyService.findOne(<string>user?.company_id);
+  }
+
+  // get the current company by its ID
+  @Roles(Role.ADG)
+  @UseGuards(RolesGuard)
+  @Get(':id')
+  @ApiOperation({ summary: 'find the currently company of the connected user' })
+  findCompanyById(@Param('id') id: string,
+  ) {
+    console.log("\n\n company IDL ", id)
     return this.companyService.findOne(id);
   }
+
+
 
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)

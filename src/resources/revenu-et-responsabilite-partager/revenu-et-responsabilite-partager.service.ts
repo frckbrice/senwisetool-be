@@ -126,7 +126,7 @@ export class RevenuEtResponsabilitePartagerService {
         message: "Failed to update record",
         data: null
       }
-     } catch (error) {
+    } catch (error) {
       console.log(error)
       this.logger.error(`Can't update social record of id ${id} \n ${error}`,
         RevenuEtResponsabilitePartagerService.name)
@@ -138,7 +138,7 @@ export class RevenuEtResponsabilitePartagerService {
   async delete(id: string) {
     try {
       const existingRecord = await this.prismaService.revenuEtResponsabilitePartager.findUnique({
-        where: {id},
+        where: { id },
 
       })
       if (typeof existingRecord == "undefined") return {
@@ -147,7 +147,7 @@ export class RevenuEtResponsabilitePartagerService {
         status: HttpStatus.BAD_REQUEST
       }
       const result = await this.prismaService.revenuEtResponsabilitePartager.delete({
-        where: {id}
+        where: { id }
       })
       if (result) {
         return {

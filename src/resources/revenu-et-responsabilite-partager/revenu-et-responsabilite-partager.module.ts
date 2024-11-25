@@ -6,4 +6,4 @@ import { RevenuEtResponsabilitePartagerService } from './revenu-et-responsabilit
   controllers: [RevenuEtResponsabilitePartagerController],
   providers: [RevenuEtResponsabilitePartagerService]
 })
-export class RevenuEtResponsabilitePartagerModule {}
+export class RevenuEtResponsabilitePartagerModule { }

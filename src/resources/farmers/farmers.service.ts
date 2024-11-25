@@ -23,10 +23,10 @@ export class FarmersService {
 
 
   async create(
-    createFarmerDto: Prisma.FarmerCreateInput,
+    createFarmerDto: Prisma.FarmerCreateInput
   ) {
     // avoid creating farmer twice
-    console.log('\n\nfarmer payload: ', createFarmerDto);
+    console.log('\n\nfarmer  payload: ', createFarmerDto);
 
     const farmer = await this.prismaService.farmer.findFirst({
       where: {
@@ -76,30 +76,32 @@ export class FarmersService {
 
   async findAll(query: any, company_id: string) {
     // find all the farmer with the latest start date with its status and type
-    const { page, perPage, location, phone } = query;
-    console.log('farmer from farmService\n', company_id)
-    let Query = Object.create({});
-    Query = {
-      ...Query,
+    const { page, perPage, location, phone, name } = query;
+
+    const where: any = {
+      company_id,
+      ...(location && { council: { contains: location } }),
+      ...(name && { farmer_name: name })
+    };
+
+    const queryOptions = {
+      where,
       take: perPage ?? 20,
       skip: (page ?? 0) * (perPage ?? 20 - 1),
       orderBy: {
-        created_at: 'desc',
+        created_at: 'desc' as const, //Explicitly use SortOrder type
       },
     };
+
+    console.log({ queryOptions })
     // find all the companies
     try {
+      // Fetch total count with the same filters and the paginated farmers
       const [total, farmers] = await this.prismaService.$transaction([
-        this.prismaService.farmer.count(),
-        this.prismaService.farmer.findMany({
-          where: {
-            company_id,
-            // location: { contains: location },
-          },
-          ...Query,
-        }),
+        this.prismaService.farmer.count({ where }),
+        this.prismaService.farmer.findMany(queryOptions),
       ]);
-      console.log("Farmers\n\n", farmers)
+
       if (farmers.length)
         return {
           status: 200,
@@ -108,7 +110,8 @@ export class FarmersService {
             farmer_name: f.farmer_name,
             farmer_id: f.id,
             farmer_ID_card_number: f.farmer_ID_card_number,
-            village: f.village
+            village: f.village,
+            farmer_contact: f.farmer_contact
           })) : farmers,
           total,
           page: query.page ?? 0,
@@ -130,7 +133,7 @@ export class FarmersService {
         `Error fetching farmers \n\n ${error}`,
         FarmersService.name,
       );
-      throw new NotFoundException('Error fetching farmers');
+      throw new NotFoundException('Error fetching farmers ');
     }
   }
 
@@ -139,7 +142,14 @@ export class FarmersService {
       const result = await this.prismaService.farmer.findUnique({
         where: {
           id: farmer_id,
-        }
+        },
+        select: {
+          id: true,
+          village: true,
+          farmer_name: true,
+          farmer_contact: true,
+          company_id: true,
+        },
       });
 
       if (result)

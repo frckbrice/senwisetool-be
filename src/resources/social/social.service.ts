@@ -7,7 +7,7 @@ import { PaginationSocialDto } from './dto/pagination-social.dto';
 @Injectable()
 export class SocialService {
   private readonly logger = new LoggerService(SocialService.name)
-  
+
   constructor(
     private readonly prismaService: PrismaService
   ) { }

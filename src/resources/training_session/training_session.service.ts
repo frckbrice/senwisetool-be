@@ -41,7 +41,7 @@ export class TrainingSessionService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientValidationError) {
         this.logger.error(
-          `Error while creating attendance_sheet ${error.name}: Validation error \n\n ${error}`,
+          `Error while  creating attendance_sheet ${error.name}: Validation error \n\n ${error}`,
           TrainingSessionService.name,
         );
         throw new InternalServerErrorException(
@@ -85,7 +85,7 @@ export class TrainingSessionService {
           data: attendance_sheets,
           total,
           page: query.page ?? 0,
-          perPage: query.perPage ?? 20,
+          perPage: query.perPage ?? 20 - 1,
           totalPages: Math.ceil(total / (query.perPage ?? 20)),
         };
       else

@@ -11,17 +11,27 @@ export class ProjectAssigneeService {
   constructor(private prismaService: PrismaService) { }
   async create(createProjectAssigneeDto: Prisma.AssigneeCreateInput) {
 
+    console.log("from project assignee from servce => ", createProjectAssigneeDto)
+    if (!createProjectAssigneeDto?.agentCode || !createProjectAssigneeDto.company_id)
+      return {
+        status: 400,
+        message: "INVALID CREDENTIALS",
+        data: null
+      }
     try {
-      console.log("project assignee from servce => ", createProjectAssigneeDto)
+
       const data = await this.prismaService.assignee.create({
         data: createProjectAssigneeDto
       });
-      if (typeof data != 'undefined')
+      if (typeof data != 'undefined' && data) {
+        console.log("assignee created: ", data)
         return {
           data,
           message: "Project Assigned to this user created successfully",
           status: 201
         }
+      }
+
       return {
         data: null,
         message: "Failed to assign projects to this user",
@@ -61,8 +71,8 @@ export class ProjectAssigneeService {
 
   async getAllAssigneeFromThisProject(code?: string) {
     let options = {}
-    // 
-    /**
+
+    /*
      * we need all the assignees involved in this project code. 
      * ie all the project assigned to this code
      * since sometimes assignee agencode is a project code
@@ -132,7 +142,7 @@ export class ProjectAssigneeService {
   }
 
   // find all the project of one assigne having this agent code.
-  async findAll(agentCode?: string) {
+  async findAll(company_id: string, agentCode?: string,) {
     let options = {}
     // we need all the projects code assigned to this agent code
 
@@ -146,7 +156,8 @@ export class ProjectAssigneeService {
       // retrieve first the uuid corresponding to this code
       const data = await this.prismaService.assignee.findUnique({
         where: {
-          agentCode: agentCode ?? ""
+          agentCode: agentCode ?? "",
+          company_id
         },
         select: {
           projectCodes: true,
@@ -244,7 +255,7 @@ export class ProjectAssigneeService {
       }
     } catch (error) {
       console.log(error)
-      this.logger.error(`Failed to fetch all sub accounts for this company\n\n ${error}`, ProjectAssigneeService.name)
+      this.logger.error(`Failed to fetch  all sub accounts for this company\n\n ${error}`, ProjectAssigneeService.name)
       throw new HttpException('failed to fetch all sub accounts for this company', HttpStatus.NOT_FOUND)
 
     }
@@ -253,19 +264,24 @@ export class ProjectAssigneeService {
 
 
   // get all project codes for this agent
-  async findOne(id: string) {
+  async findOne(id: string, company_id?: string) {
 
-    // in case the code is provide instead
+    console.log("inside projet assignee, incoming ID: ", id);
+    // in case the code is provide instead 
     let options = Object.create({});
 
     if (id.length <= 5)
       options['agentCode'] = id
     else
       options['id'] = id
+    options['company_id'] = company_id;
+    console.log("inside project assignee , option: ", options)
     try {
       const data = await this.prismaService.assignee.findUnique({
         where: options
       });
+
+      console.log("inside project assignee , data: ", data)
       if (typeof data != 'undefined')
         return {
           data: data?.projectCodes,

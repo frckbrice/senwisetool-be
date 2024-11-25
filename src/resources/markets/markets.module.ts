@@ -8,5 +8,6 @@ import { CampaignsModule } from '../campaigns/campaigns.module';
   imports: [ProjectAssigneeModule, CampaignsModule],
   controllers: [MarketsController],
   providers: [MarketsService],
+  exports: [MarketsService],
 })
 export class MarketsModule { }

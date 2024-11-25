@@ -1,1 +1,1 @@
-export class Social  {}
+export class Social { }

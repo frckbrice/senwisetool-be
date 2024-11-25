@@ -34,20 +34,17 @@ export class TrainingService {
   ) {
     //TDOO: look if possible to avoid creating training twice
 
-    // create a mapping code
-    const { uuid, code: training_code } = generateMapping(crypto.randomUUID());
-
-    console.log("after creation: ", "training_code: ", training_code, "uuid: ", uuid)
 
     try {
-
-      const { uuid, code: projectCode } = generateMapping(crypto.randomUUID());
+      // create a mapping code
+      const { uuid, code: training_code } = generateMapping(crypto.randomUUID());
       await this.projectAssigneeService.create({
-        agentCode: projectCode,
+        agentCode: training_code,
         projectCodes: [uuid],
-        company_id: <string>user.company_id,
-        project_type: "TRAINING"
+        company_id: <string>user?.company_id
       })
+      console.log("after training creation: ", "training_code: ", training_code, "uuid: ", uuid)
+
 
       const result = await this.prismaService.training.create({
         data: {
@@ -138,7 +135,7 @@ export class TrainingService {
           await this.projectAssigneeService
             .getAllTheAssigneesCodesFromAListOfProjectUuidsOfACompany(listOfUuidCodes, <string>company_id);
 
-            // console.log('assignees =>', assignees)
+        console.log('assignees =>', assignees)
         // Create mapping for matching uuids
         const mappedList = assignees?.data?.flatMap(assignee =>
           assignee.projectCodes
@@ -148,6 +145,7 @@ export class TrainingService {
               uuid: uuid
             }))
         );
+        console.log('mapped list\n', mappedList)
         // assign coresponding code to each project.
         const projectResponse = mappedList?.reduce((acc, curr, index) => {
           if (acc.find(p => p.code === curr.uuid)) {
@@ -156,6 +154,8 @@ export class TrainingService {
           }
           return acc
         }, trainings);
+
+        console.log('training response \n', projectResponse)
 
         return {
           status: 200,
@@ -191,25 +191,70 @@ export class TrainingService {
       // get list of projects codes assigned to this agent
       const listOfCodes = (await this.projectAssigneeService.findOne(agentCode))?.data;
       if (listOfCodes?.length) {
-
-        const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
+        let listOfUuids, projects;
+        if (listOfCodes.length === 1) {
+          console.log("listOfCodes get one uuid: ", listOfCodes);
+          // get all oject having the the uuid
+          const [codeVal] = listOfCodes;
+          projects = await this.prismaService.training.findMany({
+            where: {
+              code: codeVal,
+              status: ProjectStatus.DEPLOYED,
+              company_id: company_id,
+            },
+            select: {
+              status: true,
+              id: true,
+              title: true,
+              company_id: true,
+              modules: true,
+              location: true,
+              start_date: true,
+              end_date: true
+            },
+          });
+          console.log("current project : ", projects)
+        } else {
+          console.log("listOfCodes get multiple code: ", listOfCodes);
+          listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes);
+          projects = await this.prismaService.training.findMany({
+            where: {
+              code: {
+                in: listOfUuids
+              },
+              status: ProjectStatus.DEPLOYED,
+              company_id
+            },
+            select: {
+              status: true,
+              id: true,
+              title: true,
+              company_id: true,
+              modules: true,
+              location: true,
+              start_date: true,
+              end_date: true
+            },
+          });
+        }
+        // const listOfUuids = await this.projectAssigneeService.getAllTheUuidsFromTheCodesList(listOfCodes)
 
         // get all oject having the the uuid
-        const projects = await this.prismaService.training.findMany({
-          where: {
-            code: {
-              in: [...listOfUuids!]
-            },
-            status: ProjectStatus.DEPLOYED,
-            company_id
-          },
-          select: {
-            status: true,
-            id: true,
-            title: true,
+        // const projects = await this.prismaService.training.findMany({
+        //   where: {
+        //     code: {
+        //       in: [...listOfUuids!]
+        //     },
+        //     status: ProjectStatus.DEPLOYED,
+        //     company_id
+        //   },
+        //   select: {
+        //     status: true,
+        //     id: true,
+        //     title: true,
 
-          },
-        });
+        //   },
+        // });
         if (typeof projects != 'undefined' && projects.length) {
 
           return {

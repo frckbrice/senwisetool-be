@@ -7,56 +7,69 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
-import { ReceiptsService } from './receipts.service';
-import { CreateReceiptDto } from './dto/create-receipt.dto';
-import { UpdateReceiptDto } from './dto/update-receipt.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RolesGuard } from 'src/global/auth/guards/auth.guard';
-import { SkipThrottle } from '@nestjs/throttler';
-import { Roles } from 'src/global/auth/guards/roles.decorator';
-import { Role } from '@prisma/client';
+import { ReceiptService, ReceiptTypeWithoutFarmerId } from './receipts.service';
 
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Prisma, Role, User } from '@prisma/client';
+import { RolesGuard } from 'src/global/auth/guards/auth.guard';
+import { Roles } from 'src/global/auth/guards/roles.decorator';
+import { SkipThrottle } from '@nestjs/throttler';
+import { CurrentUser } from 'src/global/current-logged-in/current-user.decorator';
+
+// @UseGuards(RolesGuard)
 @ApiTags('receipts')
 @Controller('receipts')
-@UseGuards(RolesGuard)
 @SkipThrottle()
-@ApiBearerAuth()
-export class ReceiptsController {
-  constructor(private readonly receiptsService: ReceiptsService) {}
+export class ReceiptController {
+  constructor(private readonly receiptService: ReceiptService) { }
 
   @Post()
-  @Roles(Role.ADG)
+  @ApiOperation({ summary: 'create project data' })
   @UseGuards(RolesGuard)
-  create(@Body() createReceiptDto: CreateReceiptDto) {
-    return this.receiptsService.create(createReceiptDto);
+  @Roles(Role.ADG, Role.AGENT)
+  create(
+    @Body() createreceiptDatumDto: Prisma.ReceiptUncheckedCreateInput | ReceiptTypeWithoutFarmerId,
+    @CurrentUser() user: Partial<User>,
+  ) {
+    return this.receiptService.create(createreceiptDatumDto, user);
   }
 
+  @Roles(Role.ADG)
+  @UseGuards(RolesGuard)
   @Get()
-  @Roles(Role.ADG, Role.AUDITOR)
-  @UseGuards(RolesGuard)
-  findAll() {
-    return this.receiptsService.findAll();
+  @ApiOperation({ summary: 'find all receipts' })
+  findAll(@Query() query: any, @CurrentUser() user: Partial<User>) {
+    return this.receiptService.findAll(query, <string>user?.company_id);
   }
 
+  // get the current receipt
+  @Roles(Role.ADG)
+  @UseGuards(RolesGuard)
   @Get(':id')
-  @Roles(Role.ADG, Role.AUDITOR)
-  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'find the currently receipt of the connected user' })
   findOne(@Param('id') id: string) {
-    return this.receiptsService.findOne(+id);
+
+    return this.receiptService.findOne(id);
   }
 
+  @Roles(Role.ADG)
+  @UseGuards(RolesGuard)
   @Patch(':id')
-  @Roles(Role.ADG)
-  @UseGuards(RolesGuard)
-  update(@Param('id') id: string, @Body() updateReceiptDto: UpdateReceiptDto) {
-    return this.receiptsService.update(+id, updateReceiptDto);
+  @ApiOperation({ summary: 'update one receipt with its id' })
+  update(
+    @Param('id') id: string,
+    @Body() updateReceiptDatumDto: Prisma.ReceiptUpdateInput,
+  ) {
+    return this.receiptService.update(id, updateReceiptDatumDto);
   }
 
-  @Delete(':id')
   @Roles(Role.ADG)
   @UseGuards(RolesGuard)
+  @Delete(':id')
+  @ApiOperation({ summary: 'delete one receipt with its id' })
   remove(@Param('id') id: string) {
-    return this.receiptsService.remove(+id);
+    return this.receiptService.remove(id);
   }
 }

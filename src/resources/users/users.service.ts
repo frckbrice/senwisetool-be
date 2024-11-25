@@ -128,7 +128,7 @@ export class UsersService {
           data: users,
           total,
           page: page ?? 0,
-          perPage: perPage ?? 20,
+          perPage: perPage ?? 20 - 1,
           totalPages: Math.ceil(total / (perPage ?? 20)),
         };
       else
@@ -138,7 +138,7 @@ export class UsersService {
           data: [],
           total,
           page: page ?? 0,
-          perPage: perPage ?? 20,
+          perPage: perPage ?? 20 - 1,
           totalPages: Math.ceil(total / (perPage ?? 20)),
         };
     } catch (error) {

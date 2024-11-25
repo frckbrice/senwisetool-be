@@ -12,7 +12,7 @@ export class RevenuEtResponsabilitePartagerController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(Role.ADG, Role.IT_SUPPORT)
-  create(@Body() createRevenuDto: Prisma.RevenuEtResponsabilitePartagerCreateInput ) {
+  create(@Body() createRevenuDto: Prisma.RevenuEtResponsabilitePartagerCreateInput) {
     return this.revenuService.create(createRevenuDto)
   }
 

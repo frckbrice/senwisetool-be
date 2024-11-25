@@ -47,6 +47,8 @@ export class ProjectsController {
     @Body() createProjectDto: Prisma.ProjectCreateInput,
     @CurrentUser() user: Partial<User>,
   ) {
+
+    console.log("project controller current user: ", user);
     return this.projectsService.create({
       createProjectDto,
       company_id: <string>user.company_id,
@@ -60,20 +62,24 @@ export class ProjectsController {
     description: 'The projects has been successfully fetched.',
   })
   @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
-  findAll(@Query() query: PaginationProjectQueryDto | { agentCode: string }, @CurrentUser() user: Partial<User>) {
+  findAll(
+    @Query() query: PaginationProjectQueryDto & { agentCode: string },
+    @CurrentUser() user: Partial<User>) {
+
+    console.log("current user: ", user)
     return this.projectsService.findAll(query, <string>user.company_id);
   }
   // get all projects codes of a company
-  @Get('company_projectCode')
-  @ApiOperation({ summary: 'Find all projects codes of a company ' })
-  @ApiResponse({
-    status: 200,
-    description: 'The projects has been successfully fetched.',
-  })
-  @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
-  getAllCompanyProjectCodes(@Query() query: PaginationProjectQueryDto, @CurrentUser() user: Partial<User>) {
-    return this.projectsService.findAllProjectCodesOfCompany(query, <string>user.company_id)
-  }
+  // @Get('company_projectCode')
+  // @ApiOperation({ summary: 'Find all projects codes of a company ' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'The projects has been successfully fetched.',
+  // })
+  // @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
+  // getAllCompanyProjectCodes(@Query() query: PaginationProjectQueryDto, @CurrentUser() user: Partial<User>) {
+  //   return this.projectsService.findAllProjectCodesOfCompany(query, <string>user.company_id)
+  // }
 
   @Get('assigned_projects')
   @ApiOperation({ summary: 'Find all projects ' })
