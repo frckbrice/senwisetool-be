@@ -12,6 +12,7 @@ import { LoggerService } from 'src/global/logger/logger.service';
 import { generateMapping } from '../projects/create-code-project-mapping';
 import { ProjectAssigneeService } from '../project-assignee/project-assignee.service';
 import { CampaignService } from '../campaigns/campaigns.service';
+import { UUID } from 'sequelize';
 
 @Injectable()
 export class MarketsService {
@@ -28,7 +29,7 @@ export class MarketsService {
     createMarketDto,
     user_id,
   }: {
-    createMarketDto: Prisma.MarketCreateInput;
+    createMarketDto: Prisma.MarketUncheckedCreateInput;
     user_id: string;
   }) {
 
@@ -43,6 +44,14 @@ export class MarketsService {
     const { uuid: UID, code: projectCode } = generateMapping(crypto.randomUUID());
 
     try {
+      // create a market record on assignee table
+      await this.projectAssigneeService.create({
+        agentCode: projectCode,
+        projectCodes: [UID],
+        company_id: createMarketDto.company_id,
+        project_type: "MARKET"
+      })
+
       const result = await this.prismaService.$transaction(async (tx) => {
         const result = await tx.market.create({
           data: {
@@ -91,7 +100,7 @@ export class MarketsService {
     const where = Object.create({});
     let Query = Object.create({ where });
 
-    console.log({company_id, campaign_id})
+    console.log({ company_id, campaign_id })
 
     if (status) {
       where['status'] = status;
@@ -140,30 +149,136 @@ export class MarketsService {
           }
         }),
       ]);
-      if (markets.length)
+
+      // Get list of market uuid code
+      if (markets.length) {
+        const listOfUuidCodes: any[] = markets.map((m) => m.code)
+
+        // Get all corresponding 4 digits codes for each market
+        const assignedMarket = await this.projectAssigneeService.getAllTheAssigneesCodesFromAListOfProjectUuidsOfACompany(listOfUuidCodes, <string>company_id)
+
+        // create a mapping for matching uuids
+        const mappedList = assignedMarket?.data?.flatMap(assigne => assigne.projectCodes.filter(uuid => listOfUuidCodes.includes(uuid)).map(uuid => ({
+          agentCode: assigne.agentCode,
+          uuid: uuid
+        })))
+
+        // Assigne corresponding code to each market
+        const marketResponse = mappedList?.reduce((acc, curr, index) => {
+          if (acc.find(p => p.code === curr.uuid)) {
+            const val = acc[index]
+            acc = [...acc, { ...val, code: curr.agentCode }]
+          }
+          return acc
+        }, markets)
+
+        // this comes duplicated. So we need to filter. TODO: Find out what is the problem
+        let marketResult = []
+        if (marketResponse) {
+          for (const item of marketResponse) {
+            if (item.code?.length && item.code?.length <= 5) {
+              marketResult.push(item)
+            }
+          }
+        }
+
         return {
           status: 200,
           message: 'markets fetched successfully',
           // data: agentCode ? markets.map((m) => ({})) : [],
-          data: markets,
+          data: marketResult,
           total,
           page: query.page ?? 0,
           perPage: query.perPage ?? 20,
           totalPages: Math.ceil(total / (query.perPage ?? 20)),
         };
-      else
-        return {
-          status: HttpStatus.NOT_FOUND,
-          message: 'No markets found ',
-          data: [],
-          total,
-          page: query.page ?? 0,
-          perPage: query.perPage ?? 20,
-          totalPages: Math.ceil(total / (query.perPage ?? 20)),
-        };
+      }
+      else return {
+        status: HttpStatus.NOT_FOUND,
+        message: 'No markets found ',
+        data: [],
+        total,
+        page: query.page ?? 0,
+        perPage: query.perPage ?? 20,
+        totalPages: Math.ceil(total / (query.perPage ?? 20)),
+      };
     } catch (error) {
       this.logger.error('Error fetching markets', MarketsService.name);
       throw new NotFoundException('Error fetching markets');
+    }
+  }
+
+  // Find all company's markets codes
+  async findAllCompanyMarket(query: Partial<PaginationMarketQueryDto> | any, company_id: string) {
+    const { campaign_id, type } = query
+
+    try {
+      const [total, markets] = await this.prismaService.$transaction([
+        this.prismaService.market.count(),
+        this.prismaService.market.findMany({
+          where: {
+            company_id,
+            campaign_id
+          }, select: {
+            id: true,
+            supplier: true,
+            code: true,
+            location: true,
+          }
+        })
+      ])
+      if (typeof markets != 'undefined' && markets.length) {
+        const listOfUuidCodes: any[] = markets?.map((p) => p.code)
+        const assignees = await this.projectAssigneeService.getAllTheAssigneesCodesFromAListOfProjectUuidsOfACompany(listOfUuidCodes, <string>company_id)
+
+        // create aa mapping for matching uuids
+        const mappedList = assignees?.data?.flatMap(assignee => assignee.projectCodes.filter(uuid => listOfUuidCodes.includes(uuid)).map((uuid) => ({
+          agentCode: assignee.agentCode,
+          uuid: uuid
+        })))
+
+        // assign corresponding code to eact market
+        const projectResponse = mappedList?.reduce((acc, curr, index) => {
+          if (acc.find(p => p.code === curr.uuid)) {
+            const val = acc[index]
+            acc = [...acc, { ...val, code: curr.agentCode }]
+          }
+          return acc
+        }, markets);
+
+        // send only projects with 4 digit code
+        let result: any[] = []
+        if (projectResponse) {
+          for (const item of projectResponse) {
+            if (item.code?.length && item.code.length < 5) {
+              result.push(item)
+            }
+          }
+        }
+
+        return {
+          status: 200,
+          message: 'markets fetched successfully',
+          data: result,
+          total,
+          page: query.page ?? 0,
+          perPage: query.perPage ?? 20,
+          totalPages: Math.ceil(total / (query.perPage ?? 20)),
+        };
+
+      } else return {
+        status: 404,
+        message: 'No projects found',
+        data: [],
+        total,
+        page: query.page ?? 0,
+        perPage: query.perPage ?? 20,
+        totalPages: Math.ceil(total / (query.perPage ?? 20)),
+      };
+
+    } catch (error) {
+      this.logger.error('Error fetching markets', MarketsService.name);
+      throw new NotFoundException('Error fetching markets codes');
     }
   }
 

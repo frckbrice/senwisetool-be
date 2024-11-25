@@ -43,13 +43,24 @@ export class MarketsController {
   })
   @Roles(Role.ADG, Role.IT_SUPPORT)
   create(
-    @Body() createMarketDto: Prisma.MarketCreateInput,
+    @Body() createMarketDto: Prisma.MarketUncheckedCreateInput,
     @CurrentUser() user: Partial<User>,
   ) {
     return this.marketsService.create({
       createMarketDto,
       user_id: <string>user.id,
     });
+  }
+
+  // Get all markets codes of a company
+  @Get("company_marketCodes")
+  @ApiResponse({
+    status: 200,
+    description: 'The markets has been successfully fetched'
+  })
+  @Roles(Role.ADG, Role.IT_SUPPORT, Role.AUDITOR)
+  getAllCompanyMarketCodes(@Query() query: PaginationMarketQueryDto, @CurrentUser() user: Partial<User>) {
+    return this.marketsService.findAllCompanyMarket(query, <string>user.company_id)
   }
 
   @Get() // find market either by agentcode or all 
